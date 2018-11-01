@@ -9,6 +9,7 @@ Options:
   -h --help                 show this screen.
   --version                 show version.
   -c <classifier_method>    various supported classifiers. [default: 'rf'].
+  -d <dataset-name>         dataset to use. [default: 'dataset-string-similarity.txt']
 
 Arguments:
   classifier_method:        'rf' (default)
@@ -18,16 +19,89 @@ Arguments:
 
 """
 
+# import configparser
 import helpers
-import configparser
 from docopt import docopt
 import os, sys
 import csv
 import time
+from collections import Counter
+import nltk
 
 from featureclassifiers import evaluate_classifier
 from datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler,monge_elkan, cosine, strike_a_match, \
     soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
+from datasetcreator import detect_alphabet
+
+
+class FEMLFeatures:
+
+    # giann: checking  code
+    def extract_dataset_statistics(input='allCountries.txt', output='statistics/dataset_statistics', only_english=1,
+                                   include_altnames=1, remove_punct=1):
+
+        """Extracts dataset statistics.
+        """
+
+        if not os.path.exists("statistics"):
+            os.makedirs("statistics")
+
+        if (only_english == 1):
+            if (include_altnames == 1):
+                if (remove_punct == 1):
+                    file = open("statistics/" + output + "_onlyenglish_includealtnames_rempunct.txt", "w+")
+                else:
+                    file = open("statistics/" + output + "_onlyenglish_includealtnames.txt", "w+")
+            else:
+                if (remove_punct == 1):
+                    file = open("statistics/" + output + "_onlyenglish_rempunct.txt", "w+")
+                else:
+                    file = open("statistics/" + output + "_onlyenglish.txt", "w+")
+        else:
+            if (include_altnames == 1):
+                if (remove_punct == 1):
+                    file = open("statistics/" + output + "_includealtnames_rempunct.txt", "w+")
+                else:
+                    file = open("statistics/" + output + "_includealtnames.txt", "w+")
+            else:
+                if (remove_punct == 1):
+                    file = open("statistics/" + output + "_rempunct.txt", "w+")
+                else:
+                    file = open("statistics/" + output + ".txt", "w+")
+
+        term_counter = Counter()
+        with open(input) as csvfile:
+            reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
+            to_be_removed = "()/.,:!'"  # all characters to be removed
+            for row in reader:
+                name, altname = row['asciiname'], row['alternatenames']
+
+                if (remove_punct == 1):
+                    for c in to_be_removed:
+                        name = name.replace(c, ' ')
+
+                name_words = name.lower().split()
+                if (only_english == 1):
+                    if (detect_alphabet(name) == "LATIN"):
+                        term_counter.update(name_words)
+                else:
+                    term_counter.update(name_words)
+
+                if (include_altnames == 1):
+
+                    if (remove_punct == 1):
+                        for c in to_be_removed:
+                            altname = altname.replace(c, ' ')
+
+                    altname_words = altname.lower().split()
+                    if (only_english == 1):
+                        if (detect_alphabet(altname) == "LATIN"):
+                            term_counter.update(altname_words)
+                    else:
+                        term_counter.update(altname_words)
+
+            for word, count in term_counter.most_common():
+                file.write('%s: %7d\n' % (word, count))
 
 
 class Evaluate:
@@ -45,8 +119,8 @@ class Evaluate:
               ["Soft-Jaccard",0.6],
               ["Davis and De Salles", 0.65]]
 
-    def getTMrelativePath(self, str):
-        return os.path.join(os.path.abspath('../Toponym-Matching'), str)
+    def getTMabsPath(self, str):
+        return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', str)
 
 
     def prediction(self, sim_id, pred_val, real_val):
@@ -237,25 +311,27 @@ class Evaluate:
         #     return result
 
 
-    def verifyCode(self):
+    def verifyCode(self, dataset):
         # String similarity metrics
-        self.evaluate_metrics(dataset=self.getTMrelativePath('dataset/dataset-string-similarity-test.txt'),
-                              accuracyresults=True, permuted=True)
+        self.evaluate_metrics(dataset=dataset, accuracyresults=True, permuted=True)
 
         # Supervised machine learning
-        evaluate_classifier(dataset=self.getTMrelativePath('dataset/dataset-string-similarity-test.txt'), method='rf',
-                            accuracyresults=True, results=False)
-        evaluate_classifier(dataset=self.getTMrelativePath('dataset/dataset-string-similarity-test.txt'), method='et',
-                            accuracyresults=True, results=False)
-        evaluate_classifier(dataset=self.getTMrelativePath('dataset/dataset-string-similarity-test.txt'), method='svm',
-                            accuracyresults=True, results=False)
-        evaluate_classifier(dataset=self.getTMrelativePath('dataset/dataset-string-similarity-test.txt'), method='xgboost',
-                            accuracyresults=True, results=False)
+        evaluate_classifier(dataset=dataset, method='rf', accuracyresults=True, results=False)
+        evaluate_classifier(dataset=dataset, method='et', accuracyresults=True, results=False)
+        evaluate_classifier(dataset=dataset, method='svm', accuracyresults=True, results=False)
+        evaluate_classifier(dataset=dataset, method='xgboost', accuracyresults=True, results=False)
 
 
 def main(args):
+    dataset_path = args['-d']
+
     eval = Evaluate()
-    eval.verifyCode()
+    full_dataset_path = eval.getTMabsPath(dataset_path)
+
+    if os.path.isfile(full_dataset_path):
+        eval.verifyCode(full_dataset_path)
+    else:
+        print "No file {0} exists!!!\n".format(full_dataset_path)
 
 
 if __name__ == "__main__":
