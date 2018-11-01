@@ -129,20 +129,16 @@ class Evaluate:
         if real_val == 1.0:
             if pred_val >= self.methods[sim_id - 1][1]:
                 var_name = 'num_true_predicted_true'
-                # result = "TRUE\tTRUE\n"
                 result = "\tTRUE"
             else:
                 var_name = 'num_true_predicted_false'
-                # result = "TRUE\tFALSE\n"
                 result = "\tFALSE"
         else:
             if pred_val >= self.methods[sim_id - 1][1]:
                 var_name = 'num_false_predicted_true'
-                # result = "FALSE\tTRUE\n"
                 result = "\tTRUE"
             else:
                 var_name = 'num_false_predicted_false'
-                # result = "FALSE\tFALSE\n"
                 result = "\tFALSE"
 
         return result, var_name
@@ -189,8 +185,6 @@ class Evaluate:
                 timers[1 - 1] += (time.time() - start_time)
                 locals()[varnm][0] += 1.0
                 tot_res += res
-                # if accuracyresults:
-                #     file.write(res)
 
                 start_time = time.time()
                 sim8 = jaccard(row['s1'], row['s2'])
@@ -280,6 +274,8 @@ class Evaluate:
                 if accuracyresults:
                     if real == 1.0:
                         file.write("TRUE{0}".format(tot_res + "\n"))
+                    else:
+                        file.write("FALSE{0}".format(tot_res + "\n"))
 
         if accuracyresults:
             file.close()
