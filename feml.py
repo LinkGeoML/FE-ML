@@ -240,17 +240,17 @@ class Evaluate:
     def verifyCode(self):
         # String similarity metrics
         self.evaluate_metrics(dataset=self.getTMrelativePath('dataset/dataset-string-similarity-test.txt'),
-                              accuracyresults=True, permuted=False)
+                              accuracyresults=True, permuted=True)
 
         # Supervised machine learning
         evaluate_classifier(dataset=self.getTMrelativePath('dataset/dataset-string-similarity-test.txt'), method='rf',
-                            accuracyresults=False, results=False)
+                            accuracyresults=True, results=False)
         evaluate_classifier(dataset=self.getTMrelativePath('dataset/dataset-string-similarity-test.txt'), method='et',
-                            accuracyresults=False, results=False)
+                            accuracyresults=True, results=False)
         evaluate_classifier(dataset=self.getTMrelativePath('dataset/dataset-string-similarity-test.txt'), method='svm',
-                            accuracyresults=False, results=False)
+                            accuracyresults=True, results=False)
         evaluate_classifier(dataset=self.getTMrelativePath('dataset/dataset-string-similarity-test.txt'), method='xgboost',
-                            accuracyresults=False, results=False)
+                            accuracyresults=True, results=False)
 
 
 def main(args):
