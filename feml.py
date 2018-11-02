@@ -10,6 +10,8 @@ Options:
   --version                 show version.
   -c <classifier_method>    various supported classifiers. [default: 'rf'].
   -d <dataset-name>         dataset to use. [default: 'dataset-string-similarity.txt']
+  --permuted                Use permuted Jaro-Winkler metrics. Default is False.
+  --stemming                 Perform stemming. Default is False.
 
 Arguments:
   classifier_method:        'rf' (default)
@@ -26,12 +28,30 @@ import os, sys
 import csv
 import time
 from collections import Counter
-import nltk
+from nltk import SnowballStemmer
+from langdetect import detect, lang_detect_exception
+import pycountry
 
 from featureclassifiers import evaluate_classifier
 from datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler,monge_elkan, cosine, strike_a_match, \
     soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
-from datasetcreator import detect_alphabet
+from datasetcreator import detect_alphabet, fields
+
+
+def perform_stemming(str, lang='en'):
+    try:
+        lang_name = pycountry.languages.get(alpha_2=detect(str)).name.lower() if lang == 'all' else 'english'
+
+        if lang_name in SnowballStemmer.languages: # See which languages are supported
+            stemmer = SnowballStemmer(lang_name)  # Choose a language
+            str = stemmer.stem(str)  # Stem a word
+    except KeyError as e:
+        pass
+        # print("Unicode error for {0}\n".format(e))
+    except lang_detect_exception.LangDetectException as e:
+        print e
+
+    return str.lower()
 
 
 class FEMLFeatures:
@@ -144,7 +164,8 @@ class Evaluate:
         return result, var_name
 
 
-    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', accuracyresults=False, results=False, permuted=False):
+    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', accuracyresults=False, results=False,
+                         permuted=False, stemming=False):
         num_true = 0.0
         num_false = 0.0
         num_true_predicted_true = [0.0]*len(self.methods)
@@ -178,6 +199,9 @@ class Evaluate:
 
                 row['s1'] = row['s1'].decode('utf-8')
                 row['s2'] = row['s2'].decode('utf-8')
+                if stemming:
+                    row['s1'] = perform_stemming(row['s1'])
+                    row['s2'] = perform_stemming(row['s2'])
 
                 start_time = time.time()
                 sim1 = damerau_levenshtein(row['s1'], row['s2'])
@@ -307,15 +331,13 @@ class Evaluate:
         #     return result
 
 
-    def verifyCode(self, dataset):
+    def verifyCode(self, dataset, permuted=False, stemming=False):
         # String similarity metrics
-        self.evaluate_metrics(dataset=dataset, accuracyresults=True, permuted=True)
+        self.evaluate_metrics(dataset=dataset, accuracyresults=True, permuted=permuted, stemming=stemming)
 
         # Supervised machine learning
-        evaluate_classifier(dataset=dataset, method='rf', accuracyresults=True, results=False)
-        evaluate_classifier(dataset=dataset, method='et', accuracyresults=True, results=False)
-        evaluate_classifier(dataset=dataset, method='svm', accuracyresults=True, results=False)
-        evaluate_classifier(dataset=dataset, method='xgboost', accuracyresults=True, results=False)
+        # for method in ['rf', 'et', 'svm', 'xgboost']:
+        #     evaluate_classifier(dataset=dataset, method=method, accuracyresults=True, results=False)
 
 
 def main(args):
@@ -325,7 +347,7 @@ def main(args):
     full_dataset_path = eval.getTMabsPath(dataset_path)
 
     if os.path.isfile(full_dataset_path):
-        eval.verifyCode(full_dataset_path)
+        eval.verifyCode(full_dataset_path,args['--permuted'],args['--stemming'])
     else:
         print "No file {0} exists!!!\n".format(full_dataset_path)
 
