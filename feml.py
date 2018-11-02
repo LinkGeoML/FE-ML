@@ -11,7 +11,8 @@ Options:
   -c <classifier_method>    various supported classifiers. [default: 'rf'].
   -d <dataset-name>         dataset to use. [default: 'dataset-string-similarity.txt']
   --permuted                Use permuted Jaro-Winkler metrics. Default is False.
-  --stemming                 Perform stemming. Default is False.
+  --stemming                Perform stemming. Default is False.
+  --sorted                  Sort
 
 Arguments:
   classifier_method:        'rf' (default)
@@ -31,6 +32,7 @@ from collections import Counter
 from nltk import SnowballStemmer
 from langdetect import detect, lang_detect_exception
 import pycountry
+import re
 
 from featureclassifiers import evaluate_classifier
 from datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler,monge_elkan, cosine, strike_a_match, \
@@ -52,6 +54,18 @@ def perform_stemming(str, lang='en'):
         print e
 
     return str.lower()
+
+
+def sorted_nicely(l):
+    """ Sorts the given iterable in the way that is expected.
+
+    Required arguments:
+    l -- The iterable to be sorted.
+
+    """
+    convert = lambda text: int(text) if text.isdigit() else text
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+    return sorted(l, key=alphanum_key)
 
 
 class FEMLFeatures:
@@ -165,7 +179,7 @@ class Evaluate:
 
 
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt', accuracyresults=False, results=False,
-                         permuted=False, stemming=False):
+                         permuted=False, stemming=False, sorted=False):
         num_true = 0.0
         num_false = 0.0
         num_true_predicted_true = [0.0]*len(self.methods)
