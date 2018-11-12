@@ -205,11 +205,13 @@ class FEMLFeatures:
 class baseMetrics:
     __metaclass__ = ABCMeta
 
+    @abstractmethod
     def __init__(self, accuracyresults=False):
         self.num_true_predicted_true = [0.0] * len(self.methods)
         self.num_true_predicted_false = [0.0] * len(self.methods)
         self.num_false_predicted_true = [0.0] * len(self.methods)
         self.num_false_predicted_false = [0.0] * len(self.methods)
+
         self.timers = [0.0] * len(self.methods)
         self.result = {}
         self.file = None
@@ -233,7 +235,7 @@ class baseMetrics:
         pass
 
     @abstractmethod
-    def print_stats(self, num_truefalse):
+    def print_stats(self, num_true, num_false):
         pass
 
     def prediction(self, sim_id, pred_val, real_val):
@@ -271,6 +273,9 @@ class calcSotAMetrics(baseMetrics):
                ["Monge-Elkan", 0.7],
                ["Soft-Jaccard", 0.6],
                ["Davis and De Salles", 0.65]]
+
+    def __init__(self):
+        super(calcSotAMetrics, self).__init__()
 
     def evaluate(self, row, permuted=False, stemming=False, sorted=False):
         tot_res = ""
@@ -381,11 +386,11 @@ class calcSotAMetrics(baseMetrics):
             else:
                 file.write("FALSE{0}".format(tot_res + "\n"))
 
-    def print_stats(self, num_truefalse):
+    def print_stats(self, num_true, num_false):
         for idx in range(len(self.methods)):
             try:
-                timer = ( self.timers[idx] / float( int( num_truefalse[0] + num_truefalse[1] ) ) ) * 50000.0
-                acc = ( self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx] ) / ( num_truefalse[0] + num_truefalse[1] )
+                timer = ( self.timers[idx] / float( int( num_true + num_false ) ) ) * 50000.0
+                acc = ( self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx] ) / ( num_true + num_false )
                 pre = ( self.num_true_predicted_true[idx] ) / ( self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx] )
                 rec = ( self.num_true_predicted_true[idx] ) / ( self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx] )
                 f1 = 2.0 * ( ( pre * rec ) / ( pre + rec ) )
@@ -406,7 +411,7 @@ class calcSotAMetrics(baseMetrics):
                 print "{0} is divided by zero\n".format(idx)
 
         # if results:
-        #     return result
+        #     return self.result
 
 
 class calcMLCustom(baseMetrics):
@@ -432,21 +437,24 @@ class Evaluate:
         self.stemming = stemming
         self.sorted = sorted
 
+        self.num_true = 0.0
+        self.num_false = 0.0
+
     def getTMabsPath(self, str):
         return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', str)
 
-    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', evalType='SotAMetrics', accuracyresults=False):
-        num_true = 0.0
-        num_false = 0.0
-
+    def computeTrueFalseVals(self, dataset):
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
             for row in reader:
                 if row['res'] == "TRUE":
-                    num_true += 1.0
+                    self.num_true += 1.0
                 else:
-                    num_false += 1.0
+                    self.num_false += 1.0
+
+    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', evalType='SotAMetrics', accuracyresults=False):
+        self.computeTrueFalseVals(dataset)
 
         print "Reading dataset..."
         with open(dataset) as csvfile:
@@ -461,7 +469,7 @@ class Evaluate:
 
             for row in reader:
                 evalClass.evaluate(row, self.permuted, self.stemming, self.sorted)
-            evalClass.print_stats((num_true, num_false))
+            evalClass.print_stats(self.num_true, self.num_false)
 
 
 def main(args):
