@@ -8,19 +8,19 @@ Usage:
 Options:
   -h --help                 show this screen.
   --version                 show version.
-  -c <classifier_method>    various supported classifiers. [default: 'rf'].
-  -d <dataset-name>         dataset to use. [default: 'dataset-string-similarity.txt']
+  -c <classifier_method>    various supported classifiers. [default: rf].
+  -d <dataset-name>         dataset to use. [default: dataset-string-similarity.txt]
   --permuted                Use permuted Jaro-Winkler metrics. Default is False.
   --stemming                Perform stemming. Default is False.
   --sorted                  Sort alphanumerically.
-  --ev <evaluator_type>     Type of experiments to conduct. [default: 'SotAMetrics']
+  --ev <evaluator_type>     Type of experiments to conduct. [default: SotAMetrics]
 
 Arguments:
   classifier_method:        'rf' (default)
                             'et'
                             'svm'
                             'xgboost'
-  evaluator_type            'SotAMetrics'
+  evaluator_type            'SotAMetrics' (default)
                             'MLCustom'
                             'DL'
                             'SortedMetrics'
@@ -453,10 +453,8 @@ class Evaluate:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
 
-            # start_time = time.time()
             try:
-                # print(evalType)
-                evalClass = self.evaluatorType_action['SotAMetrics']()
+                evalClass = self.evaluatorType_action[evalType]()
             except KeyError:
                 print("Unkown method")
                 return
@@ -464,15 +462,6 @@ class Evaluate:
             for row in reader:
                 evalClass.evaluate(row, self.permuted, self.stemming, self.sorted)
             evalClass.print_stats((num_true, num_false))
-
-    def verifyCode(self, dataset, evalType):
-        # String similarity metrics
-        self.evaluate_metrics(dataset=dataset, evalType=evalType, accuracyresults=True)
-
-        # Supervised machine learning
-        if evalType == 'SotAMetrics':
-            for method in ['rf', 'et', 'svm', 'xgboost']:
-                evaluate_classifier(dataset=dataset, method=method, accuracyresults=True, results=False)
 
 
 def main(args):
@@ -482,7 +471,12 @@ def main(args):
     full_dataset_path = eval.getTMabsPath(dataset_path)
 
     if os.path.isfile(full_dataset_path):
-        eval.verifyCode(full_dataset_path, args['--ev'])
+        eval.evaluate_metrics(full_dataset_path, args['--ev'])
+
+        # Supervised machine learning
+        if args['--ev'] == "SotAMetrics":
+            for method in ['rf', 'et', 'svm', 'xgboost']:
+                evaluate_classifier(dataset=full_dataset_path, method=method, accuracyresults=True, results=False)
     else:
         print "No file {0} exists!!!\n".format(full_dataset_path)
 
