@@ -2,3 +2,9 @@ nltk
 langdetect
 pycountry
 docopt
+numpy
+xgboost
+sklearn
+jellyfish
+pyxdameraulevenshtein
+alphabet_detector
