@@ -541,30 +541,18 @@ class Evaluate:
                           )
 
             for i in range(min_top):
-                f.write("{},{}\t".format(sorted_freq_str1_terms[i][0],
-                                         sorted_freq_str1_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_str2_terms[i][0],
-                                         sorted_freq_str2_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_bi_str1_1_terms[i][0],
-                                         sorted_freq_bi_str1_1_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_bi_str1_2_terms[i][0],
-                                         sorted_freq_bi_str1_2_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_bi_str2_1_terms[i][0],
-                                         sorted_freq_bi_str2_1_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_bi_str2_2_terms[i][0],
-                                         sorted_freq_bi_str2_2_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str1_1_terms[i][0],
-                                         sorted_freq_tri_str1_1_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str1_2_terms[i][0],
-                                         sorted_freq_tri_str1_2_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str1_3_terms[i][0],
-                                         sorted_freq_tri_str1_3_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str2_1_terms[i][0],
-                                         sorted_freq_tri_str2_1_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str2_2_terms[i][0],
-                                         sorted_freq_tri_str2_2_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str2_3_terms[i][0],
-                                         sorted_freq_tri_str2_3_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_str1_terms[i][0], sorted_freq_str1_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_str2_terms[i][0], sorted_freq_str2_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_bi_str1_1_terms[i][0], sorted_freq_bi_str1_1_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_bi_str1_2_terms[i][0], sorted_freq_bi_str1_2_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_bi_str2_1_terms[i][0], sorted_freq_bi_str2_1_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_bi_str2_2_terms[i][0], sorted_freq_bi_str2_2_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str1_1_terms[i][0], sorted_freq_tri_str1_1_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str1_2_terms[i][0], sorted_freq_tri_str1_2_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str1_3_terms[i][0], sorted_freq_tri_str1_3_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str2_1_terms[i][0], sorted_freq_tri_str2_1_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str2_2_terms[i][0], sorted_freq_tri_str2_2_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str2_3_terms[i][0], sorted_freq_tri_str2_3_terms[i][1]))
                 f.write('\n')
 
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt', evalType='SotAMetrics', accuracyresults=False):
