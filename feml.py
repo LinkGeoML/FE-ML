@@ -14,6 +14,7 @@ Options:
   --stemming                Perform stemming. Default is False.
   --sorted                  Sort alphanumerically.
   --ev <evaluator_type>     Type of experiments to conduct. [default: SotAMetrics]
+  --print                   Print only computed variables. Default is False.
 
 Arguments:
   classifier_method:        'rf' (default)
@@ -27,21 +28,23 @@ Arguments:
 
 """
 
-# import configparser
-import helpers
-from docopt import docopt
 import os, sys
 import csv
 import time
 from collections import Counter
+import re
+from abc import ABCMeta, abstractmethod
+import itertools
+
+# import configparser
+from docopt import docopt
 from nltk import SnowballStemmer, wordpunct_tokenize
 from nltk.collocations import BigramCollocationFinder
 from nltk.corpus import stopwords
 from langdetect import detect, lang_detect_exception
 import pycountry
-import re
-from abc import ABCMeta, abstractmethod
 
+import helpers
 from featureclassifiers import evaluate_classifier
 from datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler,monge_elkan, cosine, strike_a_match, \
     soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
@@ -102,103 +105,80 @@ def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
     reverse = dict((value, key) for key, value in enums.iteritems())
     enums['reverse_mapping'] = reverse
-
     return type('Enum', (), enums)
 
 
 class FEMLFeatures:
-    # if not os.path.exists("statistics"):
-    #     os.makedirs("statistics")
     # to_be_removed = "()/.,:!'"  # all characters to be removed
     # file.write('%s: %7d\n' % (word, count))
 
-    # giann: extracting 2,3,4-grams
-    def extract_ngrams(input='dataset/allCountries.txt', output='dataset_ngrams', remove_punct=1, numberList=[2]):
-
-        """Extracts dataset statistics.
-        numberList is a list of integers k prescribing the k-grams to be extracted
-        Only 2,3,4 values are permitted
-        Currently works for only English and includes alternate names
-        """
-
-        if not os.path.exists("statistics"):
-            os.makedirs("statistics")
-
-        file = {}
-        ngramCounter = Counter()
-
-        if len(numberList) > 3:
-            print (
-                "Error: Too many different n-gram types to calculate!\n Currently, we can only calculate 2,3,4-grams!")
-            return 1
-        for ngr in numberList:
-            if (ngr < 2) or (ngr > 4):
-                print (
-                    "Error: Too many different n-gram types to calculate!\n Currently, we can only calculate 2,3,4-grams!")
-                return 1
-            else:
-                if (remove_punct == 1):
-                    file[ngr] = open("statistics/" + output + str(ngr) + "_rempunct.txt", "w+")
-                else:
-                    file[ngr] = open("statistics/" + output + str(ngr) + ".txt", "w+")
-                ngramCounter[ngr] = Counter()
-
-        cou = 0;
-        with open(input) as csvfile:
-            reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
-            to_be_removed = "()/.,:!'"  # all characters to be removed
-            for row in reader:
-                name, altname = row['asciiname'], row['alternatenames']
-
-                if (remove_punct == 1):
-                    for c in to_be_removed:
-                        name = name.replace(c, ' ')
-                        altname = altname.replace(c, ' ')
-
-                tokens1 = wordpunct_tokenize(name)
-                tokens2 = wordpunct_tokenize(name)
-
-                tokens1 = tokens1 + tokens2
-
-                # print (tokens1)
-
-                finder1 = BigramCollocationFinder.from_words(tokens1)
-                # finder2 = TrigramCollocationFinder.from_words(tokens1)
-                # finder3 = QuadgramCollocationFinder.from_words(tokens1)
-
-                # finder1.apply_freq_filter(50)
-                # finder2.apply_freq_filter(50)
-                # finder3.apply_freq_filter(50)
-
-                # print (finder1.ngram_fd)
-
-                ngramCounter[2] = ngramCounter[2] + finder1.ngram_fd
-                # ngramCounter[3] = ngramCounter[3] + finder2.ngram_fd
-                # ngramCounter[4] = ngramCounter[4] + finder3.ngram_fd
-
-                # for key, value in ngramCounter[2].items():
-                #    print(key, value)
-
-                # cou += 1
-                # if (cou == 5):
-                #    break
-
-        for ngrm in numberList:
-            for ngram, count in ngramCounter[ngrm].most_common(1000):
-                file[ngrm].write('%s: %7d\n' % (ngram, count))
-
-        return 0
-
-
     # Returned vals: #1: str1 is subset of str2, #2 str2 is subset of str1
-    def contains(self, str1, str2):
-        str1,_ = normalize_str(str1)
-        str2, _ = normalize_str(str2)
-
+    def contains(self, str1, str2, sorted=False):
+        str1,_ = normalize_str(str1, sorted)
+        str2, _ = normalize_str(str2, sorted)
         return set(str1).issubset(set(str2)), set(str2).issubset(set(str1))
 
-    def contains_freq_term(self, str1, str2):
-        term_counter = Counter()
+    def contains_freq_term(self, str, freqTerms=None):
+        str, _ = normalize_str(str)
+        return True if freqTerms != None and str in freqTerms else False
+
+    def contains_specific_freq_term(self, str):
+        pass
+
+    def is_matched(self, str):
+        """
+        Finds out how balanced an expression is.
+        With a string containing only brackets.
+
+        >>> is_matched('[]()()(((([])))')
+        False
+        >>> is_matched('[](){{{[]}}}')
+        True
+        """
+        opening = tuple('({[')
+        closing = tuple(')}]')
+        mapping = dict(zip(opening, closing))
+        queue = []
+
+        for letter in str:
+            if letter in opening:
+                queue.append(mapping[letter])
+            elif letter in closing:
+                if not queue or letter != queue.pop():
+                    return False
+        return not queue
+
+    def hasEncoding_err(self, str1, str2):
+        return self.is_matched(str1), self.is_matched(str2)
+
+    def containsAbbr(self, str1, str2):
+        abbr1 = re.search(r"\b[A-Z]{2,}\b", str1)
+        abbr2 = re.search(r"\b[A-Z]{2,}\b", str2)
+        return abbr1, abbr2
+
+    def containsTermsInParenthesis(self, str1, str2):
+        tokens1 = re.split('\[|\]|\(|\)', str1)
+        tokens2 = re.split('\[|\]|\(|\)', str2)
+        return len(tokens1), len(tokens2)
+
+    def containsDashConnected_words(self, str1, str2):
+        """
+        Hyphenated word are considered to be:
+        * a number of word chars
+        * followed by any number of:
+            a single hyphen
+            followed by word chars
+        """
+        dashed1 = re.search(r"\w+(?:-\w+)+", str1)
+        dashed2 = re.search(r"\w+(?:-\w+)+", str2)
+        return dashed1, dashed2
+
+    def no_of_words(self, str1, str2):
+        str1, _ = normalize_str(str1)
+        str2, _ = normalize_str(str2)
+        return len(set(str1)), len(set(str2))
+
+    def freq_ngram_tokens(self, str1, str2):
         pass
 
 
@@ -231,7 +211,7 @@ class baseMetrics:
             self.file.close()
 
     @abstractmethod
-    def evaluate(self, row, permuted=False, stemming=False, sorted=False):
+    def evaluate(self, row, permuted=False, stemming=False, sorted=False, freqTerms=None):
         pass
 
     @abstractmethod
@@ -277,7 +257,7 @@ class calcSotAMetrics(baseMetrics):
     def __init__(self):
         super(calcSotAMetrics, self).__init__()
 
-    def evaluate(self, row, permuted=False, stemming=False, sorted=False):
+    def evaluate(self, row, permuted=False, stemming=False, sorting=False, freqTerms=None):
         tot_res = ""
         real = 1.0 if row['res'] == "TRUE" else 0.0
 
@@ -287,6 +267,11 @@ class calcSotAMetrics(baseMetrics):
         if stemming:
             row['s1'] = perform_stemming(row['s1'])
             row['s2'] = perform_stemming(row['s2'])
+        if sorting:
+            a = sorted(row['s1'].split(" "))
+            b = sorted(row['s2'].split(" "))
+            row['s1'] = " ".join(a)
+            row['s2'] = " ".join(b)
 
         start_time = time.time()
         sim1 = damerau_levenshtein(row['s1'], row['s2'])
@@ -417,8 +402,10 @@ class calcSotAMetrics(baseMetrics):
 class calcMLCustom(baseMetrics):
     pass
 
+
 class calcDLearning(baseMetrics):
     pass
+
 
 class calcSortedMetrics(baseMetrics):
     pass
@@ -432,18 +419,25 @@ class Evaluate:
         'SortedMetrics': calcSortedMetrics
     }
 
-    def __init__(self, permuted=False, stemming=False, sorted=False):
+    def __init__(self, permuted=False, stemming=False, sorting=False, do_printing=False):
         self.permuted = permuted
         self.stemming = stemming
-        self.sorted = sorted
+        self.sorting = sorting
+        self.only_printing = do_printing
 
         self.num_true = 0.0
         self.num_false = 0.0
+        self.freqTerms = {
+            'str1': Counter(), 'str2': Counter(),
+            'bi_str1_1': Counter(), 'tri_str1_1': Counter(), 'bi_str1_2': Counter(), 'tri_str1_2': Counter(), 'tri_str1_3': Counter(),
+            'bi_str2_1': Counter(), 'tri_str2_1': Counter(), 'bi_str2_2': Counter(), 'tri_str2_2': Counter(), 'tri_str2_3': Counter()
+        }
+        self.bitrigrams = list()
 
     def getTMabsPath(self, str):
         return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', str)
 
-    def computeTrueFalseVals(self, dataset):
+    def computeInitVals(self, dataset):
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
@@ -453,9 +447,127 @@ class Evaluate:
                 else:
                     self.num_false += 1.0
 
-    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', evalType='SotAMetrics', accuracyresults=False):
-        self.computeTrueFalseVals(dataset)
+                # Calc frequent terms
+                # str1
+                fterms, stop_words = normalize_str(row['s1'])
+                for term in fterms:
+                    self.freqTerms['str1'][term] += 1
+                for ngram in list(itertools.chain.from_iterable(
+                    [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
+                    if len(ngram) == 2:
+                        self.freqTerms['bi_str1_1'][ngram[0]] += 1
+                        self.freqTerms['bi_str1_2'][ngram[1]] += 1
+                    else:
+                        self.freqTerms['tri_str1_1'][ngram[0]] += 1
+                        self.freqTerms['tri_str1_2'][ngram[1]] += 1
+                        self.freqTerms['tri_str1_3'][ngram[2]] += 1
 
+                # str2
+                fterms, stop_words = normalize_str(row['s2'])
+                for term in fterms:
+                    self.freqTerms['str2'][term] += 1
+                for ngram in list(itertools.chain.from_iterable(
+                    [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
+                    if len(ngram) == 2:
+                        self.freqTerms['bi_str2_1'][ngram[0]] += 1
+                        self.freqTerms['bi_str2_2'][ngram[1]] += 1
+                    else:
+                        self.freqTerms['tri_str2_1'][ngram[0]] += 1
+                        self.freqTerms['tri_str2_2'][ngram[1]] += 1
+                        self.freqTerms['tri_str2_3'][ngram[2]] += 1
+
+        if self.only_printing:
+            self.do_the_printing()
+
+    def do_the_printing(self):
+        print "Printing 10 most common single freq terms..."
+        print "str1: {0}".format(self.freqTerms['str1'].most_common(20))
+        print "str2: {0}".format(self.freqTerms['str2'].most_common(20))
+
+        print "Printing 10 most common freq terms in bigrams..."
+        print "str1 pos 1: {0}".format(self.freqTerms['bi_str1_1'].most_common(20))
+        print "\t pos 2: {0}".format(self.freqTerms['bi_str1_2'].most_common(20))
+        print "str2 pos 1: {0}".format(self.freqTerms['bi_str2_1'].most_common(20))
+        print "\t pos 2: {0}".format(self.freqTerms['bi_str2_2'].most_common(20))
+
+        print "Printing 10 most common freq terms in trigrams..."
+        print "str1 pos 1: {0}".format(self.freqTerms['tri_str1_1'].most_common(20))
+        print "\t pos 2: {0}".format(self.freqTerms['tri_str1_2'].most_common(20))
+        print "\t pos 3: {0}".format(self.freqTerms['tri_str1_3'].most_common(20))
+        print "str2 pos 1: {0}".format(self.freqTerms['tri_str2_1'].most_common(20))
+        print "\t pos 2: {0}".format(self.freqTerms['tri_str2_2'].most_common(20))
+        print "\t pos 3: {0}".format(self.freqTerms['tri_str2_3'].most_common(20))
+
+        with open("freqTerms.txt", "w") as f:
+            f.write('str1\t')
+            f.write('str2\t')
+            f.write('bigram1_pos_1\t')
+            f.write('bigram1_pos_2\t')
+            f.write('bigram2_pos_1\t')
+            f.write('bigram2_pos_2\t')
+            f.write('trigram1_pos_1\t')
+            f.write('trigram1_pos_2\t')
+            f.write('trigram1_pos_3\t')
+            f.write('trigram2_pos_1\t')
+            f.write('trigram2_pos_2\t')
+            f.write('trigram2_pos_3\t')
+            f.write('\n')
+
+            sorted_freq_str1_terms = self.freqTerms['str1'].most_common()
+            sorted_freq_str2_terms = self.freqTerms['str1'].most_common()
+            sorted_freq_bi_str1_1_terms = self.freqTerms['bi_str1_1'].most_common()
+            sorted_freq_bi_str1_2_terms = self.freqTerms['bi_str1_2'].most_common()
+            sorted_freq_bi_str2_1_terms = self.freqTerms['bi_str2_1'].most_common()
+            sorted_freq_bi_str2_2_terms = self.freqTerms['bi_str2_2'].most_common()
+            sorted_freq_tri_str1_1_terms = self.freqTerms['tri_str1_1'].most_common()
+            sorted_freq_tri_str1_2_terms = self.freqTerms['tri_str1_2'].most_common()
+            sorted_freq_tri_str1_3_terms = self.freqTerms['tri_str1_3'].most_common()
+            sorted_freq_tri_str2_1_terms = self.freqTerms['tri_str2_1'].most_common()
+            sorted_freq_tri_str2_2_terms = self.freqTerms['tri_str2_2'].most_common()
+            sorted_freq_tri_str2_3_terms = self.freqTerms['tri_str2_3'].most_common()
+
+            min_top = min(len(sorted_freq_str1_terms),
+                        len(sorted_freq_str2_terms),
+                        len(sorted_freq_bi_str1_1_terms),
+                        len(sorted_freq_bi_str1_2_terms),
+                        len(sorted_freq_bi_str2_1_terms),
+                        len(sorted_freq_bi_str2_2_terms),
+                        len(sorted_freq_tri_str1_1_terms),
+                        len(sorted_freq_tri_str1_2_terms),
+                        len(sorted_freq_tri_str1_3_terms),
+                        len(sorted_freq_tri_str2_1_terms),
+                        len(sorted_freq_tri_str2_2_terms),
+                        len(sorted_freq_tri_str2_3_terms)
+                          )
+
+            for i in range(min_top):
+                f.write("{},{}\t".format(sorted_freq_str1_terms[i][0],
+                                         sorted_freq_str1_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_str2_terms[i][0],
+                                         sorted_freq_str2_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_bi_str1_1_terms[i][0],
+                                         sorted_freq_bi_str1_1_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_bi_str1_2_terms[i][0],
+                                         sorted_freq_bi_str1_2_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_bi_str2_1_terms[i][0],
+                                         sorted_freq_bi_str2_1_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_bi_str2_2_terms[i][0],
+                                         sorted_freq_bi_str2_2_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str1_1_terms[i][0],
+                                         sorted_freq_tri_str1_1_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str1_2_terms[i][0],
+                                         sorted_freq_tri_str1_2_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str1_3_terms[i][0],
+                                         sorted_freq_tri_str1_3_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str2_1_terms[i][0],
+                                         sorted_freq_tri_str2_1_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str2_2_terms[i][0],
+                                         sorted_freq_tri_str2_2_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_tri_str2_3_terms[i][0],
+                                         sorted_freq_tri_str2_3_terms[i][1]))
+                f.write('\n')
+
+    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', evalType='SotAMetrics', accuracyresults=False):
         print "Reading dataset..."
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
@@ -468,17 +580,21 @@ class Evaluate:
                 return
 
             for row in reader:
-                evalClass.evaluate(row, self.permuted, self.stemming, self.sorted)
+                evalClass.evaluate(row, self.permuted, self.stemming, self.sorting, self.freqTerms)
             evalClass.print_stats(self.num_true, self.num_false)
 
 
 def main(args):
     dataset_path = args['-d']
 
-    eval = Evaluate(args['--permuted'], args['--stemming'], args['--sorted'])
+    eval = Evaluate(args['--permuted'], args['--stemming'], args['--sorted'], args['--print'])
     full_dataset_path = eval.getTMabsPath(dataset_path)
 
     if os.path.isfile(full_dataset_path):
+        eval.computeInitVals(full_dataset_path)
+        if args['--print']:
+            sys.exit()
+
         eval.evaluate_metrics(full_dataset_path, args['--ev'])
 
         # Supervised machine learning
