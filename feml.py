@@ -206,6 +206,22 @@ class baseMetrics:
             'num_false_predicted_false': self.num_false_predicted_false
         }
 
+        self.algorithms = {
+            'damerau_levenshtein': damerau_levenshtein,
+            'davies': davies,
+            'skipgram': skipgram,
+            'permuted_winkler': permuted_winkler,
+            'sorted_winkler': sorted_winkler,
+            'soft_jaccard': soft_jaccard,
+            'strike_a_match': strike_a_match,
+            'cosine': cosine,
+            'monge_elkan': monge_elkan,
+            'jaro_winkler': jaro_winkler,
+            'jaro': jaro,
+            'jaccard': jaccard,
+        }
+
+
     def __del__(self):
         if self.accuracyresults:
             self.file.close()
@@ -257,6 +273,14 @@ class calcSotAMetrics(baseMetrics):
     def __init__(self):
         super(calcSotAMetrics, self).__init__()
 
+    def generic_evaluator(self, idx, algnm, str1, str2, match):
+        start_time = time.time()
+        sim = self.algorithms[algnm](str1, str2)
+        res, varnm = self.prediction(idx, sim, match)
+        self.timers[idx - 1] += (time.time() - start_time)
+        self.predictedState[varnm][idx - 1] += 1.0
+        return res
+
     def evaluate(self, row, permuted=False, stemming=False, sorting=False, freqTerms=None):
         tot_res = ""
         real = 1.0 if row['res'] == "TRUE" else 0.0
@@ -273,97 +297,27 @@ class calcSotAMetrics(baseMetrics):
             row['s1'] = " ".join(a)
             row['s2'] = " ".join(b)
 
-        start_time = time.time()
-        sim1 = damerau_levenshtein(row['s1'], row['s2'])
-        res, varnm = self.prediction(1, sim1, real)
-        self.timers[1 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][0] += 1.0
-        tot_res += res
+        # start_time = time.time()
+        # sim1 = damerau_levenshtein(row['s1'], row['s2'])
+        # res, varnm = self.prediction(1, sim1, real)
+        # self.timers[1 - 1] += (time.time() - start_time)
+        # self.predictedState[varnm][0] += 1.0
+        # tot_res += res
 
-        start_time = time.time()
-        sim8 = jaccard(row['s1'], row['s2'])
-        res, varnm = self.prediction(8, sim8, real)
-        self.timers[8 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][8 - 1] += 1.0
-        tot_res += res
-
-        start_time = time.time()
-        sim2 = jaro(row['s1'], row['s2'])
-        res, varnm = self.prediction(2, sim2, real)
-        self.timers[2 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][2 - 1] += 1.0
-        tot_res += res
-
-        start_time = time.time()
-        sim3 = jaro_winkler(row['s1'], row['s2'])
-        res, varnm = self.prediction(3, sim3, real)
-        self.timers[3 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][3 - 1] += 1.0
-        tot_res += res
-
-        start_time = time.time()
-        sim4 = jaro_winkler(row['s1'][::-1], row['s2'][::-1])
-        res, varnm = self.prediction(4, sim4, real)
-        self.timers[4 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][4 - 1] += 1.0
-        tot_res += res
-
-        start_time = time.time()
-        sim11 = monge_elkan(row['s1'], row['s2'])
-        res, varnm = self.prediction(11, sim11, real)
-        self.timers[11 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][11 - 1] += 1.0
-        tot_res += res
-
-        start_time = time.time()
-        sim7 = cosine(row['s1'], row['s2'])
-        res, varnm = self.prediction(7, sim7, real)
-        self.timers[7 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][7 - 1] += 1.0
-        tot_res += res
-
-        start_time = time.time()
-        sim9 = strike_a_match(row['s1'], row['s2'])
-        res, varnm = self.prediction(9, sim9, real)
-        self.timers[9 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][9 - 1] += 1.0
-        tot_res += res
-
-        start_time = time.time()
-        sim12 = soft_jaccard(row['s1'], row['s2'])
-        res, varnm = self.prediction(12, sim12, real)
-        self.timers[12 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][12 - 1] += 1.0
-        tot_res += res
-
-        start_time = time.time()
-        sim5 = sorted_winkler(row['s1'], row['s2'])
-        res, varnm = self.prediction(5, sim5, real)
-        self.timers[5 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][5 - 1] += 1.0
-        tot_res += res
-
+        tot_res += self.generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], real)
+        tot_res += self.generic_evaluator(8, 'jaccard', row['s1'], row['s2'], real)
+        tot_res += self.generic_evaluator(2, 'jaro', row['s1'], row['s2'], real)
+        tot_res += self.generic_evaluator(3, 'jaro_winkler', row['s1'], row['s2'], real)
+        tot_res += self.generic_evaluator(4, 'jaro_winkler', row['s1'][::-1], row['s2'][::-1], real)
+        tot_res += self.generic_evaluator(11, 'monge_elkan', row['s1'], row['s2'], real)
+        tot_res += self.generic_evaluator(7, 'cosine', row['s1'], row['s2'], real)
+        tot_res += self.generic_evaluator(9, 'strike_a_match', row['s1'], row['s2'], real)
+        tot_res += self.generic_evaluator(12, 'soft_jaccard', row['s1'], row['s2'], real)
+        tot_res += self.generic_evaluator(5, 'sorted_winkler', row['s1'], row['s2'], real)
         if permuted:
-            start_time = time.time()
-            sim6 = permuted_winkler(row['s1'], row['s2'])
-            res, varnm = self.prediction(6, sim6, real)
-            self.timers[6 - 1] += (time.time() - start_time)
-            self.predictedState[varnm][6 - 1] += 1.0
-            tot_res += res
-
-        start_time = time.time()
-        sim10 = skipgram(row['s1'], row['s2'])
-        res, varnm = self.prediction(10, sim10, real)
-        self.timers[10 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][10 - 1] += 1.0
-        tot_res += res
-
-        start_time = time.time()
-        sim13 = davies(row['s1'], row['s2'])
-        res, varnm = self.prediction(13, sim13, real)
-        self.timers[13 - 1] += (time.time() - start_time)
-        self.predictedState[varnm][13 - 1] += 1.0
-        tot_res += res
+            tot_res += self.generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], real)
+        tot_res += self.generic_evaluator(10, 'skipgram', row['s1'], row['s2'], real)
+        tot_res += self.generic_evaluator(13, 'davies', row['s1'], row['s2'], real)
 
         if self.accuracyresults:
             if real == 1.0:
