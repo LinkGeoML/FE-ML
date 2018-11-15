@@ -452,7 +452,7 @@ class Evaluate:
         print "\t pos 2: {0}".format(self.freqTerms['tri_str2_2'].most_common(20))
         print "\t pos 3: {0}".format(self.freqTerms['tri_str2_3'].most_common(20))
 
-        with open("freqTerms.txt", "w") as f:
+        with open("freqTerms.csv", "w") as f:
             f.write('str1\t')
             f.write('str2\t')
             f.write('bigram1_pos_1\t')

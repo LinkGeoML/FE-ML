@@ -1,4 +1,5 @@
 nltk
+# python -m nltk.downloader stopwords
 langdetect
 pycountry
 docopt
