@@ -336,10 +336,10 @@ class calcSotAMetrics(baseMetrics):
                 print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
                 print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(self.methods[idx][0], acc, pre, rec, f1, timer)
                 print ""
-
                 sys.stdout.flush()
             except ZeroDivisionError:
-                print "{0} is divided by zero\n".format(idx)
+                pass
+                # print "{0} is divided by zero\n".format(idx)
 
         # if results:
         #     return self.result
