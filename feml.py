@@ -152,8 +152,8 @@ class FEMLFeatures:
         return self.is_matched(str1), self.is_matched(str2)
 
     def containsAbbr(self, str1, str2):
-        abbr1 = re.search(r"\b[A-Z]{2,}\b", str1)
-        abbr2 = re.search(r"\b[A-Z]{2,}\b", str2)
+        abbr1 = re.search(r"\b[A-Z][A-Z\.]{0,}[sr\.]{0,2}\b", str1)
+        abbr2 = re.search(r"\b[A-Z][A-Z\.]{0,}[sr\.]{0,2}\b", str2)
         return abbr1, abbr2
 
     def containsTermsInParenthesis(self, str1, str2):
@@ -387,15 +387,15 @@ class Evaluate:
     def computeInitVals(self, dataset):
         # These are the available languages with stopwords from NLTK
         NLTKlanguages = ["dutch", "finnish", "german", "italian", "portuguese", "spanish", "turkish", "danish",
-                         "english",
-                         "french", "hungarian", "norwegian", "russian", "swedish"]
+                         "english", "french", "hungarian", "norwegian", "russian", "swedish"]
 
         # Just in case more stopword lists are added
-        FREElanguages = [""]
-        languages = NLTKlanguages + FREElanguages
+        # FREElanguages = []
+        # languages = NLTKlanguages + FREElanguages
 
         for lang in NLTKlanguages:
             self.stopwords.extend(stopwords.words(lang))
+        print(sorted(set(self.stopwords)))
 
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
