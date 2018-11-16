@@ -15,6 +15,7 @@ Options:
   --sort                    Sort alphanumerically.
   --ev <evaluator_type>     Type of experiments to conduct. [default: SotAMetrics]
   --print                   Print only computed variables. Default is False.
+  --accuracyresults         Store predicted results (TRUE/FALSE) in file. Default is False
 
 Arguments:
   classifier_method:        'rf' (default)
@@ -268,8 +269,8 @@ class calcSotAMetrics(baseMetrics):
                ["Soft-Jaccard", 0.6],
                ["Davis and De Salles", 0.65]]
 
-    def __init__(self):
-        super(calcSotAMetrics, self).__init__()
+    def __init__(self, accres):
+        super(calcSotAMetrics, self).__init__(accres)
 
     def generic_evaluator(self, idx, algnm, str1, str2, match):
         start_time = time.time()
@@ -519,7 +520,7 @@ class Evaluate:
                                     delimiter='\t')
 
             try:
-                evalClass = self.evaluatorType_action[evalType]()
+                evalClass = self.evaluatorType_action[evalType](accuracyresults)
             except KeyError:
                 print("Unkown method")
                 return
@@ -540,12 +541,13 @@ def main(args):
         if args['--print']:
             sys.exit()
 
-        eval.evaluate_metrics(full_dataset_path, args['--ev'])
+        eval.evaluate_metrics(full_dataset_path, args['--ev'], args['--accuracyresults'])
 
         # Supervised machine learning
         if args['--ev'] == "SotAMetrics":
             for method in ['rf', 'et', 'svm', 'xgboost']:
-                evaluate_classifier(dataset=full_dataset_path, method=method, accuracyresults=True, results=False)
+                evaluate_classifier(dataset=full_dataset_path, method=method, accuracyresults=args['--accuracyresults'],
+                                    permuted=args['--permuted'], results=False)
     else:
         print "No file {0} exists!!!\n".format(full_dataset_path)
 
