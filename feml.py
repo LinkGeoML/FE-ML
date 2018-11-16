@@ -36,6 +36,7 @@ from collections import Counter
 import re
 from abc import ABCMeta, abstractmethod
 import itertools
+import math
 
 # import configparser
 from docopt import docopt
@@ -51,6 +52,36 @@ from datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler,mong
     soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
 from datasetcreator import detect_alphabet, fields
 
+
+"""
+Compute the Damerau-Levenshtein distance between two given
+strings (s1 and s2)
+https://www.guyrutenberg.com/2008/12/15/damerau-levenshtein-distance-in-python/
+"""
+def damerau_levenshtein_distance(s1, s2):
+    d = {}
+    lenstr1 = len(s1)
+    lenstr2 = len(s2)
+    for i in xrange(-1, lenstr1 + 1):
+        d[(i, -1)] = i + 1
+    for j in xrange(-1, lenstr2 + 1):
+        d[(-1, j)] = j + 1
+
+    for i in xrange(lenstr1):
+        for j in xrange(lenstr2):
+            if s1[i] == s2[j]:
+                cost = 0
+            else:
+                cost = 1
+            d[(i, j)] = min(
+                d[(i - 1, j)] + 1,  # deletion
+                d[(i, j - 1)] + 1,  # insertion
+                d[(i - 1, j - 1)] + cost,  # substitution
+            )
+            if i and j and s1[i] == s2[j - 1] and s1[i - 1] == s2[j]:
+                d[(i, j)] = min(d[(i, j)], d[i - 2, j - 2] + cost)  # transposition
+
+    return d[lenstr1 - 1, lenstr2 - 1]
 
 def get_langnm(str, lang_detect=False):
     lname = 'english'
@@ -180,6 +211,33 @@ class FEMLFeatures:
     def freq_ngram_tokens(self, str1, str2):
         pass
 
+    def containsInPos(self, str1, str2):
+        fvec_str1 = []
+        fvec_str2 = []
+
+        step = math.ceil(len(str1) / 3)
+        for idx in xrange(0, len(str1), step):
+            if str1[idx:idx + step]:
+                sim = damerau_levenshtein(str1[idx:idx + step], str2)
+                if sim >= 0.55:
+                    fvec_str1.append(1)
+                else:
+                    fvec_str1.append(0)
+
+        step = math.ceil(len(str2) / 3)
+        for idx in xrange(0, len(str2), step):
+            if str2[idx:idx + step]:
+                sim = damerau_levenshtein(str1, str2[idx:idx + step])
+                if sim >= 0.55:
+                    fvec_str2.append(1)
+                else:
+                    fvec_str2.append(0)
+
+        return fvec_str1, fvec_str2
+
+    def fagiSim(self, str1, str2):
+        pass
+
 
 class baseMetrics:
     __metaclass__ = ABCMeta
@@ -269,8 +327,8 @@ class calcSotAMetrics(baseMetrics):
                ["Soft-Jaccard", 0.6],
                ["Davis and De Salles", 0.65]]
 
-    def __init__(self, accres):
-        super(calcSotAMetrics, self).__init__(accres)
+    def __init__(self, accures):
+        super(calcSotAMetrics, self).__init__(accures)
 
     def generic_evaluator(self, idx, algnm, str1, str2, match):
         start_time = time.time()
