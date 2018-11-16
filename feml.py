@@ -12,7 +12,7 @@ Options:
   -d <dataset-name>         dataset to use. [default: dataset-string-similarity.txt]
   --permuted                Use permuted Jaro-Winkler metrics. Default is False.
   --stemming                Perform stemming. Default is False.
-  --sorted                  Sort alphanumerically.
+  --sort                    Sort alphanumerically.
   --ev <evaluator_type>     Type of experiments to conduct. [default: SotAMetrics]
   --print                   Print only computed variables. Default is False.
 
@@ -163,11 +163,9 @@ class FEMLFeatures:
 
     def containsDashConnected_words(self, str1, str2):
         """
-        Hyphenated word are considered to be:
-        * a number of word chars
-        * followed by any number of:
-            a single hyphen
-            followed by word chars
+        Hyphenated words are considered to be:
+            * a number of word chars
+            * followed by any number of: a single hyphen followed by word chars
         """
         dashed1 = re.search(r"\w+(?:-\w+)+", str1)
         dashed2 = re.search(r"\w+(?:-\w+)+", str2)
@@ -227,7 +225,7 @@ class baseMetrics:
             self.file.close()
 
     @abstractmethod
-    def evaluate(self, row, permuted=False, stemming=False, sorted=False, freqTerms=None):
+    def evaluate(self, row, permuted=False, stemming=False, sorting=False, freqTerms=None):
         pass
 
     @abstractmethod
@@ -395,7 +393,7 @@ class Evaluate:
 
         for lang in NLTKlanguages:
             self.stopwords.extend(stopwords.words(lang))
-        print(sorted(set(self.stopwords)))
+        # print(sorted(set(self.stopwords)))
 
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
@@ -534,7 +532,7 @@ class Evaluate:
 def main(args):
     dataset_path = args['-d']
 
-    eval = Evaluate(args['--permuted'], args['--stemming'], args['--sorted'], args['--print'])
+    eval = Evaluate(args['--permuted'], args['--stemming'], args['--sort'], args['--print'])
     full_dataset_path = eval.getTMabsPath(dataset_path)
 
     if os.path.isfile(full_dataset_path):
