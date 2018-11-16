@@ -62,12 +62,12 @@ def get_langnm(str, lang_detect=False):
 
 # Clean the string from stopwords, puctuations based on language detections feature
 # Returned values #1: non-stopped words, #2: stopped words
-def normalize_str(str, sorted=False, lang_detect=False):
+def normalize_str(str, sstopwords=None, sorted=False, lang_detect=False):
     languagenm = get_langnm(str) if lang_detect else 'english'
 
     tokens = wordpunct_tokenize(str)
     words = [word.lower() for word in tokens if word.isalpha()]
-    stopwords_set = set(stopwords.words(languagenm))
+    stopwords_set = set(stopwords.words(languagenm)) if sstopwords is None else set(sstopwords)
 
     filtered_words = sorted_nicely(filter(lambda token: token not in stopwords_set, words)) if sorted else \
         filter(lambda token: token not in stopwords_set, words)
@@ -297,13 +297,6 @@ class calcSotAMetrics(baseMetrics):
             row['s1'] = " ".join(a)
             row['s2'] = " ".join(b)
 
-        # start_time = time.time()
-        # sim1 = damerau_levenshtein(row['s1'], row['s2'])
-        # res, varnm = self.prediction(1, sim1, real)
-        # self.timers[1 - 1] += (time.time() - start_time)
-        # self.predictedState[varnm][0] += 1.0
-        # tot_res += res
-
         tot_res += self.generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], real)
         tot_res += self.generic_evaluator(8, 'jaccard', row['s1'], row['s2'], real)
         tot_res += self.generic_evaluator(2, 'jaro', row['s1'], row['s2'], real)
@@ -386,12 +379,24 @@ class Evaluate:
             'bi_str1_1': Counter(), 'tri_str1_1': Counter(), 'bi_str1_2': Counter(), 'tri_str1_2': Counter(), 'tri_str1_3': Counter(),
             'bi_str2_1': Counter(), 'tri_str2_1': Counter(), 'bi_str2_2': Counter(), 'tri_str2_2': Counter(), 'tri_str2_3': Counter()
         }
-        self.bitrigrams = list()
+        self.stopwords = []
 
     def getTMabsPath(self, str):
         return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', str)
 
     def computeInitVals(self, dataset):
+        # These are the available languages with stopwords from NLTK
+        NLTKlanguages = ["dutch", "finnish", "german", "italian", "portuguese", "spanish", "turkish", "danish",
+                         "english",
+                         "french", "hungarian", "norwegian", "russian", "swedish"]
+
+        # Just in case more stopword lists are added
+        FREElanguages = [""]
+        languages = NLTKlanguages + FREElanguages
+
+        for lang in NLTKlanguages:
+            self.stopwords.extend(stopwords.words(lang))
+
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
@@ -403,7 +408,7 @@ class Evaluate:
 
                 # Calc frequent terms
                 # str1
-                fterms, stop_words = normalize_str(row['s1'])
+                fterms, stop_words = normalize_str(row['s1'], self.stopwords)
                 for term in fterms:
                     self.freqTerms['str1'][term] += 1
                 for ngram in list(itertools.chain.from_iterable(
@@ -417,7 +422,7 @@ class Evaluate:
                         self.freqTerms['tri_str1_3'][ngram[2]] += 1
 
                 # str2
-                fterms, stop_words = normalize_str(row['s2'])
+                fterms, stop_words = normalize_str(row['s2'], self.stopwords)
                 for term in fterms:
                     self.freqTerms['str2'][term] += 1
                 for ngram in list(itertools.chain.from_iterable(
