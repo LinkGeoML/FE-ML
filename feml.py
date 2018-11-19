@@ -264,17 +264,37 @@ class FEMLFeatures:
     def fagiSim(self, strA, strB, stop_words):
         # TODO identifyAndExpandAbbr
         # remove punckuations and stopwords, lowercase, sort alphanumerically
-        strA, _ = normalize_str(strA, sorting=True, sstopwords=stop_words)
-        strB, _ = normalize_str(strB, sorting=True, sstopwords=stop_words)
+        lstrA, _ = normalize_str(strA, sorting=True, sstopwords=stop_words)
+        lstrB, _ = normalize_str(strB, sorting=True, sstopwords=stop_words)
         # TODO extractSpecialTerms
-        self.compareAndSplit_names(strA, strB)
+        base, mis = self.compareAndSplit_names(lstrA, lstrB)
 
-    def compareAndSplit_names(self, strA, strB):
-        misA, misB = []
-        baseA, baseB = []
+    def compareAndSplit_names(self, listA, listB):
+        mis = {'A': [], 'B': []}
+        base = {'A': [],'B': []}
 
+        cur = {'A': 0, 'B': 0}
+        while cur['A'] < len(listA) and cur['B'] < len(listB):
+            sim = jaro_winkler(listA[cur['A']], listB[cur['B']])
+            if sim > 0.5:
+                base['A'].append(listA[cur['A']])
+                base['B'].append(listA[cur['B']])
+                cur['A'] += 1
+                cur['B'] += 1
+            else:
+                if listA[cur.A] < listB[cur['B']]:
+                    mis['B'].append(listB[cur['B']])
+                    cur['B'] += 1
+                else:
+                    mis['A'].append(listB[cur['A']])
+                    cur['A'] += 1
 
-        pass
+        if cur['A'] < len(listA):
+            mis['A'].extend(listA[cur['A'] + 1:])
+        if cur['B'] < len(listB):
+            mis['B'].extend(listB[cur['B'] + 1:])
+
+        return base, mis
 
 
 class baseMetrics:
@@ -351,16 +371,17 @@ class calcSotAMetrics(baseMetrics):
         real = 1.0 if row['res'] == "TRUE" else 0.0
 
         # print("{0} - norm: {1}".format(row['s1'], normalize_str(row['s1'])))
+        # print(repr(row['s1']), repr(row['s2']))
+        if sorting:
+            a = sorted_nicely(row['s1'].split(" "))
+            b = sorted_nicely(row['s2'].split(" "))
+            row['s1'] = " ".join(a)
+            row['s2'] = " ".join(b)
         row['s1'] = row['s1'].decode('utf-8')
         row['s2'] = row['s2'].decode('utf-8')
         if stemming:
             row['s1'] = perform_stemming(row['s1'])
             row['s2'] = perform_stemming(row['s2'])
-        if sorting:
-            a = sorted(row['s1'].split(" "))
-            b = sorted(row['s2'].split(" "))
-            row['s1'] = " ".join(a)
-            row['s2'] = " ".join(b)
 
         tot_res += self.generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], real)
         tot_res += self.generic_evaluator(8, 'jaccard', row['s1'], row['s2'], real)
