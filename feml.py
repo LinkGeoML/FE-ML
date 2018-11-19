@@ -140,13 +140,44 @@ def enum(*sequential, **named):
     return type('Enum', (), enums)
 
 
+class StaticValues:
+    algorithms = {
+        'damerau_levenshtein': damerau_levenshtein,
+        'davies': davies,
+        'skipgram': skipgram,
+        'permuted_winkler': permuted_winkler,
+        'sorted_winkler': sorted_winkler,
+        'soft_jaccard': soft_jaccard,
+        'strike_a_match': strike_a_match,
+        'cosine': cosine,
+        'monge_elkan': monge_elkan,
+        'jaro_winkler': jaro_winkler,
+        'jaro': jaro,
+        'jaccard': jaccard,
+    }
+
+    methods = [["Damerau-Levenshtein", 0.55],
+               ["Jaro", 0.75],
+               ["Jaro-Winkler", 0.7],
+               ["Jaro-Winkler reversed", 0.75],
+               ["Sorted Jaro-Winkler", 0.7],
+               ["Permuted Jaro-Winkler", 0.7],
+               ["Cosine N-grams", 0.4],
+               ["Jaccard N-grams", 0.25],
+               ["Dice bigrams", 0.5],
+               ["Jaccard skipgrams", 0.45],
+               ["Monge-Elkan", 0.7],
+               ["Soft-Jaccard", 0.6],
+               ["Davis and De Salles", 0.65]]
+
+
 class FEMLFeatures:
     # to_be_removed = "()/.,:!'"  # all characters to be removed
 
     # Returned vals: #1: str1 is subset of str2, #2 str2 is subset of str1
-    def contains(self, strA, strB, sorted=False):
-        strA, _ = normalize_str(strA, sorted)
-        strB, _ = normalize_str(strB, sorted)
+    def contains(self, strA, strB, sorting=False):
+        strA, _ = normalize_str(strA, sorting)
+        strB, _ = normalize_str(strB, sorting)
         return set(strA).issubset(set(strB)), set(strB).issubset(set(strA))
 
     def contains_freq_term(self, str, freqTerms=None):
@@ -188,8 +219,8 @@ class FEMLFeatures:
 
     def containsTermsInParenthesis(self, str):
         tokens = re.split('\[|\]|\(|\)', str)
-        flag = True if len(tokens) > 1 else False
-        return flag
+        bflag = True if len(tokens) > 1 else False
+        return bflag
 
     def containsDashConnected_words(self, str):
         """
@@ -231,7 +262,16 @@ class FEMLFeatures:
 
         return fvec_str1, fvec_str2
 
-    def fagiSim(self, str1, str2):
+    def fagiSim(self, strA, strB, stop_words):
+        # TODO identifyAndExpandAbbr
+        # remove punckuations and stopwords, lowercase, sort alphanumerically
+        strA, _ = normalize_str(strA, sorting=True, sstopwords=stop_words)
+        strB, _ = normalize_str(strB, sorting=True, sstopwords=stop_words)
+        # TODO extractSpecialTerms
+        self.compareAndSplit_names(strA, strB)
+
+    def compareAndSplit_names(self, strA, strB):
+
         pass
 
 
@@ -240,12 +280,12 @@ class baseMetrics:
 
     @abstractmethod
     def __init__(self, accuracyresults=False):
-        self.num_true_predicted_true = [0.0] * len(self.methods)
-        self.num_true_predicted_false = [0.0] * len(self.methods)
-        self.num_false_predicted_true = [0.0] * len(self.methods)
-        self.num_false_predicted_false = [0.0] * len(self.methods)
+        self.num_true_predicted_true = [0.0] * len(StaticValues.methods)
+        self.num_true_predicted_false = [0.0] * len(StaticValues.methods)
+        self.num_false_predicted_true = [0.0] * len(StaticValues.methods)
+        self.num_false_predicted_false = [0.0] * len(StaticValues.methods)
 
-        self.timers = [0.0] * len(self.methods)
+        self.timers = [0.0] * len(StaticValues.methods)
         self.result = {}
         self.file = None
         self.accuracyresults = accuracyresults
@@ -258,22 +298,6 @@ class baseMetrics:
             'num_false_predicted_true': self.num_false_predicted_true,
             'num_false_predicted_false': self.num_false_predicted_false
         }
-
-        self.algorithms = {
-            'damerau_levenshtein': damerau_levenshtein,
-            'davies': davies,
-            'skipgram': skipgram,
-            'permuted_winkler': permuted_winkler,
-            'sorted_winkler': sorted_winkler,
-            'soft_jaccard': soft_jaccard,
-            'strike_a_match': strike_a_match,
-            'cosine': cosine,
-            'monge_elkan': monge_elkan,
-            'jaro_winkler': jaro_winkler,
-            'jaro': jaro,
-            'jaccard': jaccard,
-        }
-
 
     def __del__(self):
         if self.accuracyresults:
@@ -291,14 +315,14 @@ class baseMetrics:
         result = ""
         var_name = ""
         if real_val == 1.0:
-            if pred_val >= self.methods[sim_id - 1][1]:
+            if pred_val >= StaticValues.methods[sim_id - 1][1]:
                 var_name = 'num_true_predicted_true'
                 result = "\tTRUE"
             else:
                 var_name = 'num_true_predicted_false'
                 result = "\tFALSE"
         else:
-            if pred_val >= self.methods[sim_id - 1][1]:
+            if pred_val >= StaticValues.methods[sim_id - 1][1]:
                 var_name = 'num_false_predicted_true'
                 result = "\tTRUE"
             else:
@@ -309,26 +333,12 @@ class baseMetrics:
 
 
 class calcSotAMetrics(baseMetrics):
-    methods = [["Damerau-Levenshtein", 0.55],
-               ["Jaro", 0.75],
-               ["Jaro-Winkler", 0.7],
-               ["Jaro-Winkler reversed", 0.75],
-               ["Sorted Jaro-Winkler", 0.7],
-               ["Permuted Jaro-Winkler", 0.7],
-               ["Cosine N-grams", 0.4],
-               ["Jaccard N-grams", 0.25],
-               ["Dice bigrams", 0.5],
-               ["Jaccard skipgrams", 0.45],
-               ["Monge-Elkan", 0.7],
-               ["Soft-Jaccard", 0.6],
-               ["Davis and De Salles", 0.65]]
-
     def __init__(self, accures):
         super(calcSotAMetrics, self).__init__(accures)
 
     def generic_evaluator(self, idx, algnm, str1, str2, match):
         start_time = time.time()
-        sim = self.algorithms[algnm](str1, str2)
+        sim = StaticValues.algorithms[algnm](str1, str2)
         res, varnm = self.prediction(idx, sim, match)
         self.timers[idx - 1] += (time.time() - start_time)
         self.predictedState[varnm][idx - 1] += 1.0
@@ -372,7 +382,7 @@ class calcSotAMetrics(baseMetrics):
                 file.write("FALSE{0}".format(tot_res + "\n"))
 
     def print_stats(self, num_true, num_false):
-        for idx in range(len(self.methods)):
+        for idx in range(len(StaticValues.methods)):
             try:
                 timer = ( self.timers[idx] / float( int( num_true + num_false ) ) ) * 50000.0
                 acc = ( self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx] ) / ( num_true + num_false )
@@ -380,7 +390,7 @@ class calcSotAMetrics(baseMetrics):
                 rec = ( self.num_true_predicted_true[idx] ) / ( self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx] )
                 f1 = 2.0 * ( ( pre * rec ) / ( pre + rec ) )
 
-                print "Metric = Supervised Classifier :" , self.methods[idx][0]
+                print "Metric = Supervised Classifier :" , StaticValues.methods[idx][0]
                 print "Accuracy =", acc
                 print "Precision =", pre
                 print "Recall =", rec
@@ -388,7 +398,7 @@ class calcSotAMetrics(baseMetrics):
                 print "Processing time per 50K records =", timer
                 print ""
                 print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
-                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(self.methods[idx][0], acc, pre, rec, f1, timer)
+                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(StaticValues.methods[idx][0], acc, pre, rec, f1, timer)
                 print ""
                 sys.stdout.flush()
             except ZeroDivisionError:
@@ -432,7 +442,7 @@ class Evaluate:
             'bi_str1_1': Counter(), 'tri_str1_1': Counter(), 'bi_str1_2': Counter(), 'tri_str1_2': Counter(), 'tri_str1_3': Counter(),
             'bi_str2_1': Counter(), 'tri_str2_1': Counter(), 'bi_str2_2': Counter(), 'tri_str2_2': Counter(), 'tri_str2_3': Counter()
         }
-        self.stopwords = []
+        self.stop_words = []
 
     def getTMabsPath(self, str):
         return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', str)
@@ -447,7 +457,7 @@ class Evaluate:
         # languages = NLTKlanguages + FREElanguages
 
         for lang in NLTKlanguages:
-            self.stopwords.extend(stopwords.words(lang))
+            self.stop_words.extend(stopwords.words(lang))
         # print(sorted(set(self.stopwords)))
 
         with open(dataset) as csvfile:
@@ -461,7 +471,7 @@ class Evaluate:
 
                 # Calc frequent terms
                 # str1
-                fterms, stop_words = normalize_str(row['s1'], self.stopwords)
+                fterms, stop_words = normalize_str(row['s1'], self.stop_words)
                 for term in fterms:
                     self.freqTerms['str1'][term] += 1
                 for ngram in list(itertools.chain.from_iterable(
@@ -475,7 +485,7 @@ class Evaluate:
                         self.freqTerms['tri_str1_3'][ngram[2]] += 1
 
                 # str2
-                fterms, stop_words = normalize_str(row['s2'], self.stopwords)
+                fterms, stop_words = normalize_str(row['s2'], self.stop_words)
                 for term in fterms:
                     self.freqTerms['str2'][term] += 1
                 for ngram in list(itertools.chain.from_iterable(
