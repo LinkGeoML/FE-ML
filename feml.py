@@ -443,16 +443,11 @@ class calcDLearning(baseMetrics):
     pass
 
 
-class calcSortedMetrics(baseMetrics):
-    pass
-
-
 class Evaluate:
     evaluatorType_action = {
         'SotAMetrics': calcSotAMetrics,
         'MLCustom': calcMLCustom,
         'DLearning': calcDLearning,
-        'SortedMetrics': calcSortedMetrics
     }
 
     def __init__(self, permuted=False, stemming=False, sorting=False, do_printing=False):
