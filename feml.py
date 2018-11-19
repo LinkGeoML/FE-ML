@@ -94,16 +94,16 @@ def get_langnm(str, lang_detect=False):
 
 # Clean the string from stopwords, puctuations based on language detections feature
 # Returned values #1: non-stopped words, #2: stopped words
-def normalize_str(str, sstopwords=None, sorted=False, lang_detect=False):
+def normalize_str(str, sstopwords=None, sorting=False, lang_detect=False):
     languagenm = get_langnm(str) if lang_detect else 'english'
 
     tokens = wordpunct_tokenize(str)
     words = [word.lower() for word in tokens if word.isalpha()]
     stopwords_set = set(stopwords.words(languagenm)) if sstopwords is None else set(sstopwords)
 
-    filtered_words = sorted_nicely(filter(lambda token: token not in stopwords_set, words)) if sorted else \
+    filtered_words = sorted_nicely(filter(lambda token: token not in stopwords_set, words)) if sorting else \
         filter(lambda token: token not in stopwords_set, words)
-    stopped_words = sorted_nicely(filter(lambda token: token not in filtered_words, words)) if sorted else \
+    stopped_words = sorted_nicely(filter(lambda token: token not in filtered_words, words)) if sorting else \
         filter(lambda token: token not in filtered_words, words)
 
     return filtered_words, stopped_words
@@ -142,13 +142,12 @@ def enum(*sequential, **named):
 
 class FEMLFeatures:
     # to_be_removed = "()/.,:!'"  # all characters to be removed
-    # file.write('%s: %7d\n' % (word, count))
 
     # Returned vals: #1: str1 is subset of str2, #2 str2 is subset of str1
-    def contains(self, str1, str2, sorted=False):
-        str1,_ = normalize_str(str1, sorted)
-        str2, _ = normalize_str(str2, sorted)
-        return set(str1).issubset(set(str2)), set(str2).issubset(set(str1))
+    def contains(self, strA, strB, sorted=False):
+        strA, _ = normalize_str(strA, sorted)
+        strB, _ = normalize_str(strB, sorted)
+        return set(strA).issubset(set(strB)), set(strB).issubset(set(strA))
 
     def contains_freq_term(self, str, freqTerms=None):
         str, _ = normalize_str(str)
@@ -180,33 +179,30 @@ class FEMLFeatures:
                     return False
         return not queue
 
-    def hasEncoding_err(self, str1, str2):
-        return self.is_matched(str1), self.is_matched(str2)
+    def hasEncoding_err(self, str):
+        return self.is_matched(str)
 
-    def containsAbbr(self, str1, str2):
-        abbr1 = re.search(r"\b[A-Z][A-Z\.]{0,}[sr\.]{0,2}\b", str1)
-        abbr2 = re.search(r"\b[A-Z][A-Z\.]{0,}[sr\.]{0,2}\b", str2)
-        return abbr1, abbr2
+    def containsAbbr(self, str):
+        abbr = re.search(r"\b[A-Z][A-Z\.]{0,}[sr\.]{0,2}\b", str)
+        return abbr
 
-    def containsTermsInParenthesis(self, str1, str2):
-        tokens1 = re.split('\[|\]|\(|\)', str1)
-        tokens2 = re.split('\[|\]|\(|\)', str2)
-        return len(tokens1), len(tokens2)
+    def containsTermsInParenthesis(self, str):
+        tokens = re.split('\[|\]|\(|\)', str)
+        flag = True if len(tokens) > 1 else False
+        return flag
 
-    def containsDashConnected_words(self, str1, str2):
+    def containsDashConnected_words(self, str):
         """
         Hyphenated words are considered to be:
             * a number of word chars
             * followed by any number of: a single hyphen followed by word chars
         """
-        dashed1 = re.search(r"\w+(?:-\w+)+", str1)
-        dashed2 = re.search(r"\w+(?:-\w+)+", str2)
-        return dashed1, dashed2
+        is_dashed = re.search(r"\w+(?:-\w+)+", str)
+        return is_dashed
 
-    def no_of_words(self, str1, str2):
-        str1, _ = normalize_str(str1)
-        str2, _ = normalize_str(str2)
-        return len(set(str1)), len(set(str2))
+    def no_of_words(self, str):
+        str, _ = normalize_str(str)
+        return len(set(str))
 
     def freq_ngram_tokens(self, str1, str2):
         pass
