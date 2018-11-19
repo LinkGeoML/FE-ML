@@ -37,6 +37,7 @@ import re
 from abc import ABCMeta, abstractmethod
 import itertools
 import math
+import json
 
 # import configparser
 from docopt import docopt
@@ -472,14 +473,18 @@ class Evaluate:
         # These are the available languages with stopwords from NLTK
         NLTKlanguages = ["dutch", "finnish", "german", "italian", "portuguese", "spanish", "turkish", "danish",
                          "english", "french", "hungarian", "norwegian", "russian", "swedish"]
-
-        # Just in case more stopword lists are added
-        # FREElanguages = []
-        # languages = NLTKlanguages + FREElanguages
-
         for lang in NLTKlanguages:
             self.stop_words.extend(stopwords.words(lang))
-        # print(sorted(set(self.stopwords)))
+
+        FREElanguages = [
+            'zh', 'ja', 'id', 'fa', 'ar', 'bn', 'ro', 'th', 'el', 'hi', 'gl', 'hy', 'ko', 'yo', 'vi',
+            'sw', 'so', 'he', 'ha', 'br', 'af', 'ku', 'ms', 'tl', 'ur'
+        ]
+        if os.path.isfile('stopwords-iso.json'):
+            with open("stopwords-iso.json", "r") as read_file:
+                data = json.load(read_file)
+                for lang in FREElanguages:
+                    self.stop_words.extend(data[lang])
 
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
