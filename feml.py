@@ -58,30 +58,30 @@ Compute the Damerau-Levenshtein distance between two given
 strings (s1 and s2)
 https://www.guyrutenberg.com/2008/12/15/damerau-levenshtein-distance-in-python/
 """
-def damerau_levenshtein_distance(s1, s2):
-    d = {}
-    lenstr1 = len(s1)
-    lenstr2 = len(s2)
-    for i in xrange(-1, lenstr1 + 1):
-        d[(i, -1)] = i + 1
-    for j in xrange(-1, lenstr2 + 1):
-        d[(-1, j)] = j + 1
-
-    for i in xrange(lenstr1):
-        for j in xrange(lenstr2):
-            if s1[i] == s2[j]:
-                cost = 0
-            else:
-                cost = 1
-            d[(i, j)] = min(
-                d[(i - 1, j)] + 1,  # deletion
-                d[(i, j - 1)] + 1,  # insertion
-                d[(i - 1, j - 1)] + cost,  # substitution
-            )
-            if i and j and s1[i] == s2[j - 1] and s1[i - 1] == s2[j]:
-                d[(i, j)] = min(d[(i, j)], d[i - 2, j - 2] + cost)  # transposition
-
-    return d[lenstr1 - 1, lenstr2 - 1]
+# def damerau_levenshtein_distance(s1, s2):
+#     d = {}
+#     lenstr1 = len(s1)
+#     lenstr2 = len(s2)
+#     for i in xrange(-1, lenstr1 + 1):
+#         d[(i, -1)] = i + 1
+#     for j in xrange(-1, lenstr2 + 1):
+#         d[(-1, j)] = j + 1
+#
+#     for i in xrange(lenstr1):
+#         for j in xrange(lenstr2):
+#             if s1[i] == s2[j]:
+#                 cost = 0
+#             else:
+#                 cost = 1
+#             d[(i, j)] = min(
+#                 d[(i - 1, j)] + 1,  # deletion
+#                 d[(i, j - 1)] + 1,  # insertion
+#                 d[(i - 1, j - 1)] + cost,  # substitution
+#             )
+#             if i and j and s1[i] == s2[j - 1] and s1[i - 1] == s2[j]:
+#                 d[(i, j)] = min(d[(i, j)], d[i - 2, j - 2] + cost)  # transposition
+#
+#     return d[lenstr1 - 1, lenstr2 - 1]
 
 def get_langnm(str, lang_detect=False):
     lname = 'english'
@@ -95,11 +95,11 @@ def get_langnm(str, lang_detect=False):
 # Clean the string from stopwords, puctuations based on language detections feature
 # Returned values #1: non-stopped words, #2: stopped words
 def normalize_str(str, sstopwords=None, sorting=False, lang_detect=False):
-    languagenm = get_langnm(str) if lang_detect else 'english'
+    lname = get_langnm(str, lang_detect)
 
     tokens = wordpunct_tokenize(str)
     words = [word.lower() for word in tokens if word.isalpha()]
-    stopwords_set = set(stopwords.words(languagenm)) if sstopwords is None else set(sstopwords)
+    stopwords_set = set(stopwords.words(lname)) if sstopwords is None else set(sstopwords)
 
     filtered_words = sorted_nicely(filter(lambda token: token not in stopwords_set, words)) if sorting else \
         filter(lambda token: token not in stopwords_set, words)
@@ -130,14 +130,13 @@ def sorted_nicely(l):
     """
     convert = lambda text: int(text) if text.isdigit() else text
     alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
-
     return sorted(l, key=alphanum_key)
 
-def enum(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    reverse = dict((value, key) for key, value in enums.iteritems())
-    enums['reverse_mapping'] = reverse
-    return type('Enum', (), enums)
+# def enum(*sequential, **named):
+#     enums = dict(zip(sequential, range(len(sequential))), **named)
+#     reverse = dict((value, key) for key, value in enums.iteritems())
+#     enums['reverse_mapping'] = reverse
+#     return type('Enum', (), enums)
 
 
 class StaticValues:
@@ -271,6 +270,9 @@ class FEMLFeatures:
         self.compareAndSplit_names(strA, strB)
 
     def compareAndSplit_names(self, strA, strB):
+        misA, misB = []
+        baseA, baseB = []
+
 
         pass
 
