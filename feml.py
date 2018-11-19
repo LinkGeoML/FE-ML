@@ -218,7 +218,7 @@ class FEMLFeatures:
         return abbr
 
     def containsTermsInParenthesis(self, str):
-        tokens = re.split('\[|\]|\(|\)', str)
+        tokens = re.split('[{\[(]', str)
         bflag = True if len(tokens) > 1 else False
         return bflag
 
@@ -385,9 +385,12 @@ class calcSotAMetrics(baseMetrics):
         for idx in range(len(StaticValues.methods)):
             try:
                 timer = ( self.timers[idx] / float( int( num_true + num_false ) ) ) * 50000.0
-                acc = ( self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx] ) / ( num_true + num_false )
-                pre = ( self.num_true_predicted_true[idx] ) / ( self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx] )
-                rec = ( self.num_true_predicted_true[idx] ) / ( self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx] )
+                acc = ( self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx] ) / \
+                      ( num_true + num_false )
+                pre = ( self.num_true_predicted_true[idx] ) / \
+                      ( self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx] )
+                rec = ( self.num_true_predicted_true[idx] ) / \
+                      ( self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx] )
                 f1 = 2.0 * ( ( pre * rec ) / ( pre + rec ) )
 
                 print "Metric = Supervised Classifier :" , StaticValues.methods[idx][0]
