@@ -525,6 +525,7 @@ class Evaluate:
             '2gram_1': Counter(), '3gram_1': Counter(), '2gram_2': Counter(), '3gram_2': Counter(), '3gram_3': Counter(),
         }
         self.stop_words = []
+        self.no_abbr = 0
 
     def getTMabsPath(self, str):
         return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', str)
@@ -546,6 +547,7 @@ class Evaluate:
                 for lang in FREElanguages:
                     self.stop_words.extend(data[lang])
 
+        feml = FEMLFeatures()
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
@@ -571,6 +573,9 @@ class Evaluate:
                             self.freqTerms['3gram_2'][ngram[1]] += 1
                             self.freqTerms['3gram_3'][ngram[2]] += 1
 
+                # calc the number of abbr that exist
+                self.no_abbr += 1 if feml.containsAbbr(row['s1']) is not None or feml.containsAbbr(row['s2']) is not None else 0
+
         if self.only_printing:
             self.do_the_printing()
 
@@ -586,6 +591,8 @@ class Evaluate:
         print "tri-gram pos 1: {0}".format(self.freqTerms['3gram_1'].most_common(20))
         print "\t pos 2: {0}".format(self.freqTerms['3gram_2'].most_common(20))
         print "\t pos 3: {0}".format(self.freqTerms['3gram_3'].most_common(20))
+
+        print "Number of abbr found: {0}".format(self.no_abbr)
 
         with open("freqTerms.csv", "w") as f:
             f.write('gram\t')
