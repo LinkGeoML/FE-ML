@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Feature extraction and traditional classifiers for toponym matching.
 
 Usage:
@@ -46,6 +48,27 @@ from nltk.collocations import BigramCollocationFinder
 from nltk.corpus import stopwords
 from langdetect import detect, lang_detect_exception
 import pycountry
+
+# Code source: Gaël Varoquaux
+#              Andreas Müller
+# Modified for documentation by Jaques Grobler
+# License: BSD 3 clause
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import make_moons, make_circles, make_classification
+from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process.kernels import RBF
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+
 
 import helpers
 from featureclassifiers import evaluate_classifier
@@ -437,7 +460,47 @@ class calcSotAMetrics(baseMetrics):
 
 
 class calcMLCustom(baseMetrics):
-    pass
+    h = .02  # step size in the mesh
+
+    names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
+             "Decision Tree", "Random Forest", "Neural Net", "AdaBoost",
+             "Naive Bayes", "QDA"]
+
+    classifiers = [
+        KNeighborsClassifier(3),
+        SVC(kernel="linear", C=0.025),
+        SVC(gamma=2, C=1),
+        GaussianProcessClassifier(1.0 * RBF(1.0)),
+        DecisionTreeClassifier(max_depth=5),
+        RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
+        MLPClassifier(alpha=1),
+        AdaBoostClassifier(),
+        GaussianNB(),
+        QuadraticDiscriminantAnalysis()]
+
+    def iterateOverClassifiers(self, ds):
+        # preprocess dataset, split into training and test part
+        X, y = ds
+        X = StandardScaler().fit_transform(X)
+        X_train, X_test, y_train, y_test = \
+            train_test_split(X, y, test_size=.4, random_state=42)
+
+        x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
+        y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, self.h),
+                             np.arange(y_min, y_max, self.h))
+
+        # iterate over classifiers
+        for name, clf in zip(self.names, self.classifiers):
+            clf.fit(X_train, y_train)
+            score = clf.score(X_test, y_test)
+
+            # Plot the decision boundary. For that, we will assign a color to each
+            # point in the mesh [x_min, x_max]x[y_min, y_max].
+            if hasattr(clf, "decision_function"):
+                Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+            else:
+                Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
 
 
 class calcDLearning(baseMetrics):
@@ -460,9 +523,8 @@ class Evaluate:
         self.num_true = 0.0
         self.num_false = 0.0
         self.freqTerms = {
-            'str1': Counter(), 'str2': Counter(),
-            'bi_str1_1': Counter(), 'tri_str1_1': Counter(), 'bi_str1_2': Counter(), 'tri_str1_2': Counter(), 'tri_str1_3': Counter(),
-            'bi_str2_1': Counter(), 'tri_str2_1': Counter(), 'bi_str2_2': Counter(), 'tri_str2_2': Counter(), 'tri_str2_3': Counter()
+            'gram': Counter(),
+            '2gram_1': Counter(), '3gram_1': Counter(), '2gram_2': Counter(), '3gram_2': Counter(), '3gram_3': Counter(),
         }
         self.stop_words = []
 
@@ -496,111 +558,69 @@ class Evaluate:
                     self.num_false += 1.0
 
                 # Calc frequent terms
-                # str1
-                fterms, stop_words = normalize_str(row['s1'], self.stop_words)
-                for term in fterms:
-                    self.freqTerms['str1'][term] += 1
-                for ngram in list(itertools.chain.from_iterable(
-                    [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
-                    if len(ngram) == 2:
-                        self.freqTerms['bi_str1_1'][ngram[0]] += 1
-                        self.freqTerms['bi_str1_2'][ngram[1]] += 1
-                    else:
-                        self.freqTerms['tri_str1_1'][ngram[0]] += 1
-                        self.freqTerms['tri_str1_2'][ngram[1]] += 1
-                        self.freqTerms['tri_str1_3'][ngram[2]] += 1
-
-                # str2
-                fterms, stop_words = normalize_str(row['s2'], self.stop_words)
-                for term in fterms:
-                    self.freqTerms['str2'][term] += 1
-                for ngram in list(itertools.chain.from_iterable(
-                    [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
-                    if len(ngram) == 2:
-                        self.freqTerms['bi_str2_1'][ngram[0]] += 1
-                        self.freqTerms['bi_str2_2'][ngram[1]] += 1
-                    else:
-                        self.freqTerms['tri_str2_1'][ngram[0]] += 1
-                        self.freqTerms['tri_str2_2'][ngram[1]] += 1
-                        self.freqTerms['tri_str2_3'][ngram[2]] += 1
+                # str1 + str2
+                for str in ['s1', 's2']:
+                    fterms, stop_words = normalize_str(row[str], self.stop_words)
+                    for term in fterms:
+                        self.freqTerms['gram'][term] += 1
+                    for ngram in list(itertools.chain.from_iterable(
+                        [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
+                        if len(ngram) == 2:
+                            self.freqTerms['2gram_1'][ngram[0]] += 1
+                            self.freqTerms['2gram_2'][ngram[1]] += 1
+                        else:
+                            self.freqTerms['3gram_1'][ngram[0]] += 1
+                            self.freqTerms['3gram_2'][ngram[1]] += 1
+                            self.freqTerms['3gram_3'][ngram[2]] += 1
 
         if self.only_printing:
             self.do_the_printing()
 
     def do_the_printing(self):
         print "Printing 10 most common single freq terms..."
-        print "str1: {0}".format(self.freqTerms['str1'].most_common(20))
-        print "str2: {0}".format(self.freqTerms['str2'].most_common(20))
+        print "gram: {0}".format(self.freqTerms['gram'].most_common(20))
 
         print "Printing 10 most common freq terms in bigrams..."
-        print "str1 pos 1: {0}".format(self.freqTerms['bi_str1_1'].most_common(20))
-        print "\t pos 2: {0}".format(self.freqTerms['bi_str1_2'].most_common(20))
-        print "str2 pos 1: {0}".format(self.freqTerms['bi_str2_1'].most_common(20))
-        print "\t pos 2: {0}".format(self.freqTerms['bi_str2_2'].most_common(20))
+        print "bi-gram pos 1: {0}".format(self.freqTerms['2gram_1'].most_common(20))
+        print "\t pos 2: {0}".format(self.freqTerms['2gram_2'].most_common(20))
 
         print "Printing 10 most common freq terms in trigrams..."
-        print "str1 pos 1: {0}".format(self.freqTerms['tri_str1_1'].most_common(20))
-        print "\t pos 2: {0}".format(self.freqTerms['tri_str1_2'].most_common(20))
-        print "\t pos 3: {0}".format(self.freqTerms['tri_str1_3'].most_common(20))
-        print "str2 pos 1: {0}".format(self.freqTerms['tri_str2_1'].most_common(20))
-        print "\t pos 2: {0}".format(self.freqTerms['tri_str2_2'].most_common(20))
-        print "\t pos 3: {0}".format(self.freqTerms['tri_str2_3'].most_common(20))
+        print "tri-gram pos 1: {0}".format(self.freqTerms['3gram_1'].most_common(20))
+        print "\t pos 2: {0}".format(self.freqTerms['3gram_2'].most_common(20))
+        print "\t pos 3: {0}".format(self.freqTerms['3gram_3'].most_common(20))
 
         with open("freqTerms.csv", "w") as f:
-            f.write('str1\t')
-            f.write('str2\t')
-            f.write('bigram1_pos_1\t')
-            f.write('bigram1_pos_2\t')
-            f.write('bigram2_pos_1\t')
-            f.write('bigram2_pos_2\t')
-            f.write('trigram1_pos_1\t')
-            f.write('trigram1_pos_2\t')
-            f.write('trigram1_pos_3\t')
-            f.write('trigram2_pos_1\t')
-            f.write('trigram2_pos_2\t')
-            f.write('trigram2_pos_3\t')
+            f.write('gram\t')
+            f.write('bigram_pos_1\t')
+            f.write('bigram_pos_2\t')
+            f.write('trigram_pos_1\t')
+            f.write('trigram_pos_2\t')
+            f.write('trigram_pos_3\t')
             f.write('\n')
 
-            sorted_freq_str1_terms = self.freqTerms['str1'].most_common()
-            sorted_freq_str2_terms = self.freqTerms['str1'].most_common()
-            sorted_freq_bi_str1_1_terms = self.freqTerms['bi_str1_1'].most_common()
-            sorted_freq_bi_str1_2_terms = self.freqTerms['bi_str1_2'].most_common()
-            sorted_freq_bi_str2_1_terms = self.freqTerms['bi_str2_1'].most_common()
-            sorted_freq_bi_str2_2_terms = self.freqTerms['bi_str2_2'].most_common()
-            sorted_freq_tri_str1_1_terms = self.freqTerms['tri_str1_1'].most_common()
-            sorted_freq_tri_str1_2_terms = self.freqTerms['tri_str1_2'].most_common()
-            sorted_freq_tri_str1_3_terms = self.freqTerms['tri_str1_3'].most_common()
-            sorted_freq_tri_str2_1_terms = self.freqTerms['tri_str2_1'].most_common()
-            sorted_freq_tri_str2_2_terms = self.freqTerms['tri_str2_2'].most_common()
-            sorted_freq_tri_str2_3_terms = self.freqTerms['tri_str2_3'].most_common()
+            sorted_freq_gram_terms = self.freqTerms['gram'].most_common()
+            sorted_freq_bigram_terms_pos1 = self.freqTerms['2gram_1'].most_common()
+            sorted_freq_bigram_terms_pos2 = self.freqTerms['2gram_2'].most_common()
+            sorted_freq_trigram_terms_pos1 = self.freqTerms['3gram_1'].most_common()
+            sorted_freq_trigram_terms_pos2 = self.freqTerms['3gram_2'].most_common()
+            sorted_freq_trigram_terms_pos3 = self.freqTerms['3gram_3'].most_common()
 
-            min_top = min(len(sorted_freq_str1_terms),
-                        len(sorted_freq_str2_terms),
-                        len(sorted_freq_bi_str1_1_terms),
-                        len(sorted_freq_bi_str1_2_terms),
-                        len(sorted_freq_bi_str2_1_terms),
-                        len(sorted_freq_bi_str2_2_terms),
-                        len(sorted_freq_tri_str1_1_terms),
-                        len(sorted_freq_tri_str1_2_terms),
-                        len(sorted_freq_tri_str1_3_terms),
-                        len(sorted_freq_tri_str2_1_terms),
-                        len(sorted_freq_tri_str2_2_terms),
-                        len(sorted_freq_tri_str2_3_terms)
-                          )
+            min_top = min(
+                len(sorted_freq_gram_terms),
+                len(sorted_freq_bigram_terms_pos1),
+                len(sorted_freq_bigram_terms_pos2),
+                len(sorted_freq_trigram_terms_pos1),
+                len(sorted_freq_trigram_terms_pos2),
+                len(sorted_freq_trigram_terms_pos3),
+            )
 
             for i in range(min_top):
-                f.write("{},{}\t".format(sorted_freq_str1_terms[i][0], sorted_freq_str1_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_str2_terms[i][0], sorted_freq_str2_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_bi_str1_1_terms[i][0], sorted_freq_bi_str1_1_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_bi_str1_2_terms[i][0], sorted_freq_bi_str1_2_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_bi_str2_1_terms[i][0], sorted_freq_bi_str2_1_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_bi_str2_2_terms[i][0], sorted_freq_bi_str2_2_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str1_1_terms[i][0], sorted_freq_tri_str1_1_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str1_2_terms[i][0], sorted_freq_tri_str1_2_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str1_3_terms[i][0], sorted_freq_tri_str1_3_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str2_1_terms[i][0], sorted_freq_tri_str2_1_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str2_2_terms[i][0], sorted_freq_tri_str2_2_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_tri_str2_3_terms[i][0], sorted_freq_tri_str2_3_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_gram_terms[i][0], sorted_freq_gram_terms[i][1]))
+                f.write("{},{}\t".format(sorted_freq_bigram_terms_pos1[i][0], sorted_freq_bigram_terms_pos1[i][1]))
+                f.write("{},{}\t".format(sorted_freq_bigram_terms_pos2[i][0], sorted_freq_bigram_terms_pos2[i][1]))
+                f.write("{},{}\t".format(sorted_freq_trigram_terms_pos1[i][0], sorted_freq_trigram_terms_pos1[i][1]))
+                f.write("{},{}\t".format(sorted_freq_trigram_terms_pos2[i][0], sorted_freq_trigram_terms_pos2[i][1]))
+                f.write("{},{}\t".format(sorted_freq_trigram_terms_pos3[i][0], sorted_freq_trigram_terms_pos3[i][1]))
                 f.write('\n')
 
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt', evalType='SotAMetrics', accuracyresults=False):
