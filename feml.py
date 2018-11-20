@@ -54,11 +54,9 @@ import pycountry
 # Modified for documentation by Jaques Grobler
 # License: BSD 3 clause
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.datasets import make_moons, make_circles, make_classification
+# from sklearn.datasets import make_moons, make_circles, make_classification
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -72,7 +70,7 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 
 import helpers
 from featureclassifiers import evaluate_classifier
-from datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler,monge_elkan, cosine, strike_a_match, \
+from datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, strike_a_match, \
     soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
 from datasetcreator import detect_alphabet, fields
 
