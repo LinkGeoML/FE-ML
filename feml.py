@@ -252,7 +252,7 @@ class FEMLFeatures:
             * followed by any number of: a single hyphen followed by word chars
         """
         is_dashed = re.search(r"\w+(?:-\w+)+", str)
-        return is_dashed
+        return False if is_dashed is None else True
 
     def no_of_words(self, str):
         str, _ = normalize_str(str)
