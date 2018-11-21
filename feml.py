@@ -40,6 +40,8 @@ from abc import ABCMeta, abstractmethod
 import itertools
 import math
 import json
+from operator import is_not
+from functools import partial
 
 # import configparser
 from docopt import docopt
@@ -235,8 +237,8 @@ class FEMLFeatures:
         return self.is_matched(str)
 
     def containsAbbr(self, str):
-        abbr = re.search(r"\b[A-Z][A-Z\.]{0,}[sr\.]{0,2}\b", str)
-        return abbr
+        abbr = re.search(r"\b[A-Z]([A-Z\.]{1,}|[sr\.]{1,2})\b", str)
+        return '-' if abbr is None else abbr.group()
 
     def containsTermsInParenthesis(self, str):
         tokens = re.split('[{\[(]', str)
@@ -525,7 +527,7 @@ class Evaluate:
             '2gram_1': Counter(), '3gram_1': Counter(), '2gram_2': Counter(), '3gram_2': Counter(), '3gram_3': Counter(),
         }
         self.stop_words = []
-        self.no_abbr = 0
+        self.abbr = {'A': [], 'B': []}
 
     def getTMabsPath(self, str):
         return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', str)
@@ -574,7 +576,8 @@ class Evaluate:
                             self.freqTerms['3gram_3'][ngram[2]] += 1
 
                 # calc the number of abbr that exist
-                self.no_abbr += 1 if feml.containsAbbr(row['s1']) is not None or feml.containsAbbr(row['s2']) is not None else 0
+                self.abbr['A'].append(feml.containsAbbr(row['s1']))
+                self.abbr['B'].append(feml.containsAbbr(row['s2']))
 
         if self.only_printing:
             self.do_the_printing()
@@ -592,7 +595,8 @@ class Evaluate:
         print "\t pos 2: {0}".format(self.freqTerms['3gram_2'].most_common(20))
         print "\t pos 3: {0}".format(self.freqTerms['3gram_3'].most_common(20))
 
-        print "Number of abbr found: {0}".format(self.no_abbr)
+        print "Number of abbr found: {0}".format(len(filter(partial(is_not, '-'), self.abbr['A'])) +
+                                                 len(filter(partial(is_not, '-'), self.abbr['B'])))
 
         with open("freqTerms.csv", "w") as f:
             f.write('gram\t')
@@ -627,6 +631,11 @@ class Evaluate:
                 f.write("{},{}\t".format(sorted_freq_trigram_terms_pos2[i][0], sorted_freq_trigram_terms_pos2[i][1]))
                 f.write("{},{}\t".format(sorted_freq_trigram_terms_pos3[i][0], sorted_freq_trigram_terms_pos3[i][1]))
                 f.write('\n')
+
+        with open("abbr.csv", "w") as f:
+            f.write('strA\tstrB\n')
+            for i in range(len(self.abbr['A'])):
+                f.write("{}\t{}\n".format(self.abbr['A'][i], self.abbr['B'][i]))
 
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt', evalType='SotAMetrics', accuracyresults=False):
         print "Reading dataset..."
