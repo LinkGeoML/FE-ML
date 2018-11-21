@@ -50,6 +50,7 @@ from nltk.collocations import BigramCollocationFinder
 from nltk.corpus import stopwords
 from langdetect import detect, lang_detect_exception
 import pycountry
+from kitchen.text.converters import getwriter
 
 # Code source: Gaël Varoquaux
 #              Andreas Müller
@@ -306,7 +307,7 @@ class FEMLFeatures:
                 cur['A'] += 1
                 cur['B'] += 1
             else:
-                if listA[cur.A] < listB[cur['B']]:
+                if listA[cur['A']] < listB[cur['B']]:
                     mis['B'].append(listB[cur['B']])
                     cur['B'] += 1
                 else:
@@ -395,17 +396,17 @@ class calcSotAMetrics(baseMetrics):
         real = 1.0 if row['res'] == "TRUE" else 0.0
 
         # print("{0} - norm: {1}".format(row['s1'], normalize_str(row['s1'])))
-        # print(repr(row['s1']), repr(row['s2']))
+        row['s1'] = row['s1'].decode('utf-8')
+        row['s2'] = row['s2'].decode('utf-8')
         if sorting:
             a = sorted_nicely(row['s1'].split(" "))
             b = sorted_nicely(row['s2'].split(" "))
             row['s1'] = " ".join(a)
             row['s2'] = " ".join(b)
-        row['s1'] = row['s1'].decode('utf-8')
-        row['s2'] = row['s2'].decode('utf-8')
         if stemming:
             row['s1'] = perform_stemming(row['s1'])
             row['s2'] = perform_stemming(row['s2'])
+        # print(row['s1'], row['s2'])
 
         tot_res += self.generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], real)
         tot_res += self.generic_evaluator(8, 'jaccard', row['s1'], row['s2'], real)
@@ -655,6 +656,9 @@ class Evaluate:
 
 
 def main(args):
+    UTF8Writer = getwriter('utf8')
+    sys.stdout = UTF8Writer(sys.stdout)
+
     dataset_path = args['-d']
 
     eval = Evaluate(args['--permuted'], args['--stemming'], args['--sort'], args['--print'])
