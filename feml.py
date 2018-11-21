@@ -529,6 +529,7 @@ class Evaluate:
         }
         self.stop_words = []
         self.abbr = {'A': [], 'B': []}
+        self.fsorted = None
 
     def getTMabsPath(self, str):
         return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', str)
@@ -549,6 +550,10 @@ class Evaluate:
                 data = json.load(read_file)
                 for lang in FREElanguages:
                     self.stop_words.extend(data[lang])
+
+        if self.only_printing:
+            self.fsorted = open('sorted.csv', 'w')
+            self.fsorted.write("Original_A\tSorted_A\tOriginal_B\tSorted_B\n")
 
         feml = FEMLFeatures()
         with open(dataset) as csvfile:
@@ -580,7 +585,18 @@ class Evaluate:
                 self.abbr['A'].append(feml.containsAbbr(row['s1']))
                 self.abbr['B'].append(feml.containsAbbr(row['s2']))
 
+                if self.only_printing:
+                    self.fsorted.write(row['s1'])
+                    self.fsorted.write("\t")
+                    self.fsorted.write(" ".join(sorted_nicely(row['s1'].split(" "))))
+                    self.fsorted.write("\t")
+                    self.fsorted.write(row['s2'])
+                    self.fsorted.write("\t")
+                    self.fsorted.write(" ".join(sorted_nicely(row['s2'].split(" "))))
+                    self.fsorted.write("\n")
+
         if self.only_printing:
+            self.fsorted.close()
             self.do_the_printing()
 
     def do_the_printing(self):
@@ -605,7 +621,7 @@ class Evaluate:
             f.write('bigram_pos_2\t')
             f.write('trigram_pos_1\t')
             f.write('trigram_pos_2\t')
-            f.write('trigram_pos_3\t')
+            f.write('trigram_pos_3')
             f.write('\n')
 
             sorted_freq_gram_terms = self.freqTerms['gram'].most_common()
