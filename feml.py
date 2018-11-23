@@ -476,18 +476,18 @@ class calcCustomFEML(baseMetrics):
         self.scores = []
         self.importances = []
         self.classifiers = [
-            KNeighborsClassifier(3),
+            KNeighborsClassifier(4, n_jobs=3),
             SVC(kernel="linear", C=1.0, random_state=0),
-            SVC(gamma=2, C=1),
-            # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=2),
-            DecisionTreeClassifier(max_depth=100),
-            RandomForestClassifier(n_estimators=600, random_state=0, n_jobs=2, max_depth=100),
-            MLPClassifier(alpha=1),
-            AdaBoostClassifier(),
+            SVC(gamma=2, C=1, random_state=0),
+            # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
+            DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
+            RandomForestClassifier(n_estimators=600, random_state=0, n_jobs=3, max_depth=100),
+            MLPClassifier(alpha=1, random_state=0),
+            AdaBoostClassifier(DecisionTreeClassifier(max_depth=100), n_estimators=600, random_state=0),
             GaussianNB(),
             QuadraticDiscriminantAnalysis(),
-            ExtraTreesClassifier(n_estimators=600, random_state=0, n_jobs=2, max_depth=100),
-            XGBClassifier(n_estimators=3000, seed=0),
+            ExtraTreesClassifier(n_estimators=600, random_state=0, n_jobs=3, max_depth=100),
+            XGBClassifier(n_estimators=3000, seed=0, nthread=3),
         ]
         super(calcCustomFEML, self).__init__(len(self.classifiers), accures)
 
