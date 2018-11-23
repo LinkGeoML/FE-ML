@@ -25,9 +25,9 @@ Arguments:
                             'svm'
                             'xgboost'
   evaluator_type            'SotAMetrics' (default)
-                            'MLCustom'
-                            'DL'
-                            'SortedMetrics'
+                            'SotAML'
+                            'customFEML'
+                            'DLearninng'
 
 """
 
@@ -46,36 +46,28 @@ from functools import partial
 # import configparser
 from docopt import docopt
 from nltk import SnowballStemmer, wordpunct_tokenize
-from nltk.collocations import BigramCollocationFinder
 from nltk.corpus import stopwords
 from langdetect import detect, lang_detect_exception
 import pycountry
 from kitchen.text.converters import getwriter
 
-# Code source: Gaël Varoquaux
-#              Andreas Müller
-# Modified for documentation by Jaques Grobler
-# License: BSD 3 clause
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-# from sklearn.datasets import make_moons, make_circles, make_classification
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, ExtraTreesClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-
+from sklearn import preprocessing
+from xgboost import XGBClassifier
 
 import helpers
-from featureclassifiers import evaluate_classifier
 from datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, strike_a_match, \
     soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
-from datasetcreator import detect_alphabet, fields
+# from datasetcreator import detect_alphabet, fields
 
 
 """
@@ -288,7 +280,7 @@ class FEMLFeatures:
 
     def fagiSim(self, strA, strB, stop_words):
         # TODO identifyAndExpandAbbr
-        # remove punckuations and stopwords, lowercase, sort alphanumerically
+        # remove punctuations and stopwords, lowercase, sort alphanumerically
         lstrA, _ = normalize_str(strA, sorting=True, sstopwords=stop_words)
         lstrB, _ = normalize_str(strB, sorting=True, sstopwords=stop_words)
         # TODO extractSpecialTerms
@@ -326,13 +318,16 @@ class baseMetrics:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, accuracyresults=False):
-        self.num_true_predicted_true = [0.0] * len(StaticValues.methods)
-        self.num_true_predicted_false = [0.0] * len(StaticValues.methods)
-        self.num_false_predicted_true = [0.0] * len(StaticValues.methods)
-        self.num_false_predicted_false = [0.0] * len(StaticValues.methods)
+    def __init__(self, size, accuracyresults=False):
+        self.num_true_predicted_true = [0.0] * size
+        self.num_true_predicted_false = [0.0] * size
+        self.num_false_predicted_true = [0.0] * size
+        self.num_false_predicted_false = [0.0] * size
+        self.num_true = 0.0
+        self.num_false = 0.0
 
-        self.timers = [0.0] * len(StaticValues.methods)
+        self.timer = 0.0
+        self.timers = [0.0] * size
         self.result = {}
         self.file = None
         self.accuracyresults = accuracyresults
@@ -350,12 +345,31 @@ class baseMetrics:
         if self.accuracyresults:
             self.file.close()
 
+    def preprocessing(self, row):
+        if row['res'] == "TRUE": self.num_true += 1.0
+        else: self.num_false += 1.0
+
+    def transform(self, strA, strB, sorting=False, stemming=False):
+        a = strA
+        b = strB
+
+        # print("{0} - norm: {1}".format(row['s1'], normalize_str(row['s1'])))
+        if sorting:
+            a = " ".join(sorted_nicely(a.split(" ")))
+            b = " ".join(sorted_nicely(b.split(" ")))
+        if stemming:
+            a = perform_stemming(a)
+            b = perform_stemming(b)
+        a = a.decode('utf-8')
+        b = b.decode('utf-8')
+        return a, b
+
     @abstractmethod
-    def evaluate(self, row, permuted=False, stemming=False, sorting=False, freqTerms=None):
+    def evaluate(self, row, sorting=False, stemming=False, permuted=False, freqTerms=None):
         pass
 
     @abstractmethod
-    def print_stats(self, num_true, num_false):
+    def print_stats(self):
         pass
 
     def prediction(self, sim_id, pred_val, real_val):
@@ -381,7 +395,7 @@ class baseMetrics:
 
 class calcSotAMetrics(baseMetrics):
     def __init__(self, accures):
-        super(calcSotAMetrics, self).__init__(accures)
+        super(calcSotAMetrics, self).__init__(len(StaticValues.methods), accures)
 
     def generic_evaluator(self, idx, algnm, str1, str2, match):
         start_time = time.time()
@@ -391,22 +405,11 @@ class calcSotAMetrics(baseMetrics):
         self.predictedState[varnm][idx - 1] += 1.0
         return res
 
-    def evaluate(self, row, permuted=False, stemming=False, sorting=False, freqTerms=None):
+    def evaluate(self, row, sorting=False, stemming=False, permuted=False, freqTerms=None):
         tot_res = ""
         real = 1.0 if row['res'] == "TRUE" else 0.0
 
-        # print("{0} - norm: {1}".format(row['s1'], normalize_str(row['s1'])))
-        row['s1'] = row['s1'].decode('utf-8')
-        row['s2'] = row['s2'].decode('utf-8')
-        if sorting:
-            a = sorted_nicely(row['s1'].split(" "))
-            b = sorted_nicely(row['s2'].split(" "))
-            row['s1'] = " ".join(a)
-            row['s2'] = " ".join(b)
-        if stemming:
-            row['s1'] = perform_stemming(row['s1'])
-            row['s2'] = perform_stemming(row['s2'])
-        # print(row['s1'], row['s2'])
+        row['s1'], row['s2'] = self.transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming)
 
         tot_res += self.generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], real)
         tot_res += self.generic_evaluator(8, 'jaccard', row['s1'], row['s2'], real)
@@ -425,16 +428,16 @@ class calcSotAMetrics(baseMetrics):
 
         if self.accuracyresults:
             if real == 1.0:
-                file.write("TRUE{0}".format(tot_res + "\n"))
+                self.file.write("TRUE{0}".format(tot_res + "\n"))
             else:
-                file.write("FALSE{0}".format(tot_res + "\n"))
+                self.file.write("FALSE{0}".format(tot_res + "\n"))
 
-    def print_stats(self, num_true, num_false):
+    def print_stats(self):
         for idx in range(len(StaticValues.methods)):
             try:
-                timer = ( self.timers[idx] / float( int( num_true + num_false ) ) ) * 50000.0
+                timer = ( self.timers[idx] / float( int( self.num_true + self.num_false ) ) ) * 50000.0
                 acc = ( self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx] ) / \
-                      ( num_true + num_false )
+                      ( self.num_true + self.num_false )
                 pre = ( self.num_true_predicted_true[idx] ) / \
                       ( self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx] )
                 rec = ( self.num_true_predicted_true[idx] ) / \
@@ -460,58 +463,189 @@ class calcSotAMetrics(baseMetrics):
         #     return self.result
 
 
-class calcMLCustom(baseMetrics):
-    h = .02  # step size in the mesh
+class calcCustomFEML(baseMetrics):
+    names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", # "Gaussian Process",
+             "Decision Tree", "Random Forest", "Neural Net", "AdaBoost", "Naive Bayes", "QDA",
+             "ExtraTreeClassifier", "XGBOOST"]
 
-    names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
-             "Decision Tree", "Random Forest", "Neural Net", "AdaBoost",
-             "Naive Bayes", "QDA"]
+    def __init__(self, accures):
+        self.X1 = []
+        self.Y1 = []
+        self.X2 = []
+        self.Y2 = []
+        self.scores = []
+        self.importances = []
+        self.classifiers = [
+            KNeighborsClassifier(3),
+            SVC(kernel="linear", C=1.0, random_state=0),
+            SVC(gamma=2, C=1),
+            # GaussianProcessClassifier(1.0 * RBF(1.0)),
+            DecisionTreeClassifier(max_depth=100),
+            RandomForestClassifier(max_depth=100, n_estimators=600, random_state=0),
+            MLPClassifier(alpha=1),
+            AdaBoostClassifier(),
+            GaussianNB(),
+            QuadraticDiscriminantAnalysis(),
+            ExtraTreesClassifier(n_estimators=600, random_state=0, n_jobs=2, max_depth=100),
+            XGBClassifier(n_estimators=3000, seed=0),
+        ]
+        super(calcCustomFEML, self).__init__(len(self.classifiers), accures)
 
-    classifiers = [
-        KNeighborsClassifier(3),
-        SVC(kernel="linear", C=0.025),
-        SVC(gamma=2, C=1),
-        GaussianProcessClassifier(1.0 * RBF(1.0)),
-        DecisionTreeClassifier(max_depth=5),
-        RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
-        MLPClassifier(alpha=1),
-        AdaBoostClassifier(),
-        GaussianNB(),
-        QuadraticDiscriminantAnalysis()]
+    def evaluate(self, row, sorting=False, stemming=False, permuted=False, freqTerms=False):
+        if row['res'] == "TRUE":
+            if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(1.0)
+            else: self.Y2.append(1.0)
+        else:
+            if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(0.0)
+            else: self.Y2.append(0.0)
 
-    def iterateOverClassifiers(self, ds):
-        # preprocess dataset, split into training and test part
-        X, y = ds
-        X = StandardScaler().fit_transform(X)
-        X_train, X_test, y_train, y_test = \
-            train_test_split(X, y, test_size=.4, random_state=42)
+        row['s1'], row['s2'] = self.transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming)
 
-        x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
-        y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
-        xx, yy = np.meshgrid(np.arange(x_min, x_max, self.h),
-                             np.arange(y_min, y_max, self.h))
+        start_time = time.time()
+        sim1 = damerau_levenshtein(row['s1'], row['s2'])
+        sim8 = jaccard(row['s1'], row['s2'])
+        sim2 = jaro(row['s1'], row['s2'])
+        sim3 = jaro_winkler(row['s1'], row['s2'])
+        sim4 = jaro_winkler(row['s1'][::-1], row['s2'][::-1])
+        sim11 = monge_elkan(row['s1'], row['s2'])
+        sim7 = cosine(row['s1'], row['s2'])
+        sim9 = strike_a_match(row['s1'], row['s2'])
+        sim12 = soft_jaccard(row['s1'], row['s2'])
+        sim5 = sorted_winkler(row['s1'], row['s2'])
+        if permuted: sim6 = permuted_winkler(row['s1'], row['s2'])
+        sim10 = skipgram(row['s1'], row['s2'])
+        sim13 = davies(row['s1'], row['s2'])
+        self.timer += (time.time() - start_time)
+        if permuted:
+            if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
+                self.X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+            else: self.X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+        else:
+            if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
+                self.X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+            else: self.X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+
+    def train_classifiers(self, polynomial=False):
+        if polynomial:
+            self.X1 = preprocessing.PolynomialFeatures().fit_transform(self.X1)
+            self.X2 = preprocessing.PolynomialFeatures().fit_transform(self.X2)
 
         # iterate over classifiers
-        for name, clf in zip(self.names, self.classifiers):
-            clf.fit(X_train, y_train)
-            score = clf.score(X_test, y_test)
+        for i, (name, clf) in enumerate(zip(self.names, self.classifiers)):
+            scoreL = []
+            importances = None
+            print "Training {}...".format(name)
 
-            # Plot the decision boundary. For that, we will assign a color to each
-            # point in the mesh [x_min, x_max]x[y_min, y_max].
-            if hasattr(clf, "decision_function"):
-                Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
-            else:
-                Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+            clf.fit(np.array(self.X1), np.array(self.Y1))
+            start_time = time.time()
+            predictedL = list(clf.predict(np.array(self.X2)))
+            self.timers[i] += (time.time() - start_time)
+            if hasattr(clf, "feature_importances_"):
+                importances = clf.feature_importances_
+            elif hasattr(clf, "coef_"):
+                importances = clf.coef_.ravel()
+            scoreL.append(clf.score(np.array(self.X2), np.array(self.Y2)))
+
+            clf.fit(np.array(self.X2), np.array(self.Y2))
+            start_time = time.time()
+            predictedL += list(clf.predict(np.array(self.X1)))
+            self.timers[i] += (time.time() - start_time)
+            if hasattr(clf, "feature_importances_"):
+                importances += clf.feature_importances_
+            # elif hasattr(clf, "coef_"):
+            #     importances += clf.coef_.ravel()
+            scoreL.append(clf.score(np.array(self.X1), np.array(self.Y1)))
+
+            self.timers[i] += self.timer
+            self.importances.append(importances)
+            self.scores.append(scoreL)
+
+            print "Matching records..."
+            real = self.Y2 + self.Y1
+            for pos in range(len(real)):
+                if real[pos] == 1.0:
+                    if predictedL[pos] == 1.0:
+                        self.num_true_predicted_true[i] += 1.0
+                        if self.accuracyresults:
+                            self.file.write("TRUE\tTRUE\n")
+                    else:
+                        self.num_true_predicted_false[i] += 1.0
+                        if self.accuracyresults:
+                            self.file.write("TRUE\tFALSE\n")
+                else:
+                    if predictedL[pos] == 1.0:
+                        self.num_false_predicted_true[i] += 1.0
+                        if self.accuracyresults:
+                            self.file.write("FALSE\tTRUE\n")
+                    else:
+                        self.num_false_predicted_false[i] += 1.0
+                        if self.accuracyresults:
+                            self.file.write("FALSE\tFALSE\n")
+
+            # if hasattr(clf, "decision_function"):
+            #     Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+            # else:
+            #     Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+
+    def print_stats(self):
+        for idx, (name, clf) in enumerate(zip(self.names, self.classifiers)):
+            try:
+                timer = ( self.timers[idx] / float( int( self.num_true + self.num_false ) ) ) * 50000.0
+                acc = ( self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx] ) / \
+                      ( self.num_true + self.num_false )
+                pre = ( self.num_true_predicted_true[idx] ) / \
+                      ( self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx] )
+                rec = ( self.num_true_predicted_true[idx] ) / \
+                      ( self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx] )
+                f1 = 2.0 * ( ( pre * rec ) / ( pre + rec ) )
+
+                print "Metric = Supervised Classifier :" , name
+                print "Score (X2, X1) = ", self.scores[idx][0], self.scores[idx][1]
+                print "Accuracy =", acc
+                print "Precision =", pre
+                print "Recall =", rec
+                print "F1 =", f1
+                print "Processing time per 50K records =", timer
+                print "Number of training instances =", min(len(self.Y1), len(self.Y2))
+                print ""
+                print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
+                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(name, acc, pre, rec, f1, timer)
+                print ""
+                sys.stdout.flush()
+
+                try:
+                    importances = self.importances[idx] / 2.0
+                    indices = np.argsort(importances)[::-1]
+                    for f in range(importances.shape[0]):
+                        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+                except TypeError:
+                    print "The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(name)
+
+                # if hasattr(clf, "feature_importances_"):
+                #         # if results:
+                #         #     result[indices[f]] = importances[indices[f]]
+                print ""
+                sys.stdout.flush()
+            except ZeroDivisionError:
+                pass
+
+        # if results:
+        #     return self.result
 
 
 class calcDLearning(baseMetrics):
     pass
 
 
-class Evaluate:
+class calcSotAML(baseMetrics):
+    pass
+
+
+class Evaluator:
     evaluatorType_action = {
         'SotAMetrics': calcSotAMetrics,
-        'MLCustom': calcMLCustom,
+        'SotAML': calcSotAML,
+        'customFEML': calcCustomFEML,
         'DLearning': calcDLearning,
     }
 
@@ -521,8 +655,6 @@ class Evaluate:
         self.sorting = sorting
         self.only_printing = do_printing
 
-        self.num_true = 0.0
-        self.num_false = 0.0
         self.freqTerms = {
             'gram': Counter(),
             '2gram_1': Counter(), '3gram_1': Counter(), '2gram_2': Counter(), '3gram_2': Counter(), '3gram_3': Counter(),
@@ -530,11 +662,18 @@ class Evaluate:
         self.stop_words = []
         self.abbr = {'A': [], 'B': []}
         self.fsorted = None
+        self.evalClass = None
 
     def getTMabsPath(self, str):
         return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', str)
 
-    def computeInitVals(self, dataset):
+    def initialize(self, dataset, evalType='SotAMetrics', accuracyresults=False):
+        try:
+            self.evalClass = self.evaluatorType_action[evalType](accuracyresults)
+        except KeyError:
+            print("Unkown method")
+            return 1
+
         # These are the available languages with stopwords from NLTK
         NLTKlanguages = ["dutch", "finnish", "german", "italian", "portuguese", "spanish", "turkish", "danish",
                          "english", "french", "hungarian", "norwegian", "russian", "swedish"]
@@ -560,13 +699,10 @@ class Evaluate:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
             for row in reader:
-                if row['res'] == "TRUE":
-                    self.num_true += 1.0
-                else:
-                    self.num_false += 1.0
+                self.evalClass.preprocessing(row)
 
                 # Calc frequent terms
-                # str1 + str2
+                # (str1, str2)
                 for str in ['s1', 's2']:
                     fterms, stop_words = normalize_str(row[str], self.stop_words)
                     for term in fterms:
@@ -598,6 +734,8 @@ class Evaluate:
         if self.only_printing:
             self.fsorted.close()
             self.do_the_printing()
+
+        return 0
 
     def do_the_printing(self):
         print "Printing 10 most common single freq terms..."
@@ -654,21 +792,17 @@ class Evaluate:
             for i in range(len(self.abbr['A'])):
                 f.write("{}\t{}\n".format(self.abbr['A'][i], self.abbr['B'][i]))
 
-    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', evalType='SotAMetrics', accuracyresults=False):
-        print "Reading dataset..."
-        with open(dataset) as csvfile:
-            reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
-                                    delimiter='\t')
+    def evaluate_metrics(self, dataset='dataset-string-similarity.txt'):
+        if self.evalClass is not None:
+            print "Reading dataset..."
+            with open(dataset) as csvfile:
+                reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
+                                        delimiter='\t')
 
-            try:
-                evalClass = self.evaluatorType_action[evalType](accuracyresults)
-            except KeyError:
-                print("Unkown method")
-                return
-
-            for row in reader:
-                evalClass.evaluate(row, self.permuted, self.stemming, self.sorting, self.freqTerms)
-            evalClass.print_stats(self.num_true, self.num_false)
+                for row in reader:
+                    self.evalClass.evaluate(row, self.sorting, self.stemming, self.permuted, self.freqTerms)
+                if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers()
+                self.evalClass.print_stats()
 
 
 def main(args):
@@ -677,23 +811,16 @@ def main(args):
 
     dataset_path = args['-d']
 
-    eval = Evaluate(args['--permuted'], args['--stemming'], args['--sort'], args['--print'])
+    eval = Evaluator(args['--permuted'], args['--stemming'], args['--sort'], args['--print'])
     full_dataset_path = eval.getTMabsPath(dataset_path)
 
     if os.path.isfile(full_dataset_path):
-        eval.computeInitVals(full_dataset_path)
+        eval.initialize(full_dataset_path, args['--ev'], args['--accuracyresults'])
         if args['--print']:
-            sys.exit()
+            sys.exit(0)
 
-        eval.evaluate_metrics(full_dataset_path, args['--ev'], args['--accuracyresults'])
-
-        # Supervised machine learning
-        if args['--ev'] == "SotAMetrics":
-            for method in ['rf', 'et', 'svm', 'xgboost']:
-                evaluate_classifier(dataset=full_dataset_path, method=method, accuracyresults=args['--accuracyresults'],
-                                    permuted=args['--permuted'], results=False)
-    else:
-        print "No file {0} exists!!!\n".format(full_dataset_path)
+        eval.evaluate_metrics(full_dataset_path)
+    else: print "No file {0} exists!!!\n".format(full_dataset_path)
 
 
 if __name__ == "__main__":
