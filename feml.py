@@ -479,9 +479,9 @@ class calcCustomFEML(baseMetrics):
             KNeighborsClassifier(3),
             SVC(kernel="linear", C=1.0, random_state=0),
             SVC(gamma=2, C=1),
-            # GaussianProcessClassifier(1.0 * RBF(1.0)),
+            # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=2),
             DecisionTreeClassifier(max_depth=100),
-            RandomForestClassifier(max_depth=100, n_estimators=600, random_state=0),
+            RandomForestClassifier(n_estimators=600, random_state=0, n_jobs=2, max_depth=100),
             MLPClassifier(alpha=1),
             AdaBoostClassifier(),
             GaussianNB(),
@@ -552,8 +552,10 @@ class calcCustomFEML(baseMetrics):
             self.timers[i] += (time.time() - start_time)
             if hasattr(clf, "feature_importances_"):
                 importances += clf.feature_importances_
-            # elif hasattr(clf, "coef_"):
-            #     importances += clf.coef_.ravel()
+            elif hasattr(clf, "coef_"):
+                # TODO when coef_ is added to importances that already contains another one, it throws a
+                # ValueError: output array is read-only
+                importances = clf.coef_.ravel()
             scoreL.append(clf.score(np.array(self.X1), np.array(self.Y1)))
 
             self.timers[i] += self.timer
