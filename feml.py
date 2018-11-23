@@ -684,7 +684,7 @@ class Evaluator:
             'zh', 'ja', 'id', 'fa', 'ar', 'bn', 'ro', 'th', 'el', 'hi', 'gl', 'hy', 'ko', 'yo', 'vi',
             'sw', 'so', 'he', 'ha', 'br', 'af', 'ku', 'ms', 'tl', 'ur'
         ]
-        if os.path.isfile('stopwords-iso.json'):
+        if os.path.isfile(os.path.join(os.getcwd(), 'stopwords-iso.json')):
             with open("stopwords-iso.json", "r") as read_file:
                 data = json.load(read_file)
                 for lang in FREElanguages:
