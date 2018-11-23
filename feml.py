@@ -189,8 +189,7 @@ class StaticValues:
 
 
 class FEMLFeatures:
-    # to_be_removed = "()/.,:!'"  # all characters to be removed
-
+    # TODO to_be_removed = "()/.,:!'"  # check the list of chars
     # Returned vals: #1: str1 is subset of str2, #2 str2 is subset of str1
     def contains(self, strA, strB, sorting=False):
         strA, _ = normalize_str(strA, sorting)
