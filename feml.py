@@ -788,9 +788,10 @@ class Evaluator:
                 f.write('\n')
 
         with open("abbr.csv", "w") as f:
-            f.write('strA\tstrB\n')
-            for i in range(len(self.abbr['A'])):
-                f.write("{}\t{}\n".format(self.abbr['A'][i], self.abbr['B'][i]))
+            f.write('strA\tstrB\tline_pos\n')
+            for i in range(min(len(self.abbr['A']), len(self.abbr['B']))):
+                if self.abbr['A'][i] != '-' or self.abbr['B'][i] != '-':
+                    f.write("{}\t{}\t{}\n".format(self.abbr['A'][i], self.abbr['B'][i], i))
 
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
