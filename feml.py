@@ -11,7 +11,8 @@ Options:
   -h --help                 show this screen.
   --version                 show version.
   -c <classifier_method>    various supported classifiers. [default: rf].
-  -d <dataset-name>         dataset to use. [default: dataset-string-similarity.txt]
+  -d <dataset-name>         The relative path to the directory of the script being run of the dataset to use for
+                            experiments. [default: dataset-string-similarity.txt]
   --permuted                Use permuted Jaro-Winkler metrics. Default is False.
   --stemming                Perform stemming. Default is False.
   --sort                    Sort alphanumerically.
@@ -796,7 +797,7 @@ class Evaluator:
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
             print "Reading dataset..."
-            with open(dataset) as csvfile:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), dataset)) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
