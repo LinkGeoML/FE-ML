@@ -65,7 +65,7 @@ from sklearn import preprocessing
 from xgboost import XGBClassifier
 
 import helpers
-from datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, strike_a_match, \
+from external.datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, strike_a_match, \
     soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
 # from datasetcreator import detect_alphabet, fields
 
