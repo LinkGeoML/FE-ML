@@ -464,9 +464,11 @@ class calcSotAMetrics(baseMetrics):
 
 
 class calcCustomFEML(baseMetrics):
-    names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", # "Gaussian Process",
-             "Decision Tree", "Random Forest", "Neural Net", "AdaBoost", "Naive Bayes", "QDA",
-             "ExtraTreeClassifier", "XGBOOST"]
+    names = [# "Nearest Neighbors",
+        "Linear SVM", "RBF SVM", # "Gaussian Process",
+        "Decision Tree", "Random Forest", "Neural Net", "AdaBoost", "Naive Bayes", "QDA",
+        "ExtraTreeClassifier", "XGBOOST"
+    ]
 
     def __init__(self, accures):
         self.X1 = []
@@ -476,7 +478,7 @@ class calcCustomFEML(baseMetrics):
         self.scores = []
         self.importances = []
         self.classifiers = [
-            KNeighborsClassifier(4, n_jobs=3),
+            # KNeighborsClassifier(4, n_jobs=3),
             SVC(kernel="linear", C=1.0, random_state=0),
             SVC(gamma=2, C=1, random_state=0),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
