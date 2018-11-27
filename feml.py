@@ -56,7 +56,7 @@ from kitchen.text.converters import getwriter
 import numpy as np
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
@@ -469,7 +469,7 @@ class calcSotAMetrics(baseMetrics):
 
 class calcCustomFEML(baseMetrics):
     names = [# "Nearest Neighbors",
-        "Linear SVM", "RBF SVM", # "Gaussian Process",
+        "Linear SVM", #"RBF SVM", # "Gaussian Process",
         "Decision Tree", "Random Forest", "Neural Net", "AdaBoost", "Naive Bayes", "QDA",
         "ExtraTreeClassifier", "XGBOOST"
     ]
@@ -483,8 +483,10 @@ class calcCustomFEML(baseMetrics):
         self.importances = []
         self.classifiers = [
             # KNeighborsClassifier(4, n_jobs=3),
-            SVC(kernel="linear", C=1.0, random_state=0),
-            SVC(gamma=2, C=1, random_state=0),
+            # This one does not scale well for large datasets
+            # SVC(kernel="linear", C=1.0, random_state=0),
+            LinearSVC(random_state=0, C=1.0),
+            # SVC(gamma=2, C=1, random_state=0),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
             DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
             RandomForestClassifier(n_estimators=600, random_state=0, n_jobs=int(njobs), max_depth=100),
