@@ -112,12 +112,12 @@ def get_langnm(str, lang_detect=False):
 
 # Clean the string from stopwords, puctuations based on language detections feature
 # Returned values #1: non-stopped words, #2: stopped words
-def normalize_str(str, sstopwords=None, sorting=False, lang_detect=False):
+def normalize_str(str, stop_words=None, sorting=False, lang_detect=False):
     lname = get_langnm(str, lang_detect)
 
     tokens = wordpunct_tokenize(str)
     words = [word.lower() for word in tokens if word.isalpha()]
-    stopwords_set = set(stopwords.words(lname)) if sstopwords is None else set(sstopwords)
+    stopwords_set = set(stopwords.words(lname)) if stop_words is None else set(stop_words)
 
     filtered_words = sorted_nicely(filter(lambda token: token not in stopwords_set, words)) if sorting else \
         filter(lambda token: token not in stopwords_set, words)
@@ -251,8 +251,10 @@ class FEMLFeatures:
         str, _ = normalize_str(str)
         return len(set(str))
 
-    def freq_ngram_tokens(self, str1, str2):
-        pass
+    @staticmethod
+    def freq_tokens(self, tokens, ngram=1):
+        if tokens < 1: tokens = 1
+        return list(itertools.chain.from_iterable([[tokens[i:i + ngram] for i in range(len(tokens) - (ngram - 1))]]))
 
     def containsInPos(self, str1, str2):
         fvec_str1 = []
@@ -281,8 +283,8 @@ class FEMLFeatures:
     def fagiSim(self, strA, strB, stop_words):
         # TODO identifyAndExpandAbbr
         # remove punctuations and stopwords, lowercase, sort alphanumerically
-        lstrA, _ = normalize_str(strA, sorting=True, sstopwords=stop_words)
-        lstrB, _ = normalize_str(strB, sorting=True, sstopwords=stop_words)
+        lstrA, _ = normalize_str(strA, sorting=True, stop_words=stop_words)
+        lstrB, _ = normalize_str(strB, sorting=True, stop_words=stop_words)
         # TODO extractSpecialTerms
         base, mis = self.compareAndSplit_names(lstrA, lstrB)
 
@@ -668,8 +670,11 @@ class Evaluator:
         self.fsorted = None
         self.evalClass = None
 
-    def getTMabsPath(self, str):
-        return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', str)
+    def getTMabsPath(self, ds):
+        return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', ds)
+
+    def getRelativeToWorkingDirPath(self, ds):
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), ds)
 
     def initialize(self, dataset, evalType='SotAMetrics', accuracyresults=False):
         try:
@@ -711,15 +716,15 @@ class Evaluator:
                     fterms, stop_words = normalize_str(row[str], self.stop_words)
                     for term in fterms:
                         self.freqTerms['gram'][term] += 1
-                    for ngram in list(itertools.chain.from_iterable(
+                    for gram in list(itertools.chain.from_iterable(
                         [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
-                        if len(ngram) == 2:
-                            self.freqTerms['2gram_1'][ngram[0]] += 1
-                            self.freqTerms['2gram_2'][ngram[1]] += 1
+                        if len(gram) == 2:
+                            self.freqTerms['2gram_1'][gram[0]] += 1
+                            self.freqTerms['2gram_2'][gram[1]] += 1
                         else:
-                            self.freqTerms['3gram_1'][ngram[0]] += 1
-                            self.freqTerms['3gram_2'][ngram[1]] += 1
-                            self.freqTerms['3gram_3'][ngram[2]] += 1
+                            self.freqTerms['3gram_1'][gram[0]] += 1
+                            self.freqTerms['3gram_2'][gram[1]] += 1
+                            self.freqTerms['3gram_3'][gram[2]] += 1
 
                 # calc the number of abbr that exist
                 self.abbr['A'].append(feml.containsAbbr(row['s1']))
@@ -817,8 +822,8 @@ def main(args):
     dataset_path = args['-d']
 
     eval = Evaluator(args['--permuted'], args['--stemming'], args['--sort'], args['--print'])
-    full_dataset_path = eval.getTMabsPath(dataset_path)
 
+    full_dataset_path = eval.getTMabsPath(dataset_path)
     if os.path.isfile(full_dataset_path):
         eval.initialize(full_dataset_path, args['--ev'], args['--accuracyresults'])
         if args['--print']:
