@@ -19,6 +19,7 @@ Options:
   --ev <evaluator_type>     Type of experiments to conduct. [default: SotAMetrics]
   --print                   Print only computed variables. Default is False.
   --accuracyresults         Store predicted results (TRUE/FALSE) in file. Default is False
+  --jobs <no>               Number of CPUs utilized. [Default: 2]
 
 Arguments:
   classifier_method:        'rf' (default)
@@ -320,7 +321,7 @@ class baseMetrics:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, size, accuracyresults=False):
+    def __init__(self, size, njobs=2, accuracyresults=False):
         self.num_true_predicted_true = [0.0] * size
         self.num_true_predicted_false = [0.0] * size
         self.num_false_predicted_true = [0.0] * size
@@ -342,6 +343,7 @@ class baseMetrics:
             'num_false_predicted_true': self.num_false_predicted_true,
             'num_false_predicted_false': self.num_false_predicted_false
         }
+        self.njobs = njobs
 
     def __del__(self):
         if self.accuracyresults:
@@ -396,8 +398,8 @@ class baseMetrics:
 
 
 class calcSotAMetrics(baseMetrics):
-    def __init__(self, accures):
-        super(calcSotAMetrics, self).__init__(len(StaticValues.methods), accures)
+    def __init__(self, njobs, accures):
+        super(calcSotAMetrics, self).__init__(len(StaticValues.methods), njobs, accures)
 
     def generic_evaluator(self, idx, algnm, str1, str2, match):
         start_time = time.time()
@@ -472,7 +474,7 @@ class calcCustomFEML(baseMetrics):
         "ExtraTreeClassifier", "XGBOOST"
     ]
 
-    def __init__(self, accures):
+    def __init__(self, njobs, accures):
         self.X1 = []
         self.Y1 = []
         self.X2 = []
@@ -485,15 +487,15 @@ class calcCustomFEML(baseMetrics):
             SVC(gamma=2, C=1, random_state=0),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
             DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
-            RandomForestClassifier(n_estimators=600, random_state=0, n_jobs=3, max_depth=100),
+            RandomForestClassifier(n_estimators=600, random_state=0, n_jobs=int(njobs), max_depth=100),
             MLPClassifier(alpha=1, random_state=0),
             AdaBoostClassifier(DecisionTreeClassifier(max_depth=100), n_estimators=600, random_state=0),
             GaussianNB(),
             QuadraticDiscriminantAnalysis(),
-            ExtraTreesClassifier(n_estimators=600, random_state=0, n_jobs=3, max_depth=100),
-            XGBClassifier(n_estimators=3000, seed=0, nthread=3),
+            ExtraTreesClassifier(n_estimators=600, random_state=0, n_jobs=int(njobs), max_depth=100),
+            XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
-        super(calcCustomFEML, self).__init__(len(self.classifiers), accures)
+        super(calcCustomFEML, self).__init__(len(self.classifiers), njobs, accures)
 
     def evaluate(self, row, sorting=False, stemming=False, permuted=False, freqTerms=False):
         if row['res'] == "TRUE":
@@ -676,9 +678,9 @@ class Evaluator:
     def getRelativeToWorkingDirPath(self, ds):
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), ds)
 
-    def initialize(self, dataset, evalType='SotAMetrics', accuracyresults=False):
+    def initialize(self, dataset, evalType='SotAMetrics', njobs=2, accuracyresults=False):
         try:
-            self.evalClass = self.evaluatorType_action[evalType](accuracyresults)
+            self.evalClass = self.evaluatorType_action[evalType](njobs, accuracyresults)
         except KeyError:
             print("Unkown method")
             return 1
@@ -825,7 +827,7 @@ def main(args):
 
     full_dataset_path = eval.getTMabsPath(dataset_path)
     if os.path.isfile(full_dataset_path):
-        eval.initialize(full_dataset_path, args['--ev'], args['--accuracyresults'])
+        eval.initialize(full_dataset_path, args['--ev'], args['--jobs'], args['--accuracyresults'])
         if args['--print']:
             sys.exit(0)
 
