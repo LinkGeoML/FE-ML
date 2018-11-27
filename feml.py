@@ -12,14 +12,15 @@ Options:
   --version                 show version.
   -c <classifier_method>    various supported classifiers. [default: rf].
   -d <dataset-name>         The relative path to the directory of the script being run of the dataset to use for
-                            experiments. [default: dataset-string-similarity.txt]
+                            experiments. [default: dataset-string-similarity.txt].
   --permuted                Use permuted Jaro-Winkler metrics. Default is False.
   --stemming                Perform stemming. Default is False.
   --sort                    Sort alphanumerically.
   --ev <evaluator_type>     Type of experiments to conduct. [default: SotAMetrics]
   --print                   Print only computed variables. Default is False.
-  --accuracyresults         Store predicted results (TRUE/FALSE) in file. Default is False
-  --jobs <no>               Number of CPUs utilized. [Default: 2]
+  --accuracyresults         Store predicted results (TRUE/FALSE) in file. Default is False.
+  --jobs <no>               Number of CPUs utilized. [Default: 2].
+  --testing                 Perform various test operations. Default is False.
 
 Arguments:
   classifier_method:        'rf' (default)
@@ -55,7 +56,6 @@ from kitchen.text.converters import getwriter
 
 import numpy as np
 from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import RBF
@@ -468,8 +468,8 @@ class calcSotAMetrics(baseMetrics):
 
 
 class calcCustomFEML(baseMetrics):
-    names = [# "Nearest Neighbors",
-        "Linear SVM", #"RBF SVM", # "Gaussian Process",
+    names = [
+        "Linear SVM", # "Gaussian Process",
         "Decision Tree", "Random Forest", "Neural Net", "AdaBoost", "Naive Bayes", "QDA", "LDA",
         "ExtraTreeClassifier", "XGBOOST"
     ]
@@ -482,11 +482,7 @@ class calcCustomFEML(baseMetrics):
         self.scores = []
         self.importances = []
         self.classifiers = [
-            # KNeighborsClassifier(4, n_jobs=3),
-            # This one does not scale well for large datasets
-            # SVC(kernel="linear", C=1.0, random_state=0),
             LinearSVC(random_state=0, C=1.0),
-            # SVC(gamma=2, C=1, random_state=0),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
             DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
             RandomForestClassifier(n_estimators=600, random_state=0, n_jobs=int(njobs), max_depth=100),
