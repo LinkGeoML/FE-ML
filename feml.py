@@ -62,7 +62,7 @@ from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, ExtraTreesClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis, LinearDiscriminantAnalysis
 from sklearn import preprocessing
 from xgboost import XGBClassifier
 
@@ -470,7 +470,7 @@ class calcSotAMetrics(baseMetrics):
 class calcCustomFEML(baseMetrics):
     names = [# "Nearest Neighbors",
         "Linear SVM", #"RBF SVM", # "Gaussian Process",
-        "Decision Tree", "Random Forest", "Neural Net", "AdaBoost", "Naive Bayes", "QDA",
+        "Decision Tree", "Random Forest", "Neural Net", "AdaBoost", "Naive Bayes", "QDA", "LDA",
         "ExtraTreeClassifier", "XGBOOST"
     ]
 
@@ -493,7 +493,7 @@ class calcCustomFEML(baseMetrics):
             MLPClassifier(alpha=1, random_state=0),
             AdaBoostClassifier(DecisionTreeClassifier(max_depth=100), n_estimators=600, random_state=0),
             GaussianNB(),
-            QuadraticDiscriminantAnalysis(),
+            QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
             ExtraTreesClassifier(n_estimators=600, random_state=0, n_jobs=int(njobs), max_depth=100),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
@@ -677,7 +677,7 @@ class Evaluator:
     def getTMabsPath(self, ds):
         return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', ds)
 
-    def getRelativeToWorkingDirPath(self, ds):
+    def getRelativeDirpathToWorking(self, ds):
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), ds)
 
     def initialize(self, dataset, evalType='SotAMetrics', njobs=2, accuracyresults=False):
@@ -809,7 +809,8 @@ class Evaluator:
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
             print "Reading dataset..."
-            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), dataset)) as csvfile:
+            relpath = self.getRelativeDirpathToWorking(dataset)
+            with open(relpath) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
