@@ -1,41 +1,49 @@
 #!/usr/bin/python
 
-def create_session(engine):
-	from sqlalchemy.orm import sessionmaker
-	
-	Session = sessionmaker(bind=engine)
-	session = Session()
-	
-	return session
+from configparser import ConfigParser
+import psycopg2
 
-def connect_to_db(db_name, usr_name, usr_pswd):
+def config(filename='database.ini', section='postgresql'):
+	# create a parser
+	parser = ConfigParser()
+	# read config file
+	parser.read(filename)
 	
-	from sqlalchemy import create_engine
+	# get section, default to postgresql
+	db = {}
+	if parser.has_section(section):
+		params = parser.items(section)
+		print(params)
+		for param in params:
+			db[param[0]] = param[1]
+	else:
+		raise Exception('Section {0} not found in the {1} file'.format(section, filename))
 	
-	request = 'postgresql://{}:{}@localhost/{}'.format(usr_name, usr_pswd, db_name)
-	engine = create_engine(request, echo=True)
-	
-	return engine
+	return db
 
-def get_custom_table_class(table_name, engine):
+def connect_to_db():
+	"""Connect to the PostgreSQL database server"""
+	conn = None
+	try:
+		# read connection parameters
+		params = config()
+		
+		# connect to the PostgreSQL server
+		print('Connecting to the PostgreSQL database...')
+		conn = psycopg2.connect(**params)
+		
+	except(Exception, psycopg2.DatabaseError) as error:
+		print(error)
+		
+	return conn
 	
-	from sqlalchemy import MetaData, Table
-	from sqlalchemy.ext.automap import automap_base
+def close_connection(conn):
 	
-	# produce our own MetaData object
-	metadata = MetaData()
-
-	# we can reflect it ourselves from a database, using options
-	# such as 'only' to limit what tables we look at...
-	metadata.reflect(engine, only=[table_name])
-	
-	# we can then produce a set of mappings from this MetaData.
-	Base = automap_base(metadata=metadata)
-
-	# calling prepare() just sets up mapped classes and relationships.
-	Base.prepare()
-	
-	# mapped classes are ready
-	exec("CustomTableClass = Base.classes.%s"%(table_name))
-	
-	return CustomTableClass
+	try:
+		cur.close()
+	except(Exception, psycopg2.DatabaseError) as error:
+		print(error)
+	finally:
+		if conn is not None:
+			conn.close()
+			print('Database connection closed.')
