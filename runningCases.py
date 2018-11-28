@@ -20,7 +20,8 @@ class Evaluator:
         'DLearning': femlAlgs.calcDLearning,
     }
 
-    def __init__(self, permuted=False, stemming=False, sorting=False, do_printing=False):
+    def __init__(self, ml_algs, permuted=False, stemming=False, sorting=False, do_printing=False):
+        self.ml_algs = [x for x in ml_algs.split(',')]
         self.permuted = permuted
         self.stemming = stemming
         self.sorting = sorting
@@ -179,6 +180,6 @@ class Evaluator:
 
                 for row in reader:
                     self.evalClass.evaluate(row, self.sorting, self.stemming, self.permuted, self.freqTerms)
-                if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers()
+                if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                 self.evalClass.print_stats()
 

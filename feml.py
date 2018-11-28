@@ -19,14 +19,24 @@ Options:
   --print                   print only computed variables. Default is False.
   --accuracyresults         store predicted results (TRUE/FALSE) in file. Default is False.
   --jobs <no>               number of CPUs utilized. [Default: 2].
-  --testing                 perform various test operations. Default is False.
+  --test                    perform various test operations. Default is False.
+  --ml <ML_algs>            Comma separated machine learning algorithms to run.[default: all]
 
 Arguments:
   evaluator_type            'SotAMetrics' (default)
                             'SotAML'
                             'customFEML'
                             'DLearninng'
-
+  ML_algs                   'rf' (Random Forest)
+                            'et' (ExtraTreeClassifier)
+                            'xgboost' (XGBoost)
+                            'qda' (Quadratic Discriminant Analysis)
+                            'lda' (Linear Discriminant Analysis)
+                            'nn' (Neural Net)
+                            'ada' (AdaBoost)
+                            'nb' (Naive Bayes)
+                            'dt' (Decision Tree)
+                            'lsvm' (Linear SVM)
 """
 
 import os, sys
@@ -44,7 +54,7 @@ def main(args):
 
     dataset_path = args['-d']
 
-    evaluator = rc.Evaluator(args['--permuted'], args['--stemming'], args['--sort'], args['--print'])
+    evaluator = rc.Evaluator(args['--ml'], args['--permuted'], args['--stemming'], args['--sort'], args['--print'])
 
     full_dataset_path = evaluator.getTMabsPath(dataset_path)
     if os.path.isfile(full_dataset_path):

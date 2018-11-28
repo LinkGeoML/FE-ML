@@ -339,6 +339,19 @@ class calcSotAMetrics(baseMetrics):
 
 
 class calcCustomFEML(baseMetrics):
+    abbr_names = {
+        'lsvm': 0,
+        'dt': 1,
+        'rf': 2,
+        'nn': 3,
+        'ada': 4,
+        'nb': 5,
+        'qda': 6,
+        'lda': 7,
+        'et': 8,
+        'xgboost': 9,
+    }
+
     names = [
         "Linear SVM", # "Gaussian Process",
         "Decision Tree", "Random Forest", "Neural Net", "AdaBoost", "Naive Bayes", "QDA", "LDA",
@@ -350,8 +363,7 @@ class calcCustomFEML(baseMetrics):
         self.Y1 = []
         self.X2 = []
         self.Y2 = []
-        self.scores = []
-        self.importances = []
+
         self.classifiers = [
             LinearSVC(random_state=0, C=1.0),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
@@ -364,6 +376,10 @@ class calcCustomFEML(baseMetrics):
             ExtraTreesClassifier(n_estimators=600, random_state=0, n_jobs=int(njobs), max_depth=100),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
+        self.scores = [[] for _ in xrange(len(self.classifiers))]
+        self.importances = [None for _ in xrange(len(self.classifiers))]
+        self.mlalgs_to_run = self.abbr_names.keys()
+
         super(calcCustomFEML, self).__init__(len(self.classifiers), njobs, accures)
 
     def evaluate(self, row, sorting=False, stemming=False, permuted=False, freqTerms=False):
@@ -400,42 +416,46 @@ class calcCustomFEML(baseMetrics):
                 self.X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
             else: self.X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
 
-    def train_classifiers(self, polynomial=False):
+    def train_classifiers(self, ml_algs, polynomial=False):
         if polynomial:
             self.X1 = preprocessing.PolynomialFeatures().fit_transform(self.X1)
             self.X2 = preprocessing.PolynomialFeatures().fit_transform(self.X2)
 
         # iterate over classifiers
-        for i, (name, clf) in enumerate(zip(self.names, self.classifiers)):
-            scoreL = []
-            importances = None
-            print "Training {}...".format(name)
+        if set(ml_algs) != {'all'}: self.mlalgs_to_run = ml_algs
+        # for i, (name, clf) in enumerate(zip(self.names, self.classifiers)):
+        for name in self.mlalgs_to_run:
+            if name not in self.abbr_names.keys():
+                print '{} is not a valid ML algorithm'.format(name)
+                continue
 
-            clf.fit(np.array(self.X1), np.array(self.Y1))
-            start_time = time.time()
-            predictedL = list(clf.predict(np.array(self.X2)))
-            self.timers[i] += (time.time() - start_time)
-            if hasattr(clf, "feature_importances_"):
-                importances = clf.feature_importances_
-            elif hasattr(clf, "coef_"):
-                importances = clf.coef_.ravel()
-            scoreL.append(clf.score(np.array(self.X2), np.array(self.Y2)))
+            i = self.abbr_names[name]
 
-            clf.fit(np.array(self.X2), np.array(self.Y2))
+            print "Training {}...".format(self.names[i])
+
+            self.classifiers[i].fit(np.array(self.X1), np.array(self.Y1))
             start_time = time.time()
-            predictedL += list(clf.predict(np.array(self.X1)))
+            predictedL = list(self.classifiers[i].predict(np.array(self.X2)))
             self.timers[i] += (time.time() - start_time)
-            if hasattr(clf, "feature_importances_"):
-                importances += clf.feature_importances_
-            elif hasattr(clf, "coef_"):
+            if hasattr(self.classifiers[i], "feature_importances_"):
+                self.importances[i] = self.classifiers[i].feature_importances_
+            elif hasattr(self.classifiers[i], "coef_"):
+                self.importances[i] = self.classifiers[i].coef_.ravel()
+            self.scores[i].append(self.classifiers[i].score(np.array(self.X2), np.array(self.Y2)))
+
+            self.classifiers[i].fit(np.array(self.X2), np.array(self.Y2))
+            start_time = time.time()
+            predictedL += list(self.classifiers[i].predict(np.array(self.X1)))
+            self.timers[i] += (time.time() - start_time)
+            if hasattr(self.classifiers[i], "feature_importances_"):
+                self.importances[i] += self.classifiers[i].feature_importances_
+            elif hasattr(self.classifiers[i], "coef_"):
                 # TODO when coef_ is added to importances that already contains another one, it throws a
                 # ValueError: output array is read-only
-                importances = clf.coef_.ravel()
-            scoreL.append(clf.score(np.array(self.X1), np.array(self.Y1)))
+                self.importances[i] += self.classifiers[i].coef_.ravel()
+            self.scores[i].append(self.classifiers[i].score(np.array(self.X1), np.array(self.Y1)))
 
             self.timers[i] += self.timer
-            self.importances.append(importances)
-            self.scores.append(scoreL)
 
             print "Matching records..."
             real = self.Y2 + self.Y1
@@ -465,7 +485,11 @@ class calcCustomFEML(baseMetrics):
             #     Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
 
     def print_stats(self):
-        for idx, name in enumerate(self.names):
+        for name in self.mlalgs_to_run:
+            if name not in self.abbr_names.keys():
+                continue
+
+            idx = self.abbr_names[name]
             try:
                 timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
                 acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
@@ -476,7 +500,7 @@ class calcCustomFEML(baseMetrics):
                       (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
                 f1 = 2.0 * ( ( pre * rec ) / ( pre + rec ) )
 
-                print "Metric = Supervised Classifier :" , name
+                print "Metric = Supervised Classifier :" , self.names[idx]
                 print "Score (X2, X1) = ", self.scores[idx][0], self.scores[idx][1]
                 print "Accuracy =", acc
                 print "Precision =", pre
@@ -486,7 +510,7 @@ class calcCustomFEML(baseMetrics):
                 print "Number of training instances =", min(len(self.Y1), len(self.Y2))
                 print ""
                 print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
-                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(name, acc, pre, rec, f1, timer)
+                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(self.names[idx], acc, pre, rec, f1, timer)
                 print ""
                 sys.stdout.flush()
 
