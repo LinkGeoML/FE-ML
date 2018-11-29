@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os, sys
 import time
 from abc import ABCMeta, abstractmethod
@@ -19,8 +21,25 @@ from xgboost import XGBClassifier
 
 from external.datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, strike_a_match, \
     soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
-# from datasetcreator import detect_alphabet, fields
 from staticArguments import perform_stemming, normalize_str, sorted_nicely
+
+
+def transform(strA, strB, sorting=False, stemming=False, delimiter=' ', old_repl='', new_repl=''):
+    regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»]')
+
+    a = strA
+    b = strB
+
+    # print("{0} - norm: {1}".format(row['s1'], normalize_str(row['s1'])))
+    a = regex.sub('', a.decode('utf-8'))
+    b = regex.sub('', b.decode('utf-8'))
+    if sorting:
+        a = " ".join(sorted_nicely(a.replace(old_repl, new_repl).split(delimiter)))
+        b = " ".join(sorted_nicely(b.replace(old_repl, new_repl).split(delimiter)))
+    if stemming:
+        a = perform_stemming(a)
+        b = perform_stemming(b)
+    return a, b
 
 
 class StaticValues:
@@ -187,6 +206,69 @@ class FEMLFeatures:
 
         return base, mis
 
+    def cmp_on_transformation(self, row, sorting=False, stemming=False):
+        equal_sims = []
+        a_decoded, b_decoded = transform(row['s1'], row['s2'])
+
+        sim1 = damerau_levenshtein(a_decoded, b_decoded)
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if damerau_levenshtein(a, b) - sim1 < -0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+        sim8 = jaccard(a_decoded, b_decoded)
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if jaccard(a, b) - sim8 < -0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+        sim2 = jaro(a_decoded, b_decoded)
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if jaro(a, b) - sim2 < -0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+        sim3 = jaro_winkler(a_decoded, b_decoded)
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if jaro_winkler(a, b) - sim3 < -0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+        sim4 = jaro_winkler(a_decoded[::-1], b_decoded[::-1])
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if damerau_levenshtein(a[::-1], b[::-1]) - sim4 < 0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+        sim11 = monge_elkan(a_decoded, b_decoded)
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if monge_elkan(a, b) - sim11 < -0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+        sim7 = cosine(a_decoded, b_decoded)
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if cosine(a, b) - sim7 < -0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+        sim9 = strike_a_match(a_decoded, b_decoded)
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if strike_a_match(a, b) - sim9 < -0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+        sim12 = soft_jaccard(a_decoded, b_decoded)
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if soft_jaccard(a, b) - sim12 < -0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+        sim10 = skipgram(a_decoded, b_decoded)
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if skipgram(a, b) - sim10 < -0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+        sim13 = davies(a_decoded, a_decoded)
+        if sorting:
+            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
+            if davies(a, b) - sim13 < -0.05: equal_sims.append(False)
+            else: equal_sims.append(True)
+
+        if sum(equal_sims) > (len(equal_sims) / 2): return True
+        else: return False
+
 
 class baseMetrics:
     __metaclass__ = ABCMeta
@@ -223,21 +305,6 @@ class baseMetrics:
     def preprocessing(self, row):
         if row['res'] == "TRUE": self.num_true += 1.0
         else: self.num_false += 1.0
-
-    def transform(self, strA, strB, sorting=False, stemming=False):
-        a = strA
-        b = strB
-
-        # print("{0} - norm: {1}".format(row['s1'], normalize_str(row['s1'])))
-        if sorting:
-            a = " ".join(sorted_nicely(a.split(" ")))
-            b = " ".join(sorted_nicely(b.split(" ")))
-        if stemming:
-            a = perform_stemming(a)
-            b = perform_stemming(b)
-        a = a.decode('utf-8')
-        b = b.decode('utf-8')
-        return a, b
 
     @abstractmethod
     def evaluate(self, row, sorting=False, stemming=False, permuted=False, freqTerms=None):
@@ -284,7 +351,7 @@ class calcSotAMetrics(baseMetrics):
         tot_res = ""
         real = 1.0 if row['res'] == "TRUE" else 0.0
 
-        row['s1'], row['s2'] = self.transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming)
+        row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming)
 
         tot_res += self.generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], real)
         tot_res += self.generic_evaluator(8, 'jaccard', row['s1'], row['s2'], real)
@@ -390,7 +457,7 @@ class calcCustomFEML(baseMetrics):
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(0.0)
             else: self.Y2.append(0.0)
 
-        row['s1'], row['s2'] = self.transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming)
+        row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming)
 
         start_time = time.time()
         sim1 = damerau_levenshtein(row['s1'], row['s2'])

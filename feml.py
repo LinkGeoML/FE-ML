@@ -56,12 +56,13 @@ def main(args):
 
     evaluator = rc.Evaluator(args['--ml'], args['--permuted'], args['--stemming'], args['--sort'], args['--print'])
 
-    full_dataset_path = evaluator.getTMabsPath(dataset_path)
-    if os.path.isfile(full_dataset_path):
-        evaluator.initialize(full_dataset_path, args['--ev'], args['--jobs'], args['--accuracyresults'])
+    fpath_ds = evaluator.getTMabsPath(dataset_path)
+    if os.path.isfile(fpath_ds):
+        evaluator.initialize(fpath_ds, args['--ev'], args['--jobs'], args['--accuracyresults'])
         if args['--print']: evaluator.do_the_printing()
-        else: evaluator.evaluate_metrics(full_dataset_path)
-    else: print "No file {0} exists!!!\n".format(full_dataset_path)
+        elif args['--test']: evaluator.test_cases(fpath_ds)
+        else: evaluator.evaluate_metrics(fpath_ds)
+    else: print "No file {0} exists!!!\n".format(fpath_ds)
 
 
 if __name__ == "__main__":
