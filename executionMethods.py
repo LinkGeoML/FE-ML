@@ -194,8 +194,8 @@ class Evaluator:
                 # Calc frequent terms
                 # (str1, str2)
                 for str in ['s1', 's2']:
-                    ab = detect_alphabet(str)
-                    if ab not in self.termfrequencies.keys():
+                    ab = detect_alphabet(row[str])
+                    if ab not in self.termsperalphabet.keys():
                         self.termsperalphabet[ab] = {
                             'gram': Counter(),
                             '2gram_1': Counter(), '3gram_1': Counter(),
