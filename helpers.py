@@ -10,6 +10,15 @@ import pycountry
 
 sys.path.append(os.path.abspath('../Toponym-Matching'))
 
+
+def getTMabsPath(ds):
+    return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', ds)
+
+
+def getRelativePathtoWorking(ds):
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), ds)
+
+
 def get_langnm(s, lang_detect=False):
     lname = 'english'
     try:

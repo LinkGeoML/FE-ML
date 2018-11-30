@@ -9,7 +9,7 @@ from functools import partial
 from nltk.corpus import stopwords
 
 import femlAlgorithms as femlAlgs
-from helpers import perform_stemming, normalize_str, sorted_nicely
+from helpers import perform_stemming, normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
 from external.datasetcreator import detect_alphabet, fields
 
 
@@ -37,14 +37,6 @@ class Evaluator:
         self.stop_words = []
         self.abbr = {'A': [], 'B': []}
         self.evalClass = None
-
-    @staticmethod
-    def getTMabsPath(ds):
-        return os.path.join(os.path.abspath('../Toponym-Matching'), 'dataset', ds)
-
-    @staticmethod
-    def getRelativePathtoWorking(ds):
-        return os.path.join(os.path.dirname(os.path.abspath(__file__)), ds)
 
     def initialize(self, dataset, evalType='SotAMetrics', njobs=2, accuracyresults=False):
         try:
@@ -161,7 +153,7 @@ class Evaluator:
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
             print "Reading dataset..."
-            relpath = self.getRelativePathtoWorking(dataset)
+            relpath = getRelativePathtoWorking(dataset)
             with open(relpath) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')

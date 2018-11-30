@@ -46,6 +46,7 @@ from docopt import docopt
 from kitchen.text.converters import getwriter
 
 import executionMethods as rc
+from helpers import getTMabsPath
 
 
 def main(args):
@@ -56,7 +57,7 @@ def main(args):
 
     evaluator = rc.Evaluator(args['--ml'], args['--permuted'], args['--stemming'], args['--sort'], args['--print'])
 
-    fpath_ds = evaluator.getTMabsPath(dataset_path)
+    fpath_ds = getTMabsPath(dataset_path)
     if os.path.isfile(fpath_ds):
         evaluator.initialize(fpath_ds, args['--ev'], args['--jobs'], args['--accuracyresults'])
         if args['--print']: evaluator.do_the_printing()
