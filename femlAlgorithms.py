@@ -25,7 +25,8 @@ from staticArguments import perform_stemming, normalize_str, sorted_nicely
 
 
 def transform(strA, strB, sorting=False, stemming=False, delimiter=' ', old_repl='', new_repl=''):
-    regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»]')
+    regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
+    regexAlpha = re.compile(u'[ĀÁ]')
 
     a = strA
     b = strB
@@ -33,6 +34,8 @@ def transform(strA, strB, sorting=False, stemming=False, delimiter=' ', old_repl
     # print("{0} - norm: {1}".format(row['s1'], normalize_str(row['s1'])))
     a = regex.sub('', a.decode('utf-8'))
     b = regex.sub('', b.decode('utf-8'))
+    a = regexAlpha.sub('A', a)
+    b = regexAlpha.sub('A', b)
     if sorting:
         a = " ".join(sorted_nicely(a.replace(old_repl, new_repl).split(delimiter)))
         b = " ".join(sorted_nicely(b.replace(old_repl, new_repl).split(delimiter)))
@@ -71,6 +74,21 @@ class StaticValues:
                ["Monge-Elkan", 0.7],
                ["Soft-Jaccard", 0.6],
                ["Davis and De Salles", 0.65]]
+
+    nameIDs = {
+        'damerau_levenshtein': 0,
+        'davies': 12,
+        'skipgram': 9,
+        'permuted_winkler': 5,
+        'sorted_winkler': 4,
+        'soft_jaccard': 11,
+        'strike_a_match': 8,
+        'cosine': 6,
+        'monge_elkan': 10,
+        'jaro_winkler': 2,
+        'jaro': 1,
+        'jaccard': 7,
+    }
 
 
 class FEMLFeatures:
@@ -206,64 +224,86 @@ class FEMLFeatures:
 
         return base, mis
 
-    def cmp_on_transformation(self, row, sorting=False, stemming=False):
+    def cmp_score_after_transformation(self, row, sorting=False, stemming=False):
         equal_sims = []
         a_decoded, b_decoded = transform(row['s1'], row['s2'])
 
         sim1 = damerau_levenshtein(a_decoded, b_decoded)
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if damerau_levenshtein(a, b) - sim1 < -0.05: equal_sims.append(False)
+            if damerau_levenshtein(a, b) - sim1 < -0.05 \
+                    and sim1 >= StaticValues.methods[StaticValues.nameIDs['damerau_levenshtein']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
         sim8 = jaccard(a_decoded, b_decoded)
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if jaccard(a, b) - sim8 < -0.05: equal_sims.append(False)
+            if jaccard(a, b) - sim8 < -0.05 \
+                    and sim8 >= StaticValues.methods[StaticValues.nameIDs['jaccard']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
         sim2 = jaro(a_decoded, b_decoded)
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if jaro(a, b) - sim2 < -0.05: equal_sims.append(False)
+            if jaro(a, b) - sim2 < -0.05 \
+                    and sim2 >= StaticValues.methods[StaticValues.nameIDs['jaro']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
         sim3 = jaro_winkler(a_decoded, b_decoded)
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if jaro_winkler(a, b) - sim3 < -0.05: equal_sims.append(False)
+            if jaro_winkler(a, b) - sim3 < -0.05 \
+                    and sim3 >= StaticValues.methods[StaticValues.nameIDs['jaro_winkler']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
         sim4 = jaro_winkler(a_decoded[::-1], b_decoded[::-1])
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if damerau_levenshtein(a[::-1], b[::-1]) - sim4 < 0.05: equal_sims.append(False)
+            if jaro_winkler(a[::-1], b[::-1]) - sim4 < 0.05 \
+                    and sim4 >= StaticValues.methods[StaticValues.nameIDs['jaro_winkler']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
         sim11 = monge_elkan(a_decoded, b_decoded)
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if monge_elkan(a, b) - sim11 < -0.05: equal_sims.append(False)
+            if monge_elkan(a, b) - sim11 < -0.05 \
+                    and sim11 >= StaticValues.methods[StaticValues.nameIDs['monge_elkan']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
         sim7 = cosine(a_decoded, b_decoded)
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if cosine(a, b) - sim7 < -0.05: equal_sims.append(False)
+            if cosine(a, b) - sim7 < -0.05 \
+                    and sim7 >= StaticValues.methods[StaticValues.nameIDs['cosine']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
         sim9 = strike_a_match(a_decoded, b_decoded)
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if strike_a_match(a, b) - sim9 < -0.05: equal_sims.append(False)
+            if strike_a_match(a, b) - sim9 < -0.05 \
+                    and sim9 >= StaticValues.methods[StaticValues.nameIDs['strike_a_match']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
         sim12 = soft_jaccard(a_decoded, b_decoded)
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if soft_jaccard(a, b) - sim12 < -0.05: equal_sims.append(False)
+            if soft_jaccard(a, b) - sim12 < -0.05 \
+                    and sim12 >= StaticValues.methods[StaticValues.nameIDs['soft_jaccard']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
         sim10 = skipgram(a_decoded, b_decoded)
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if skipgram(a, b) - sim10 < -0.05: equal_sims.append(False)
+            if skipgram(a, b) - sim10 < -0.05 \
+                    and sim10 >= StaticValues.methods[StaticValues.nameIDs['skipgram']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
         sim13 = davies(a_decoded, a_decoded)
         if sorting:
             a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if davies(a, b) - sim13 < -0.05: equal_sims.append(False)
+            if davies(a, b) - sim13 < -0.05 \
+                    and sim13 >= StaticValues.methods[StaticValues.nameIDs['davies']][1]:
+                equal_sims.append(False)
             else: equal_sims.append(True)
 
         if sum(equal_sims) > (len(equal_sims) / 2): return True

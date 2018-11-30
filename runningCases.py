@@ -177,11 +177,11 @@ class Evaluator:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
             for row in reader:
-                if feml.cmp_on_transformation(row, sorting=True) is False:
+                if feml.cmp_score_after_transformation(row, sorting=True) is False:
                     fscoresless.write("{}\t{}\t{}\t{}\n".format(
                         row['s1'], row['s2'],
-                        " ".join(sorted_nicely(row['s1'].replace('\'', '').split(" "))),
-                        " ".join(sorted_nicely(row['s2'].replace('\'','').split(" ")))
+                        " ".join(sorted_nicely(row['s1'].split(" "))),
+                        " ".join(sorted_nicely(row['s2'].split(" ")))
                     ))
 
                 # Calc frequent terms
