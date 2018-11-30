@@ -9,7 +9,7 @@ from functools import partial
 from nltk.corpus import stopwords
 
 import femlAlgorithms as femlAlgs
-from staticArguments import perform_stemming, normalize_str, sorted_nicely
+from helpers import perform_stemming, normalize_str, sorted_nicely
 from external.datasetcreator import detect_alphabet, fields
 
 
@@ -63,6 +63,7 @@ class Evaluator:
             'zh', 'ja', 'id', 'fa', 'ar', 'bn', 'ro', 'th', 'el', 'hi', 'gl', 'hy', 'ko', 'yo', 'vi',
             'sw', 'so', 'he', 'ha', 'br', 'af', 'ku', 'ms', 'tl', 'ur'
         ]
+
         if os.path.isfile(os.path.join(os.getcwd(), 'stopwords-iso.json')):
             with open("stopwords-iso.json", "r") as read_file:
                 data = json.load(read_file)
@@ -99,6 +100,9 @@ class Evaluator:
         return 0
 
     def do_the_printing(self):
+        if not os.path.exists("output"):
+            os.makedirs("output")
+
         print "Printing 10 most common single freq terms..."
         print "gram: {0}".format(self.termfrequencies['gram'].most_common(20))
 
@@ -114,7 +118,7 @@ class Evaluator:
         print "Number of abbr found: {0}".format(len(filter(partial(is_not, '-'), self.abbr['A'])) +
                                                  len(filter(partial(is_not, '-'), self.abbr['B'])))
 
-        with open("freqTerms.csv", "w") as f:
+        with open("./output/freqTerms.csv", "w") as f:
             f.write('gram\t')
             f.write('bigram_pos_1\t')
             f.write('bigram_pos_2\t')
@@ -148,7 +152,7 @@ class Evaluator:
                 f.write("{},{}\t".format(sorted_freq_trigram_terms_pos3[i][0], sorted_freq_trigram_terms_pos3[i][1]))
                 f.write('\n')
 
-        with open("abbr.csv", "w") as f:
+        with open("./output/abbr.csv", "w") as f:
             f.write('strA\tstrB\tline_pos\n')
             for i in range(min(len(self.abbr['A']), len(self.abbr['B']))):
                 if self.abbr['A'][i] != '-' or self.abbr['B'][i] != '-':
@@ -168,8 +172,11 @@ class Evaluator:
                 self.evalClass.print_stats()
 
     def test_cases(self, dataset):
+        if not os.path.exists("output"):
+            os.makedirs("output")
+
         abbr = Counter()
-        fscoresless = open("lower_score_on_transformation.csv", "w")
+        fscoresless = open("./output/lower_score_on_transformation.csv", "w")
         fscoresless.write("strA\tstrB\tsorted_strA\tsorted_strB\n")
 
         feml = femlAlgs.FEMLFeatures()
@@ -217,13 +224,13 @@ class Evaluator:
         if not fscoresless.closed:
             fscoresless.close()
 
-        with open("abbr.csv", "w") as f:
+        with open("./output/abbr.csv", "w") as f:
             f.write('abbr\tcount\n')
             for value, count in abbr.most_common():
                 f.write("{}\t{}\n".format(value, count))
 
         for k, v in self.termsperalphabet.items():
-            with open("freqterms_for_{}.csv".format(k), "w") as f:
+            with open("./output/freqterms_for_{}.csv".format(k), "w") as f:
                 f.write('gram\t')
                 f.write('bigram_pos_1\t')
                 f.write('bigram_pos_2\t')

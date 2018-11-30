@@ -21,7 +21,7 @@ from xgboost import XGBClassifier
 
 from external.datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, strike_a_match, \
     soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
-from staticArguments import perform_stemming, normalize_str, sorted_nicely
+from helpers import perform_stemming, normalize_str, sorted_nicely
 
 
 def transform(strA, strB, sorting=False, stemming=False, delimiter=' ', old_repl='', new_repl=''):
