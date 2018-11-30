@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 import math
 import re
 import itertools
+import unicodedata
 
 import numpy as np
 from sklearn.neural_network import MLPClassifier
@@ -26,16 +27,17 @@ from helpers import perform_stemming, normalize_str, sorted_nicely
 
 def transform(strA, strB, sorting=False, stemming=False, delimiter=' ', old_repl='', new_repl=''):
     regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
-    regexAlpha = re.compile(u'[ĀÁ]')
 
     a = strA
     b = strB
 
-    # print("{0} - norm: {1}".format(row['s1'], normalize_str(row['s1'])))
-    a = regex.sub('', a.decode('utf-8'))
-    b = regex.sub('', b.decode('utf-8'))
-    a = regexAlpha.sub('A', a)
-    b = regexAlpha.sub('A', b)
+    # NFKD: first applies a canonical decomposition, i.e., translates each character into its decomposed form.
+    # and afterwards apply the compatibility decomposition, i.e. replace all compatibility characters with their
+    # equivalents.
+    a = unicodedata.normalize('NFKD', a.decode('utf8')) # .encode('ASCII', 'ignore')
+    b = unicodedata.normalize('NFKD', b.decode('utf8')) # .encode('ASCII', 'ignore')
+    a = regex.sub('', a)
+    b = regex.sub('', b)
     if sorting:
         a = " ".join(sorted_nicely(a.replace(old_repl, new_repl).split(delimiter)))
         b = " ".join(sorted_nicely(b.replace(old_repl, new_repl).split(delimiter)))

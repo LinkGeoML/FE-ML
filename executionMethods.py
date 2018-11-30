@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os, sys
 import csv
 from collections import Counter
@@ -5,6 +7,8 @@ import itertools
 import json
 from operator import is_not
 from functools import partial
+import unicodedata
+import re
 
 from nltk.corpus import stopwords
 
@@ -175,12 +179,16 @@ class Evaluator:
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
+
+            regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
             for row in reader:
                 if feml.cmp_score_after_transformation(row, sorting=True) is False:
+                    a = regex.sub('', unicodedata.normalize('NFKD', row['s1'].decode('utf8'))).encode('ASCII', 'ignore')
+                    b = regex.sub('', unicodedata.normalize('NFKD', row['s2'].decode('utf8'))).encode('ASCII', 'ignore')
                     fscoresless.write("{}\t{}\t{}\t{}\n".format(
                         row['s1'], row['s2'],
-                        " ".join(sorted_nicely(row['s1'].split(" "))),
-                        " ".join(sorted_nicely(row['s2'].split(" ")))
+                        " ".join(sorted_nicely(a.split(" "))),
+                        " ".join(sorted_nicely(b.split(" ")))
                     ))
 
                 # Calc frequent terms
