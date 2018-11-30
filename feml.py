@@ -45,7 +45,7 @@ import helpers
 from docopt import docopt
 from kitchen.text.converters import getwriter
 
-import runningCases as rc
+import executionMethods as rc
 
 
 def main(args):
