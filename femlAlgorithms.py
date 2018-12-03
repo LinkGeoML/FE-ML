@@ -509,8 +509,10 @@ class calcCustomFEML(baseMetrics):
             i = self.abbr_names[name]
 
             print "Training {}...".format(self.names[i])
-
+            start_time = time.time()
             self.classifiers[i].fit(np.array(self.X1), np.array(self.Y1))
+            print "Training took {:.3f} min".format((time.time() - start_time) / 60.0)
+
             start_time = time.time()
             predictedL = list(self.classifiers[i].predict(np.array(self.X2)))
             self.timers[i] += (time.time() - start_time)
