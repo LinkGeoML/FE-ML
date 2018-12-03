@@ -14,7 +14,7 @@ from nltk.corpus import stopwords
 
 import femlAlgorithms as femlAlgs
 from helpers import perform_stemming, normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
-from external.datasetcreator import detect_alphabet, fields
+from external.datasetcreator import detect_alphabet, fields, strip_accents
 
 
 class Evaluator:
@@ -25,10 +25,11 @@ class Evaluator:
         'DLearning': femlAlgs.calcDLearning,
     }
 
-    def __init__(self, ml_algs, permuted=False, stemming=False, sorting=False, do_printing=False):
+    def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, do_printing=False):
         self.ml_algs = [x for x in ml_algs.split(',')]
         self.permuted = permuted
         self.stemming = stemming
+        self.canonical = canonical
         self.sorting = sorting
         self.only_printing = do_printing
 
@@ -163,7 +164,9 @@ class Evaluator:
                                         delimiter='\t')
 
                 for row in reader:
-                    self.evalClass.evaluate(row, self.sorting, self.stemming, self.permuted, self.termfrequencies)
+                    self.evalClass.evaluate(
+                        row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies
+                    )
                 if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                 self.evalClass.print_stats()
 
@@ -180,15 +183,15 @@ class Evaluator:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
 
-            regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
             for row in reader:
-                if feml.cmp_score_after_transformation(row, sorting=True) is False:
-                    a = regex.sub('', unicodedata.normalize('NFKD', row['s1'].decode('utf8'))).encode('ASCII', 'ignore')
-                    b = regex.sub('', unicodedata.normalize('NFKD', row['s2'].decode('utf8'))).encode('ASCII', 'ignore')
+                if feml.cmp_score_after_transformation(row, sorting=True, canonical=True) is False:
+                    a = strip_accents(row['s1'].decode('utf8'))
+                    b = strip_accents(row['s2'].decode('utf8'))
+
                     fscoresless.write("{}\t{}\t{}\t{}\n".format(
                         row['s1'], row['s2'],
-                        " ".join(sorted_nicely(a.split(" "))),
-                        " ".join(sorted_nicely(b.split(" ")))
+                        " ".join(sorted_nicely(a.lower().split(" "))).encode('ASCII', 'ignore'),
+                        " ".join(sorted_nicely(b.lower().split(" "))).encode('ASCII', 'ignore')
                     ))
 
                 # Calc frequent terms

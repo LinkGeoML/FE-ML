@@ -14,6 +14,7 @@ Options:
                             experiments. [default: dataset-string-similarity.txt].
   --permuted                permuted Jaro-Winkler metric. Default is False.
   --stemming                perform stemming. Default is False.
+  --canonical               perform canonical decomposition (NFKD). Default is False.
   --sort                    sort alphanumerically.
   --ev <evaluator_type>     type of experiments to conduct. [default: SotAMetrics]
   --print                   print only computed variables. Default is False.
@@ -55,7 +56,8 @@ def main(args):
 
     dataset_path = args['-d']
 
-    evaluator = rc.Evaluator(args['--ml'], args['--permuted'], args['--stemming'], args['--sort'], args['--print'])
+    evaluator = rc.Evaluator(args['--ml'], args['--sort'], args['--stemming'], args['--canonical'],
+                             args['--permuted'], args['--print'])
 
     fpath_ds = getTMabsPath(dataset_path)
     if os.path.isfile(fpath_ds):

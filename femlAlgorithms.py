@@ -22,25 +22,29 @@ from xgboost import XGBClassifier
 
 from external.datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, strike_a_match, \
     soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
+from external.datasetcreator import strip_accents
 from helpers import perform_stemming, normalize_str, sorted_nicely
 
 
-def transform(strA, strB, sorting=False, stemming=False, delimiter=' ', old_repl='', new_repl=''):
-    regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
+def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' '):
+    a = strA.decode('utf8').lower()
+    b = strB.decode('utf8').lower()
 
-    a = strA
-    b = strB
+    if canonical:
+        # NFKD: first applies a canonical decomposition, i.e., translates each character into its decomposed form.
+        # and afterwards apply the compatibility decomposition, i.e. replace all compatibility characters with their
+        # equivalents.
+        # regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
 
-    # NFKD: first applies a canonical decomposition, i.e., translates each character into its decomposed form.
-    # and afterwards apply the compatibility decomposition, i.e. replace all compatibility characters with their
-    # equivalents.
-    a = unicodedata.normalize('NFKD', a.decode('utf8')) # .encode('ASCII', 'ignore')
-    b = unicodedata.normalize('NFKD', b.decode('utf8')) # .encode('ASCII', 'ignore')
-    a = regex.sub('', a)
-    b = regex.sub('', b)
+        # a = unicodedata.normalize('NFKD', a.decode('utf8')) # .encode('ASCII', 'ignore')
+        # a = regex.sub('', a)
+        a = strip_accents(a)
+        b = strip_accents(b)
+
     if sorting:
-        a = " ".join(sorted_nicely(a.replace(old_repl, new_repl).split(delimiter)))
-        b = " ".join(sorted_nicely(b.replace(old_repl, new_repl).split(delimiter)))
+        a = " ".join(sorted_nicely(a.split(delimiter)))
+        b = " ".join(sorted_nicely(b.split(delimiter)))
+
     if stemming:
         a = perform_stemming(a)
         b = perform_stemming(b)
@@ -226,89 +230,53 @@ class FEMLFeatures:
 
         return base, mis
 
-    def cmp_score_after_transformation(self, row, sorting=False, stemming=False):
-        equal_sims = []
-        a_decoded, b_decoded = transform(row['s1'], row['s2'])
+    def _generic_metric_cmp(self, funcnm, a, b, sorting, stemming, canonical, invert=False):
+        res = None
 
-        sim1 = damerau_levenshtein(a_decoded, b_decoded)
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if damerau_levenshtein(a, b) - sim1 < -0.05 \
-                    and sim1 >= StaticValues.methods[StaticValues.nameIDs['damerau_levenshtein']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
-        sim8 = jaccard(a_decoded, b_decoded)
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if jaccard(a, b) - sim8 < -0.05 \
-                    and sim8 >= StaticValues.methods[StaticValues.nameIDs['jaccard']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
-        sim2 = jaro(a_decoded, b_decoded)
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if jaro(a, b) - sim2 < -0.05 \
-                    and sim2 >= StaticValues.methods[StaticValues.nameIDs['jaro']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
-        sim3 = jaro_winkler(a_decoded, b_decoded)
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if jaro_winkler(a, b) - sim3 < -0.05 \
-                    and sim3 >= StaticValues.methods[StaticValues.nameIDs['jaro_winkler']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
-        sim4 = jaro_winkler(a_decoded[::-1], b_decoded[::-1])
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if jaro_winkler(a[::-1], b[::-1]) - sim4 < 0.05 \
-                    and sim4 >= StaticValues.methods[StaticValues.nameIDs['jaro_winkler']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
-        sim11 = monge_elkan(a_decoded, b_decoded)
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if monge_elkan(a, b) - sim11 < -0.05 \
-                    and sim11 >= StaticValues.methods[StaticValues.nameIDs['monge_elkan']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
-        sim7 = cosine(a_decoded, b_decoded)
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if cosine(a, b) - sim7 < -0.05 \
-                    and sim7 >= StaticValues.methods[StaticValues.nameIDs['cosine']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
-        sim9 = strike_a_match(a_decoded, b_decoded)
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if strike_a_match(a, b) - sim9 < -0.05 \
-                    and sim9 >= StaticValues.methods[StaticValues.nameIDs['strike_a_match']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
-        sim12 = soft_jaccard(a_decoded, b_decoded)
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if soft_jaccard(a, b) - sim12 < -0.05 \
-                    and sim12 >= StaticValues.methods[StaticValues.nameIDs['soft_jaccard']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
-        sim10 = skipgram(a_decoded, b_decoded)
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if skipgram(a, b) - sim10 < -0.05 \
-                    and sim10 >= StaticValues.methods[StaticValues.nameIDs['skipgram']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
-        sim13 = davies(a_decoded, a_decoded)
-        if sorting:
-            a, b = transform(row['s1'], row['s2'], sorting, stemming, old_repl='\'')
-            if davies(a, b) - sim13 < -0.05 \
-                    and sim13 >= StaticValues.methods[StaticValues.nameIDs['davies']][1]:
-                equal_sims.append(False)
-            else: equal_sims.append(True)
+        tmp_a, tmp_b = transform(a, b)
+        if invert:
+            tmp_a = tmp_a[::-1]
+            tmp_b = tmp_b[::-1]
+        sim = StaticValues.algorithms[funcnm](tmp_a, tmp_b)
 
-        if sum(equal_sims) > (len(equal_sims) / 2): return True
+        if sorting:
+            tmp_a, tmp_b = transform(a, b, sorting, stemming, canonical)
+            if invert:
+                tmp_a = tmp_a[::-1]
+                tmp_b = tmp_b[::-1]
+            if (sim - StaticValues.algorithms[funcnm](tmp_a, tmp_b)) > 0.05:
+                    # and sim >= StaticValues.methods[StaticValues.nameIDs[funcnm]][1]:
+                res = False
+            else: res = True
+        return res
+
+    def cmp_score_after_transformation(self, row, sorting=False, stemming=False, canonical=False):
+        sims_correlation = []
+
+        res = self._generic_metric_cmp('damerau_levenshtein', row['s1'], row['s2'], sorting, stemming, canonical)
+        if res is not None: sims_correlation.append(res)
+        res = self._generic_metric_cmp('jaccard', row['s1'], row['s2'], sorting, stemming, canonical)
+        if res is not None: sims_correlation.append(res)
+        res = self._generic_metric_cmp('jaro', row['s1'], row['s2'], sorting, stemming, canonical)
+        if res is not None: sims_correlation.append(res)
+        res = self._generic_metric_cmp('jaro_winkler', row['s1'], row['s2'], sorting, stemming, canonical)
+        if res is not None: sims_correlation.append(res)
+        res = self._generic_metric_cmp('jaro_winkler', row['s1'], row['s2'], sorting, stemming, canonical, invert=True)
+        if res is not None: sims_correlation.append(res)
+        res = self._generic_metric_cmp('monge_elkan', row['s1'], row['s2'], sorting, stemming, canonical)
+        if res is not None: sims_correlation.append(res)
+        res = self._generic_metric_cmp('cosine', row['s1'], row['s2'], sorting, stemming, canonical)
+        if res is not None: sims_correlation.append(res)
+        res = self._generic_metric_cmp('strike_a_match', row['s1'], row['s2'], sorting, stemming, canonical)
+        if res is not None: sims_correlation.append(res)
+        res = self._generic_metric_cmp('soft_jaccard', row['s1'], row['s2'], sorting, stemming, canonical)
+        if res is not None: sims_correlation.append(res)
+        res = self._generic_metric_cmp('skipgram', row['s1'], row['s2'], sorting, stemming, canonical)
+        if res is not None: sims_correlation.append(res)
+        res = self._generic_metric_cmp('davies', row['s1'], row['s2'], sorting, stemming, canonical)
+        if res is not None: sims_correlation.append(res)
+
+        if sum(sims_correlation) > (len(sims_correlation) / 2.0): return True
         else: return False
 
 
@@ -349,7 +317,7 @@ class baseMetrics:
         else: self.num_false += 1.0
 
     @abstractmethod
-    def evaluate(self, row, sorting=False, stemming=False, permuted=False, freqTerms=None):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None):
         pass
 
     @abstractmethod
@@ -381,7 +349,7 @@ class calcSotAMetrics(baseMetrics):
     def __init__(self, njobs, accures):
         super(calcSotAMetrics, self).__init__(len(StaticValues.methods), njobs, accures)
 
-    def generic_evaluator(self, idx, algnm, str1, str2, match):
+    def _generic_evaluator(self, idx, algnm, str1, str2, match):
         start_time = time.time()
         sim = StaticValues.algorithms[algnm](str1, str2)
         res, varnm = self.prediction(idx, sim, match)
@@ -389,26 +357,26 @@ class calcSotAMetrics(baseMetrics):
         self.predictedState[varnm][idx - 1] += 1.0
         return res
 
-    def evaluate(self, row, sorting=False, stemming=False, permuted=False, freqTerms=None):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None):
         tot_res = ""
         real = 1.0 if row['res'] == "TRUE" else 0.0
 
-        row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming)
+        row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
-        tot_res += self.generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], real)
-        tot_res += self.generic_evaluator(8, 'jaccard', row['s1'], row['s2'], real)
-        tot_res += self.generic_evaluator(2, 'jaro', row['s1'], row['s2'], real)
-        tot_res += self.generic_evaluator(3, 'jaro_winkler', row['s1'], row['s2'], real)
-        tot_res += self.generic_evaluator(4, 'jaro_winkler', row['s1'][::-1], row['s2'][::-1], real)
-        tot_res += self.generic_evaluator(11, 'monge_elkan', row['s1'], row['s2'], real)
-        tot_res += self.generic_evaluator(7, 'cosine', row['s1'], row['s2'], real)
-        tot_res += self.generic_evaluator(9, 'strike_a_match', row['s1'], row['s2'], real)
-        tot_res += self.generic_evaluator(12, 'soft_jaccard', row['s1'], row['s2'], real)
-        tot_res += self.generic_evaluator(5, 'sorted_winkler', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(8, 'jaccard', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(2, 'jaro', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(3, 'jaro_winkler', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(4, 'jaro_winkler', row['s1'][::-1], row['s2'][::-1], real)
+        tot_res += self._generic_evaluator(11, 'monge_elkan', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(7, 'cosine', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(9, 'strike_a_match', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(12, 'soft_jaccard', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(5, 'sorted_winkler', row['s1'], row['s2'], real)
         if permuted:
-            tot_res += self.generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], real)
-        tot_res += self.generic_evaluator(10, 'skipgram', row['s1'], row['s2'], real)
-        tot_res += self.generic_evaluator(13, 'davies', row['s1'], row['s2'], real)
+            tot_res += self._generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(10, 'skipgram', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(13, 'davies', row['s1'], row['s2'], real)
 
         if self.accuracyresults:
             if real == 1.0:
@@ -491,7 +459,7 @@ class calcCustomFEML(baseMetrics):
 
         super(calcCustomFEML, self).__init__(len(self.classifiers), njobs, accures)
 
-    def evaluate(self, row, sorting=False, stemming=False, permuted=False, freqTerms=False):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False):
         if row['res'] == "TRUE":
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(1.0)
             else: self.Y2.append(1.0)
@@ -499,7 +467,7 @@ class calcCustomFEML(baseMetrics):
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(0.0)
             else: self.Y2.append(0.0)
 
-        row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming)
+        row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
         start_time = time.time()
         sim1 = damerau_levenshtein(row['s1'], row['s2'])
