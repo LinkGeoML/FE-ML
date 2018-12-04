@@ -517,20 +517,19 @@ class calcCustomFEML(baseMetrics):
             ):
                 start_time = time.time()
                 self.classifiers[i].fit(np.array(train_X), np.array(train_Y))
-                train_time = time.time() - start_time
+                train_time += (time.time() - start_time)
 
                 start_time = time.time()
                 predictedL += list(self.classifiers[i].predict(np.array(pred_X)))
                 self.timers[i] += (time.time() - start_time)
 
                 if hasattr(self.classifiers[i], "feature_importances_"):
-                    print self.classifiers[i].feature_importances_
                     self.importances[i] += self.classifiers[i].feature_importances_
                 elif hasattr(self.classifiers[i], "coef_"):
                     self.importances[i] += self.classifiers[i].coef_.ravel()
                 self.scores[i].append(self.classifiers[i].score(np.array(pred_X), np.array(pred_Y)))
 
-            print "Training took {:.3f} min".format(train_time / 60.0)
+            print "Training took {:.3f} min".format(train_time / (2* 60.0))
             self.timers[i] += self.timer
 
             print "Matching records..."
