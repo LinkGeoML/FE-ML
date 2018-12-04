@@ -454,7 +454,7 @@ class calcCustomFEML(baseMetrics):
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         self.scores = [[] for _ in xrange(len(self.classifiers))]
-        self.importances = [None for _ in xrange(len(self.classifiers))]
+        self.importances = [0.0 for _ in xrange(len(self.classifiers))]
         self.mlalgs_to_run = self.abbr_names.keys()
 
         super(calcCustomFEML, self).__init__(len(self.classifiers), njobs, accures)
@@ -508,32 +508,29 @@ class calcCustomFEML(baseMetrics):
 
             i = self.abbr_names[name]
 
+            train_time = 0
+            predictedL = list()
             print "Training {}...".format(self.names[i])
-            start_time = time.time()
-            self.classifiers[i].fit(np.array(self.X1), np.array(self.Y1))
-            print "Training took {:.3f} min".format((time.time() - start_time) / 60.0)
+            for train_X, train_Y, pred_X, pred_Y in zip(
+                    [row for row in [self.X1, self.X2]], [row for row in [self.Y1, self.Y2]],
+                    [row for row in [self.X2, self.X1]], [row for row in [self.Y2, self.Y1]]
+            ):
+                start_time = time.time()
+                self.classifiers[i].fit(np.array(train_X), np.array(train_Y))
+                train_time = time.time() - start_time
 
-            start_time = time.time()
-            predictedL = list(self.classifiers[i].predict(np.array(self.X2)))
-            self.timers[i] += (time.time() - start_time)
-            if hasattr(self.classifiers[i], "feature_importances_"):
-                self.importances[i] = self.classifiers[i].feature_importances_
-            elif hasattr(self.classifiers[i], "coef_"):
-                self.importances[i] = self.classifiers[i].coef_.ravel()
-            self.scores[i].append(self.classifiers[i].score(np.array(self.X2), np.array(self.Y2)))
+                start_time = time.time()
+                predictedL += list(self.classifiers[i].predict(np.array(pred_X)))
+                self.timers[i] += (time.time() - start_time)
 
-            self.classifiers[i].fit(np.array(self.X2), np.array(self.Y2))
-            start_time = time.time()
-            predictedL += list(self.classifiers[i].predict(np.array(self.X1)))
-            self.timers[i] += (time.time() - start_time)
-            if hasattr(self.classifiers[i], "feature_importances_"):
-                self.importances[i] += self.classifiers[i].feature_importances_
-            elif hasattr(self.classifiers[i], "coef_"):
-                # TODO when coef_ is added to importances that already contains another one, it throws a
-                # ValueError: output array is read-only
-                self.importances[i] += self.classifiers[i].coef_.ravel()
-            self.scores[i].append(self.classifiers[i].score(np.array(self.X1), np.array(self.Y1)))
+                if hasattr(self.classifiers[i], "feature_importances_"):
+                    print self.classifiers[i].feature_importances_
+                    self.importances[i] += self.classifiers[i].feature_importances_
+                elif hasattr(self.classifiers[i], "coef_"):
+                    self.importances[i] += self.classifiers[i].coef_.ravel()
+                self.scores[i].append(self.classifiers[i].score(np.array(pred_X), np.array(pred_Y)))
 
+            print "Training took {:.3f} min".format(train_time / 60.0)
             self.timers[i] += self.timer
 
             print "Matching records..."
