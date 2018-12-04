@@ -13,9 +13,22 @@ import nltk
 def find_ngrams(token_list, n):
 	s = []
     
-	for token in token_list:
-		for i in range(0, len(token)- n + 1):
-			s.append(token[i:n+i])
+	#for token in token_list:
+	#	for i in range(0, len(token)- n + 1):
+	#		s.append(token[i:n+i])
+	
+	#for i in range(len(token_list) - n + 1):
+	#	s.append(token_list[i] + " " + token_list[i+1])
+	
+	for i in range(len(token_list)):
+		if i == 0:
+			s.append(token_list[i] + " ")
+		elif i == len(token_list) - 1:
+			s.append(" " + token_list[i])
+		else:
+			s.append(" " + token_list[i])
+			s.append(token_list[i] + " ")
+	
 	return s
 
 def get_corpus(conn, args, n_grams = False):
@@ -58,8 +71,20 @@ def get_top_k_features(corpus, args):
 		else:
 			word_counter[word] = 1
 			
-	popular_words = sorted(word_counter, key = word_counter.get, reverse = True)
+	popular_words = sorted(word_counter, key = word_counter.get, reverse = True)	
 	
+	
+	import csv
+	
+	with open('bigram_features_ranked2.csv', 'a') as csvFile:
+		writer = csv.writer(csvFile)
+		for word in popular_words:
+			list_to_csv = [word, word_counter[word]]
+				
+			writer.writerow(list_to_csv)
+
+	csvFile.close()
+
 	#print(popular_words)
 	
 	top_k = popular_words[:int(args["k"])]
@@ -124,13 +149,14 @@ def main():
 	# call the appropriate function to connect to the database
 	conn = connect_to_db()
 	
-	features_top_k_words = get_features_top_k(conn, args)
+	#features_top_k_words = get_features_top_k(conn, args)
 	
 	#print(features_top_k_words)
 	
 	features_top_k_ngrams = get_features_top_k_ngrams(conn, args)
 	#print(features_top_k_ngrams)
 	
+	"""
 	import csv
 	
 	with open('data.csv', 'a') as csvFile:
@@ -139,6 +165,6 @@ def main():
 			writer.writerow(features_top_k_ngrams[id])
 
 	csvFile.close()
-	
+	"""
 if __name__ == "__main__":
    main()
