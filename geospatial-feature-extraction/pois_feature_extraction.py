@@ -99,8 +99,8 @@ def update_poi_id_dictionary(poi_id_to_street_id_dict, street_id_to_closest_pois
 	# this road's closest poi label boolean and count to the
 	# dictionary poi_id_to_closest_pois_boolean_count_dict
 	for poi_id in poi_id_to_street_id_dict:
-		poi_id_to_closest_pois_boolean_count_dict[poi_id] = street_id_to_closest_pois_boolean_and_counts_per_label_dict[poi_id_to_street_id_dict[poi_id]]
-		
+		poi_id_to_closest_pois_boolean_count_dict[poi_id] = street_id_to_closest_pois_boolean_and_counts_per_label_dict[poi_id_to_street_id_dict[poi_id][1]]
+
 	return poi_id_to_closest_pois_boolean_count_dict
 	
 	
@@ -116,7 +116,6 @@ def get_closest_pois_boolean_and_counts_per_label_streets(conn, args, threshold 
 	#  function but with road ids as the keys of the dictionary)
 	threshold = 1000.0
 	street_id_to_label_boolean_counts_dict = get_street_id_to_closest_pois_boolean_and_counts_per_label_dict(conn, threshold, args)
-	return
 	
 	# construct a dictionary similar to the one returned by get_poi_id_to_boolean_and_counts_per_class_dict
 	# which will map a poi's id to the label boolean and count values of the poi's situated within threshold 
@@ -282,6 +281,21 @@ def main():
 	#print(closest_pois_boolean_and_counts_per_label)
 	
 	closest_pois_boolean_and_counts_per_label_streets = get_closest_pois_boolean_and_counts_per_label_streets(conn, args, threshold)
+	print(closest_pois_boolean_and_counts_per_label_streets)
+	
+	"""
+	import csv
+	
+	with open('data.csv', 'a') as csvFile:
+		writer = csv.writer(csvFile)
+		for id in closest_pois_boolean_and_counts_per_label:
+			feature_list = [item for sublist in closest_pois_boolean_and_counts_per_label[id] for item in sublist]
+				
+			#print(feature_list)
+			writer.writerow(feature_list)
+
+	csvFile.close()
+	"""
 	
 if __name__ == "__main__":
    main()

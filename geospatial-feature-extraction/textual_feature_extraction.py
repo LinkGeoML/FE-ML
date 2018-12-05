@@ -58,6 +58,9 @@ def get_corpus(conn, args, n_grams = False):
 		
 	corpus = [elem for sublist in corpus for elem in sublist]
 	
+	if not n_grams:
+		corpus = [elem for elem in corpus if len(elem) > 2]
+	
 	#print(corpus)
 	
 	return corpus
@@ -76,7 +79,7 @@ def get_top_k_features(corpus, args):
 	
 	import csv
 	
-	with open('bigram_features_ranked2.csv', 'a') as csvFile:
+	with open('word_features_ranked.csv', 'a') as csvFile:
 		writer = csv.writer(csvFile)
 		for word in popular_words:
 			list_to_csv = [word, word_counter[word]]
@@ -149,11 +152,11 @@ def main():
 	# call the appropriate function to connect to the database
 	conn = connect_to_db()
 	
-	#features_top_k_words = get_features_top_k(conn, args)
+	features_top_k_words = get_features_top_k(conn, args)
 	
 	#print(features_top_k_words)
 	
-	features_top_k_ngrams = get_features_top_k_ngrams(conn, args)
+	#features_top_k_ngrams = get_features_top_k_ngrams(conn, args)
 	#print(features_top_k_ngrams)
 	
 	"""
