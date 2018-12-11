@@ -67,32 +67,32 @@ class Evaluator:
                 for lang in FREElanguages:
                     self.stop_words.extend(data[lang])
 
-        feml = femlAlgs.FEMLFeatures()
+        # feml = femlAlgs.FEMLFeatures()
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
             for row in reader:
                 self.evalClass.preprocessing(row)
 
-                # Calc frequent terms
-                # (str1, str2)
-                for str in ['s1', 's2']:
-                    fterms, stop_words = normalize_str(row[str], self.stop_words)
-                    for term in fterms:
-                        self.termfrequencies['gram'][term] += 1
-                    for gram in list(itertools.chain.from_iterable(
-                        [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
-                        if len(gram) == 2:
-                            self.termfrequencies['2gram_1'][gram[0]] += 1
-                            self.termfrequencies['2gram_2'][gram[1]] += 1
-                        else:
-                            self.termfrequencies['3gram_1'][gram[0]] += 1
-                            self.termfrequencies['3gram_2'][gram[1]] += 1
-                            self.termfrequencies['3gram_3'][gram[2]] += 1
-
-                # calc the number of abbr that exist
-                self.abbr['A'].append(feml.containsAbbr(row['s1']))
-                self.abbr['B'].append(feml.containsAbbr(row['s2']))
+        #         # Calc frequent terms
+        #         # (str1, str2)
+        #         for str in ['s1', 's2']:
+        #             fterms, stop_words = normalize_str(row[str], self.stop_words)
+        #             for term in fterms:
+        #                 self.termfrequencies['gram'][term] += 1
+        #             for gram in list(itertools.chain.from_iterable(
+        #                 [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
+        #                 if len(gram) == 2:
+        #                     self.termfrequencies['2gram_1'][gram[0]] += 1
+        #                     self.termfrequencies['2gram_2'][gram[1]] += 1
+        #                 else:
+        #                     self.termfrequencies['3gram_1'][gram[0]] += 1
+        #                     self.termfrequencies['3gram_2'][gram[1]] += 1
+        #                     self.termfrequencies['3gram_3'][gram[2]] += 1
+        #
+        #         # calc the number of abbr that exist
+        #         self.abbr['A'].append(feml.containsAbbr(row['s1']))
+        #         self.abbr['B'].append(feml.containsAbbr(row['s2']))
 
         return 0
 

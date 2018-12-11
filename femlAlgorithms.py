@@ -445,12 +445,12 @@ class calcCustomFEML(baseMetrics):
             LinearSVC(random_state=0, C=1.0),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
             DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
-            RandomForestClassifier(n_estimators=600, random_state=0, n_jobs=int(njobs), max_depth=100),
+            RandomForestClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=60),
             MLPClassifier(alpha=1, random_state=0),
             AdaBoostClassifier(DecisionTreeClassifier(max_depth=100), n_estimators=600, random_state=0),
             GaussianNB(),
             QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
-            ExtraTreesClassifier(n_estimators=600, random_state=0, n_jobs=int(njobs), max_depth=100),
+            ExtraTreesClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=50),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         self.scores = [[] for _ in xrange(len(self.classifiers))]
@@ -507,6 +507,7 @@ class calcCustomFEML(baseMetrics):
                 continue
 
             i = self.abbr_names[name]
+            model = self.classifiers[i]
 
             train_time = 0
             predictedL = list()
@@ -516,20 +517,20 @@ class calcCustomFEML(baseMetrics):
                     [row for row in [self.X2, self.X1]], [row for row in [self.Y2, self.Y1]]
             ):
                 start_time = time.time()
-                self.classifiers[i].fit(np.array(train_X), np.array(train_Y))
+                model.fit(np.array(train_X), np.array(train_Y))
                 train_time += (time.time() - start_time)
 
                 start_time = time.time()
-                predictedL += list(self.classifiers[i].predict(np.array(pred_X)))
+                predictedL += list(model.predict(np.array(pred_X)))
                 self.timers[i] += (time.time() - start_time)
 
-                if hasattr(self.classifiers[i], "feature_importances_"):
-                    self.importances[i] += self.classifiers[i].feature_importances_
-                elif hasattr(self.classifiers[i], "coef_"):
-                    self.importances[i] += self.classifiers[i].coef_.ravel()
-                self.scores[i].append(self.classifiers[i].score(np.array(pred_X), np.array(pred_Y)))
+                if hasattr(model, "feature_importances_"):
+                    self.importances[i] += model.feature_importances_
+                elif hasattr(model, "coef_"):
+                    self.importances[i] += model.coef_.ravel()
+                self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
 
-            print "Training took {:.3f} min".format(train_time / (2* 60.0))
+            print "Training took {:.3f} min".format(train_time / (2 * 60.0))
             self.timers[i] += self.timer
 
             print "Matching records..."
