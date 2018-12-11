@@ -444,10 +444,10 @@ class calcCustomFEML(baseMetrics):
         self.classifiers = [
             LinearSVC(random_state=0, C=1.0),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
-            DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
+            DecisionTreeClassifier(random_state=0, max_depth=50, max_features='auto'),
             RandomForestClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=60),
             MLPClassifier(alpha=1, random_state=0),
-            AdaBoostClassifier(DecisionTreeClassifier(max_depth=100), n_estimators=600, random_state=0),
+            AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
             QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
             ExtraTreesClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=60),
