@@ -450,7 +450,7 @@ class calcCustomFEML(baseMetrics):
             AdaBoostClassifier(DecisionTreeClassifier(max_depth=100), n_estimators=600, random_state=0),
             GaussianNB(),
             QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
-            ExtraTreesClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=50),
+            ExtraTreesClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=60),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         self.scores = [[] for _ in xrange(len(self.classifiers))]
