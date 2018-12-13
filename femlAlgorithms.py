@@ -590,13 +590,14 @@ class calcCustomFEML(baseMetrics):
                 print ""
                 sys.stdout.flush()
 
-                try:
-                    importances = self.importances[idx] / 2.0
+                importances = self.importances[idx] / 2.0
+                if isinstance(importances, float):
+                    print "The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
+                        name)
+                else:
                     indices = np.argsort(importances)[::-1]
                     for f in range(importances.shape[0]):
-                        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
-                except TypeError:
-                    print "The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(name)
+                            print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
 
                 # if hasattr(clf, "feature_importances_"):
                 #         # if results:
