@@ -37,13 +37,18 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         # regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
 
         # a = unicodedata.normalize('NFKD', a.decode('utf8')) # .encode('ASCII', 'ignore')
-        # a = regex.sub('', a)
+
         a = strip_accents(a)
         b = strip_accents(b)
 
+        # a = regex.sub('', a)
+        # b = regex.sub('', b)
+        #
     if sorting:
-        a = " ".join(sorted_nicely(a.split(delimiter)))
-        b = " ".join(sorted_nicely(b.split(delimiter)))
+        if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) < 0.95:
+        # if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) <= damerau_levenshtein(a, b):
+            a = " ".join(sorted_nicely(a.split(delimiter)))
+            b = " ".join(sorted_nicely(b.split(delimiter)))
 
     if stemming:
         a = perform_stemming(a)
