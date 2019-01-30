@@ -269,3 +269,24 @@ class Evaluator:
                     f.write(
                         "{},{}\t".format(sorted_freq_trigram_terms_pos3[i][0], sorted_freq_trigram_terms_pos3[i][1]))
                     f.write('\n')
+
+    def print_false_posneg(self, datasets):
+        if len(datasets) == 2:
+            with open(getTMabsPath(datasets[0])) as csvfile, open(datasets[1]) as fin_res, \
+                open('output/false_positive.txt', 'w') as fout_pos, open('output/false_negative.txt', 'w') as fout_neg:
+                reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
+                                        delimiter='\t')
+                results = csv.DictReader(fin_res, fieldnames=["res1", "res2"], delimiter='\t')
+
+                for row in zip(results, reader):
+                    if row[0]['res1'] != row[0]['res2']:
+                        if row[0]['res1'] == 'TRUE':
+                            fout_neg.write(row[1]['s1'])
+                            fout_neg.write('\t')
+                            fout_neg.write(row[1]['s2'])
+                            fout_neg.write('\n')
+                        else:
+                            fout_pos.write(row[1]['s1'])
+                            fout_pos.write('\t')
+                            fout_pos.write(row[1]['s2'])
+                            fout_pos.write('\n')

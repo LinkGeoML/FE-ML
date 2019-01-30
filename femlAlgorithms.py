@@ -53,6 +53,7 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
     if stemming:
         a = perform_stemming(a)
         b = perform_stemming(b)
+
     return a, b
 
 
