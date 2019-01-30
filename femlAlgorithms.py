@@ -45,10 +45,13 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         # b = regex.sub('', b)
         #
     if sorting:
-        if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) < 0.95:
+        if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) < 0.87:
         # if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) <= damerau_levenshtein(a, b):
             a = " ".join(sorted_nicely(a.split(delimiter)))
             b = " ".join(sorted_nicely(b.split(delimiter)))
+        else:
+            a = a.replace(" ", "")
+            b = b.replace(" ", "")
 
     if stemming:
         a = perform_stemming(a)
