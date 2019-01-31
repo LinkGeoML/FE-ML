@@ -285,7 +285,7 @@ class Evaluator:
             mismatches = pd.concat([reader, resultDf], axis=1)
 
             negDf = mismatches[(mismatches.res1 == True) & (mismatches.res1 != mismatches.res2)]
-            negDf.to_csv('./output/false_negative.txt', sep='\t', encoding='utf-8')
+            negDf.to_csv('./output/false_negative.txt', sep='\t', encoding='utf-8', header=['s1', 's2'])
             posDf = mismatches[(mismatches.res1 == False) & (mismatches.res1 != mismatches.res2)]
-            posDf.to_csv('./output/false_positive.txt', sep='\t', encoding='utf-8')
+            posDf.to_csv('./output/false_positive.txt', sep='\t', encoding='utf-8', header=['s1', 's2'])
         else: print "Wrong number {0} of input datasets to cmp".format(len(datasets))
