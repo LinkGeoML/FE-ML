@@ -7,8 +7,9 @@ import itertools
 import json
 from operator import is_not
 from functools import partial
-import unicodedata
+# import unicodedata
 import re
+import pandas as pd
 
 from nltk.corpus import stopwords
 
@@ -275,21 +276,16 @@ class Evaluator:
             os.makedirs("output")
 
         if len(datasets) == 2:
-            with open(getTMabsPath(datasets[0])) as csvfile, open(datasets[1]) as fin_res, \
-                open('output/false_positive.txt', 'w+') as fout_pos, open('output/false_negative.txt', 'w+') as fout_neg:
-                reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
-                                        delimiter='\t')
-                results = csv.DictReader(fin_res, fieldnames=["res1", "res2"], delimiter='\t')
+            reader = pd.read_csv(getTMabsPath(datasets[0]), sep='\t', names=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"])
+            results = pd.read_csv(datasets[1], sep='\t', names=["res1", "res2"])
 
-                for row in zip(results, reader):
-                    if row[0]['res1'] != row[0]['res2']:
-                        if row[0]['res1'] == 'TRUE':
-                            fout_neg.write(row[1]['s1'])
-                            fout_neg.write('\t')
-                            fout_neg.write(row[1]['s2'])
-                            fout_neg.write('\n')
-                        else:
-                            fout_pos.write(row[1]['s1'])
-                            fout_pos.write('\t')
-                            fout_pos.write(row[1]['s2'])
-                            fout_pos.write('\n')
+            resDf1, resDf2 = results.iloc[:results.shape[0]/2], results.iloc[results.shape[0]/2:]
+            print "No of rows for (df1,df2): ({0},{1})".format(resDf1.shape[0], resDf2.shape[0])
+            resultDf = pd.concat([resDf2, resDf1], ignore_index=True)
+            mismatches = pd.concat([reader, resultDf], axis=1)
+
+            negDf = mismatches[(mismatches.res1 == True) & (mismatches.res1 != mismatches.res2)]
+            negDf.to_csv('./output/false_negative.txt', sep='\t', encoding='utf-8')
+            posDf = mismatches[(mismatches.res1 == False) & (mismatches.res1 != mismatches.res2)]
+            posDf.to_csv('./output/false_positive.txt', sep='\t', encoding='utf-8')
+        else: print "Wrong number {0} of input datasets to cmp".format(len(datasets))
