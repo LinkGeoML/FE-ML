@@ -49,7 +49,7 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         # if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) <= damerau_levenshtein(a, b):
             a = " ".join(sorted_nicely(a.split(delimiter)))
             b = " ".join(sorted_nicely(b.split(delimiter)))
-        else:
+        elif damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) > damerau_levenshtein(a, b):
             a = a.replace(" ", "")
             b = b.replace(" ", "")
 
