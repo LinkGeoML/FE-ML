@@ -271,6 +271,9 @@ class Evaluator:
                     f.write('\n')
 
     def print_false_posneg(self, datasets):
+        if not os.path.exists("output"):
+            os.makedirs("output")
+
         if len(datasets) == 2:
             with open(getTMabsPath(datasets[0])) as csvfile, open(datasets[1]) as fin_res, \
                 open('output/false_positive.txt', 'w') as fout_pos, open('output/false_negative.txt', 'w') as fout_neg:
