@@ -10,3 +10,4 @@ jellyfish
 pyxdameraulevenshtein
 alphabet_detector
 kitchen
+pandas
