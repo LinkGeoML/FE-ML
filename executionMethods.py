@@ -26,13 +26,15 @@ class Evaluator:
         'DLearning': femlAlgs.calcDLearning,
     }
 
-    def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, do_printing=False):
+    def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, do_printing=False,
+                 only_latin=False):
         self.ml_algs = [x for x in ml_algs.split(',')]
         self.permuted = permuted
         self.stemming = stemming
         self.canonical = canonical
         self.sorting = sorting
         self.only_printing = do_printing
+        self.latin = only_latin
 
         self.termfrequencies = {
             'gram': Counter(),
@@ -165,6 +167,8 @@ class Evaluator:
                                         delimiter='\t')
 
                 for row in reader:
+                    if self.latin and (row['a1'] != 'LATIN' or row['a2'] != 'LATIN'): continue
+
                     self.evalClass.evaluate(
                         row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies
                     )
@@ -284,8 +288,14 @@ class Evaluator:
             resultDf = pd.concat([resDf2, resDf1], ignore_index=True)
             mismatches = pd.concat([reader, resultDf], axis=1)
 
-            negDf = mismatches[(mismatches.res1 == True) & (mismatches.res1 != mismatches.res2)]
-            negDf.to_csv('./output/false_negative.txt', sep='\t', encoding='utf-8', columns=['s1', 's2'])
-            posDf = mismatches[(mismatches.res1 == False) & (mismatches.res1 != mismatches.res2)]
-            posDf.to_csv('./output/false_positive.txt', sep='\t', encoding='utf-8', columns=['s1', 's2'])
+            negDf = mismatches[
+                (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
+                (mismatches.res1 == True) & (mismatches.res1 != mismatches.res2)
+            ]
+            negDf.to_csv('./output/false_negatives.txt', sep='\t', encoding='utf-8', columns=['s1', 's2'])
+            posDf = mismatches[
+                (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
+                (mismatches.res1 == False) & (mismatches.res1 != mismatches.res2)
+            ]
+            posDf.to_csv('./output/false_positives.txt', sep='\t', encoding='utf-8', columns=['s1', 's2'])
         else: print "Wrong number {0} of input datasets to cmp".format(len(datasets))

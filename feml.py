@@ -23,6 +23,7 @@ Options:
   --test                    perform various test operations. Default is False.
   --ml <ML_algs>            Comma separated machine learning algorithms to run. [default: all]
   --cmp                     Print output results that a comparison produces. Default is False.
+  --onlyLATIN               Check for similarities only both strings use LATIN chars. Default is False.
 
 Arguments:
   evaluator_type            'SotAMetrics' (default)
@@ -58,7 +59,7 @@ def main(args):
     dataset_path = [x for x in args['-d'].split(',')]
 
     evaluator = rc.Evaluator(args['--ml'], args['--sort'], args['--stemming'], args['--canonical'],
-                             args['--permuted'], args['--print'])
+                             args['--permuted'], args['--print'], args['--onlyLATIN'])
 
     fpath_ds = getTMabsPath(dataset_path[0])
     if os.path.isfile(fpath_ds):
