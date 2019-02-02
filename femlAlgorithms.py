@@ -27,23 +27,22 @@ from helpers import perform_stemming, normalize_str, sorted_nicely
 
 
 def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' '):
-    a = strA.decode('utf8').lower()
-    b = strB.decode('utf8').lower()
+    a = strA.decode('utf8') #.lower()
+    b = strB.decode('utf8') #.lower()
 
     if canonical:
         # NFKD: first applies a canonical decomposition, i.e., translates each character into its decomposed form.
         # and afterwards apply the compatibility decomposition, i.e. replace all compatibility characters with their
         # equivalents.
-        # regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
 
         # a = unicodedata.normalize('NFKD', a.decode('utf8')) # .encode('ASCII', 'ignore')
-
         a = strip_accents(a)
         b = strip_accents(b)
 
-        # a = regex.sub('', a)
-        # b = regex.sub('', b)
-        #
+        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
+        a = regex.sub('', a)
+        b = regex.sub('', b)
+
     if sorting:
         if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) < 0.87:
         # if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) <= damerau_levenshtein(a, b):
@@ -382,8 +381,7 @@ class calcSotAMetrics(baseMetrics):
         tot_res += self._generic_evaluator(9, 'strike_a_match', row['s1'], row['s2'], real)
         tot_res += self._generic_evaluator(12, 'soft_jaccard', row['s1'], row['s2'], real)
         tot_res += self._generic_evaluator(5, 'sorted_winkler', row['s1'], row['s2'], real)
-        if permuted:
-            tot_res += self._generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], real)
+        if permuted: tot_res += self._generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], real)
         tot_res += self._generic_evaluator(10, 'skipgram', row['s1'], row['s2'], real)
         tot_res += self._generic_evaluator(13, 'davies', row['s1'], row['s2'], real)
 
