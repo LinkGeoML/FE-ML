@@ -304,15 +304,11 @@ class Evaluator:
             res1 = pd.read_csv(datasets[1], sep='\t', names=["res1_1", "res1_2"])
             res2 = pd.read_csv(datasets[2], sep='\t', names=["res2_1", "res2_2"])
 
-            tmpDf1, tmpDf2 = res1.iloc[:res1.shape[0] / 2], res1.iloc[res1.shape[0] / 2:]
-            print "No of rows for (df1,df2): ({0},{1})".format(tmpDf1.shape[0], tmpDf2.shape[0])
-            resDf1 = pd.concat([tmpDf2, tmpDf1], ignore_index=True)
-            tmpDf1.drop(tmpDf1.index, inplace=True)
-            tmpDf2.drop(tmpDf2.index, inplace=True)
+            print "No of rows for res1 dataset: {0}".format(res1.shape[0] / 2)
+            resDf1 = pd.concat([res1.iloc[res1.shape[0] / 2:], res1.iloc[:res1.shape[0] / 2]], ignore_index=True)
 
-            tmpDf1, tmpDf2 = res2.iloc[:res1.shape[0] / 2], res1.iloc[res1.shape[0] / 2:]
-            print "No of rows for (df1,df2): ({0},{1})".format(tmpDf1.shape[0], tmpDf2.shape[0])
-            resDf2 = pd.concat([tmpDf2, tmpDf1], ignore_index=True)
+            print "No of rows for res2 dataset: {0}".format(res2.shape[0] / 2)
+            resDf2 = pd.concat([res2.iloc[res2.shape[0] / 2:], res2.iloc[:res2.shape[0] / 2]], ignore_index=True)
 
             mismatches = pd.concat([reader, resDf1, resDf2], axis=1)
 
