@@ -298,4 +298,24 @@ class Evaluator:
                 (mismatches.res1 == False) & (mismatches.res1 != mismatches.res2)
             ]
             posDf.to_csv('./output/false_positives.txt', sep='\t', encoding='utf-8', columns=['s1', 's2'])
+        elif len(datasets) == 3:
+            reader = pd.read_csv(getTMabsPath(datasets[0]), sep='\t',
+                                 names=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"])
+            res1 = pd.read_csv(datasets[1], sep='\t', names=["res1_1", "res1_2"])
+            res2 = pd.read_csv(datasets[2], sep='\t', names=["res2_1", "res2_2"])
+
+            tmpDf1, tmpDf2 = res1.iloc[:res1.shape[0] / 2], res1.iloc[res1.shape[0] / 2:]
+            print "No of rows for (df1,df2): ({0},{1})".format(tmpDf1.shape[0], tmpDf2.shape[0])
+            resDf1 = pd.concat([tmpDf2, tmpDf1], ignore_index=True)
+            tmpDf1, tmpDf2 = res2.iloc[:res1.shape[0] / 2], res1.iloc[res1.shape[0] / 2:]
+            print "No of rows for (df1,df2): ({0},{1})".format(tmpDf1.shape[0], tmpDf2.shape[0])
+            resDf2 = pd.concat([tmpDf2, tmpDf1], ignore_index=True)
+
+            mismatches = pd.concat([reader, resDf1, resDf2], axis=1)
+
+            negDf = mismatches[
+                (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
+                (mismatches.res1_1 == mismatches.res1_2) & (mismatches.res2_1 != mismatches.res2_2)
+                ]
+            negDf.to_csv('./output/false_enhanced.txt', sep='\t', encoding='utf-8', columns=['s1', 's2', 'res'])
         else: print "Wrong number {0} of input datasets to cmp".format(len(datasets))
