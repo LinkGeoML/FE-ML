@@ -307,6 +307,9 @@ class Evaluator:
             tmpDf1, tmpDf2 = res1.iloc[:res1.shape[0] / 2], res1.iloc[res1.shape[0] / 2:]
             print "No of rows for (df1,df2): ({0},{1})".format(tmpDf1.shape[0], tmpDf2.shape[0])
             resDf1 = pd.concat([tmpDf2, tmpDf1], ignore_index=True)
+            tmpDf1.drop(tmpDf1.index, inplace=True)
+            tmpDf2.drop(tmpDf2.index, inplace=True)
+
             tmpDf1, tmpDf2 = res2.iloc[:res1.shape[0] / 2], res1.iloc[res1.shape[0] / 2:]
             print "No of rows for (df1,df2): ({0},{1})".format(tmpDf1.shape[0], tmpDf2.shape[0])
             resDf2 = pd.concat([tmpDf2, tmpDf1], ignore_index=True)
