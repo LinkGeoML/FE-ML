@@ -283,9 +283,8 @@ class Evaluator:
             reader = pd.read_csv(getTMabsPath(datasets[0]), sep='\t', names=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"])
             results = pd.read_csv(datasets[1], sep='\t', names=["res1", "res2"])
 
-            resDf1, resDf2 = results.iloc[:results.shape[0]/2], results.iloc[results.shape[0]/2:]
-            print "No of rows for (df1,df2): ({0},{1})".format(resDf1.shape[0], resDf2.shape[0])
-            resultDf = pd.concat([resDf2, resDf1], ignore_index=True)
+            print "No of rows for dataset: {0}".format(results.shape[0]/2)
+            resultDf = pd.concat([results.iloc[results.shape[0]/2:], results.iloc[:results.shape[0]/2]], ignore_index=True)
             mismatches = pd.concat([reader, resultDf], axis=1)
 
             negDf = mismatches[
@@ -301,8 +300,40 @@ class Evaluator:
         elif len(datasets) == 3:
             reader = pd.read_csv(getTMabsPath(datasets[0]), sep='\t',
                                  names=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"])
-            res1 = pd.read_csv(datasets[1], sep='\t', names=["res1_1", "res1_2"])
-            res2 = pd.read_csv(datasets[2], sep='\t', names=["res2_1", "res2_2"])
+            res1 = pd.read_csv(
+                datasets[1], sep='\t',
+                names=[
+                    "res1",
+                    "res1_damerau_levenshtein",
+                    "res1_jaccard",
+                    "res1_jaro",
+                    "res1_jaro_winkler",
+                    "res1_jaro_winkler_reversed",
+                    "res1_monge_elkan",
+                    "res1_cosine",
+                    "res1_strike_a_match",
+                    "res1_soft_jaccard",
+                    "res1_sorted_winkler",
+                    "res1_skipgram",
+                    "res1_davies",]
+            )
+            res2 = pd.read_csv(
+                datasets[2], sep='\t',
+                names=[
+                    "res2",
+                    "res2_damerau_levenshtein",
+                    "res2_jaccard",
+                    "res2_jaro",
+                    "res2_jaro_winkler",
+                    "res2_jaro_winkler_reversed",
+                    "res2_monge_elkan",
+                    "res2_cosine",
+                    "res2_strike_a_match",
+                    "res2_soft_jaccard",
+                    "res2_sorted_winkler",
+                    "res2_skipgram",
+                    "res2_davies", ]
+            )
 
             print "No of rows for res1 dataset: {0}".format(res1.shape[0] / 2)
             resDf1 = pd.concat([res1.iloc[res1.shape[0] / 2:], res1.iloc[:res1.shape[0] / 2]], ignore_index=True)
@@ -311,10 +342,16 @@ class Evaluator:
             resDf2 = pd.concat([res2.iloc[res2.shape[0] / 2:], res2.iloc[:res2.shape[0] / 2]], ignore_index=True)
 
             mismatches = pd.concat([reader, resDf1, resDf2], axis=1)
+            mismatches = mismatches.sort_values(by=['res'], ascending=False)
 
-            negDf = mismatches[
-                (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
-                (mismatches.res1_1 == mismatches.res1_2) & (mismatches.res2_1 != mismatches.res2_2)
-                ]
-            negDf.to_csv('./output/false_enhanced.txt', sep='\t', encoding='utf-8', columns=['s1', 's2', 'res'])
+            for metric_name in [
+                'damerau_levenshtein', 'jaccard', 'jaro', 'jaro_winkler', 'jaro_winkler_reversed', 'monge_elkan',
+                'cosine', 'strike_a_match', 'soft_jaccard', 'sorted_winkler','skipgram', 'davies']:
+                negDf = mismatches[
+                    (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
+                    (mismatches.res1 == mismatches['res1_{0}'.format(metric_name)]) &
+                    (mismatches.res2 != mismatches['res2_{0}'.format(metric_name)])
+                    ]
+                negDf.to_csv('./output/false_enhancedmetric_{0}.txt'.format(metric_name), sep='\t',
+                             encoding='utf-8', columns=['s1', 's2', 'res'])
         else: print "Wrong number {0} of input datasets to cmp".format(len(datasets))
