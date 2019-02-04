@@ -335,13 +335,13 @@ class Evaluator:
                     "res2_davies", ]
             )
 
-            print "No of rows for res1 dataset: {0}".format(res1.shape[0] / 2)
-            resDf1 = pd.concat([res1.iloc[res1.shape[0] / 2:], res1.iloc[:res1.shape[0] / 2]], ignore_index=True)
+            # print "No of rows for res1 dataset: {0}".format(res1.shape[0] / 2)
+            # resDf1 = pd.concat([res1.iloc[res1.shape[0] / 2:], res1.iloc[:res1.shape[0] / 2]], ignore_index=True)
+            #
+            # print "No of rows for res2 dataset: {0}".format(res2.shape[0] / 2)
+            # resDf2 = pd.concat([res2.iloc[res2.shape[0] / 2:], res2.iloc[:res2.shape[0] / 2]], ignore_index=True)
 
-            print "No of rows for res2 dataset: {0}".format(res2.shape[0] / 2)
-            resDf2 = pd.concat([res2.iloc[res2.shape[0] / 2:], res2.iloc[:res2.shape[0] / 2]], ignore_index=True)
-
-            mismatches = pd.concat([reader, resDf1, resDf2], axis=1)
+            mismatches = pd.concat([reader, res1, res2], axis=1)
             mismatches = mismatches.sort_values(by=['res'], ascending=False)
 
             for metric_name in [
@@ -353,7 +353,7 @@ class Evaluator:
                     (mismatches.res2 != mismatches['res2_{0}'.format(metric_name)])
                     ]
                 negDf.to_csv('./output/false_enhancedmetric_{0}.txt'.format(metric_name), sep='\t',
-                             encoding='utf-8', columns=['s1', 's2', 'res', 'res1_{0}'.format(metric_name), 'res2_{0}'.format(metric_name)])
+                             encoding='utf-8', columns=['s1', 's2', 'res'])
 
                 tmpDf = mismatches[ mismatches.res1 != mismatches.res2 ]
                 if not tmpDf.empty: print tmpDf
