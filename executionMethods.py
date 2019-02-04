@@ -353,7 +353,7 @@ class Evaluator:
                     (mismatches.res2 != mismatches['res2_{0}'.format(metric_name)])
                     ]
                 negDf.to_csv('./output/false_enhancedmetric_{0}.txt'.format(metric_name), sep='\t',
-                             encoding='utf-8', columns=['s1', 's2', 'res'])
+                             encoding='utf-8', columns=['s1', 's2', 'res', 'res1_{0}'.format(metric_name), 'res2_{0}'.format(metric_name)])
 
                 tmpDf = mismatches[ mismatches.res1 != mismatches.res2 ]
                 if not tmpDf.empty: print tmpDf
