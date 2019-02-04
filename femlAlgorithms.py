@@ -36,8 +36,8 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         # equivalents.
 
         # a = unicodedata.normalize('NFKD', a.decode('utf8')) # .encode('ASCII', 'ignore')
-        a = strip_accents(a)
-        b = strip_accents(b)
+        a = strip_accents(a.lower())
+        b = strip_accents(b.lower())
 
         regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
         a = regex.sub('', a)

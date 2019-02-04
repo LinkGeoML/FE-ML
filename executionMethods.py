@@ -354,4 +354,7 @@ class Evaluator:
                     ]
                 negDf.to_csv('./output/false_enhancedmetric_{0}.txt'.format(metric_name), sep='\t',
                              encoding='utf-8', columns=['s1', 's2', 'res'])
+
+                tmpDf = mismatches[ mismatches.res1 != mismatches.res2 ]
+                if not tmpDf.empty: print tmpDf
         else: print "Wrong number {0} of input datasets to cmp".format(len(datasets))
