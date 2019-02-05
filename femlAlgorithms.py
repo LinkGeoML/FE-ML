@@ -20,10 +20,8 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis, LinearD
 from sklearn import preprocessing
 from xgboost import XGBClassifier
 
-from external.datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, strike_a_match, \
-    soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
 from external.datasetcreator import strip_accents
-from helpers import perform_stemming, normalize_str, sorted_nicely
+from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
 def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' '):
@@ -43,12 +41,15 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         a = regex.sub('', a)
         b = regex.sub('', b)
 
+        a = a.replace('-', ' ')
+        b = b.replace('-', ' ')
+
     if sorting:
-        if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) < 0.87:
+        if StaticValues.algorithms['damerau_levenshtein'](a.replace(" ", ""), b.replace(" ", "")) < 0.87:
         # if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) <= damerau_levenshtein(a, b):
             a = " ".join(sorted_nicely(a.split(delimiter)))
             b = " ".join(sorted_nicely(b.split(delimiter)))
-        elif damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) > damerau_levenshtein(a, b):
+        elif StaticValues.algorithms['damerau_levenshtein'](a.replace(" ", ""), b.replace(" ", "")) > StaticValues.algorithms['damerau_levenshtein'](a, b):
             a = a.replace(" ", "")
             b = b.replace(" ", "")
 
@@ -57,52 +58,6 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         b = perform_stemming(b)
 
     return a, b
-
-
-class StaticValues:
-    algorithms = {
-        'damerau_levenshtein': damerau_levenshtein,
-        'davies': davies,
-        'skipgram': skipgram,
-        'permuted_winkler': permuted_winkler,
-        'sorted_winkler': sorted_winkler,
-        'soft_jaccard': soft_jaccard,
-        'strike_a_match': strike_a_match,
-        'cosine': cosine,
-        'monge_elkan': monge_elkan,
-        'jaro_winkler': jaro_winkler,
-        'jaro': jaro,
-        'jaccard': jaccard,
-    }
-
-    methods = [["Damerau-Levenshtein", 0.55],
-               ["Jaro", 0.75],
-               ["Jaro-Winkler", 0.7],
-               ["Jaro-Winkler reversed", 0.75],
-               ["Sorted Jaro-Winkler", 0.7],
-               ["Permuted Jaro-Winkler", 0.7],
-               ["Cosine N-grams", 0.4],
-               ["Jaccard N-grams", 0.25],
-               ["Dice bigrams", 0.5],
-               ["Jaccard skipgrams", 0.45],
-               ["Monge-Elkan", 0.7],
-               ["Soft-Jaccard", 0.6],
-               ["Davis and De Salles", 0.65]]
-
-    nameIDs = {
-        'damerau_levenshtein': 0,
-        'davies': 12,
-        'skipgram': 9,
-        'permuted_winkler': 5,
-        'sorted_winkler': 4,
-        'soft_jaccard': 11,
-        'strike_a_match': 8,
-        'cosine': 6,
-        'monge_elkan': 10,
-        'jaro_winkler': 2,
-        'jaro': 1,
-        'jaccard': 7,
-    }
 
 
 class FEMLFeatures:
@@ -186,7 +141,7 @@ class FEMLFeatures:
         step = math.ceil(len(str1) / 3)
         for idx in xrange(0, len(str1), step):
             if str1[idx:idx + step]:
-                sim = damerau_levenshtein(str1[idx:idx + step], str2)
+                sim = StaticValues.algorithms['damerau_levenshtein'](str1[idx:idx + step], str2)
                 if sim >= 0.55:
                     fvec_str1.append(1)
                 else:
@@ -195,7 +150,7 @@ class FEMLFeatures:
         step = math.ceil(len(str2) / 3)
         for idx in xrange(0, len(str2), step):
             if str2[idx:idx + step]:
-                sim = damerau_levenshtein(str1, str2[idx:idx + step])
+                sim = StaticValues.algorithms['damerau_levenshtein'](str1, str2[idx:idx + step])
                 if sim >= 0.55:
                     fvec_str2.append(1)
                 else:
@@ -217,7 +172,7 @@ class FEMLFeatures:
 
         cur = {'A': 0, 'B': 0}
         while cur['A'] < len(listA) and cur['B'] < len(listB):
-            sim = jaro_winkler(listA[cur['A']], listB[cur['B']])
+            sim = StaticValues.algorithms['jaro_winkler'](listA[cur['A']], listB[cur['B']])
             if sim > 0.5:
                 base['A'].append(listA[cur['A']])
                 base['B'].append(listA[cur['B']])
@@ -302,11 +257,9 @@ class baseMetrics:
 
         self.timer = 0.0
         self.timers = [0.0] * size
-        self.result = {}
+        # self.result = {}
         self.file = None
         self.accuracyresults = accuracyresults
-        if self.accuracyresults:
-            self.file = open('dataset-accuracyresults-sim-metrics.txt', 'w+')
 
         self.predictedState = {
             'num_true_predicted_true': self.num_true_predicted_true,
@@ -320,30 +273,41 @@ class baseMetrics:
         if self.accuracyresults:
             self.file.close()
 
+    def reset_vars(self):
+        self.num_true_predicted_true[:] = [0.0] * len(self.num_true_predicted_true)
+        self.num_true_predicted_false[:] = [0.0] * len(self.num_true_predicted_false)
+        self.num_false_predicted_true[:] = [0.0] * len(self.num_false_predicted_true)
+        self.num_false_predicted_false[:] = [0.0] * len(self.num_false_predicted_false)
+
+        self.timer = 0.0
+        self.timers[:] = [0.0] * len(self.timers)
+
     def preprocessing(self, row):
         if row['res'] == "TRUE": self.num_true += 1.0
         else: self.num_false += 1.0
 
     @abstractmethod
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres=None):
         pass
 
     @abstractmethod
     def print_stats(self):
         pass
 
-    def prediction(self, sim_id, pred_val, real_val):
+    def prediction(self, sim_id, pred_val, real_val, custom_thres=None):
         result = ""
         var_name = ""
+
+        thres = StaticValues.methods[sim_id - 1][1] if custom_thres is None else custom_thres
         if real_val == 1.0:
-            if pred_val >= StaticValues.methods[sim_id - 1][1]:
+            if pred_val >= thres:
                 var_name = 'num_true_predicted_true'
                 result = "\tTRUE"
             else:
                 var_name = 'num_true_predicted_false'
                 result = "\tFALSE"
         else:
-            if pred_val >= StaticValues.methods[sim_id - 1][1]:
+            if pred_val >= thres:
                 var_name = 'num_false_predicted_true'
                 result = "\tTRUE"
             else:
@@ -357,36 +321,44 @@ class calcSotAMetrics(baseMetrics):
     def __init__(self, njobs, accures):
         super(calcSotAMetrics, self).__init__(len(StaticValues.methods), njobs, accures)
 
-    def _generic_evaluator(self, idx, algnm, str1, str2, match):
+    def _generic_evaluator(self, idx, algnm, str1, str2, match, custom_thres):
         start_time = time.time()
         sim = StaticValues.algorithms[algnm](str1, str2)
-        res, varnm = self.prediction(idx, sim, match)
+        res, varnm = self.prediction(idx, sim, match, custom_thres)
         self.timers[idx - 1] += (time.time() - start_time)
         self.predictedState[varnm][idx - 1] += 1.0
         return res
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres=None):
         tot_res = ""
-        real = 1.0 if row['res'] == "TRUE" else 0.0
+        flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
 
         row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
-        tot_res += self._generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], real)
-        tot_res += self._generic_evaluator(8, 'jaccard', row['s1'], row['s2'], real)
-        tot_res += self._generic_evaluator(2, 'jaro', row['s1'], row['s2'], real)
-        tot_res += self._generic_evaluator(3, 'jaro_winkler', row['s1'], row['s2'], real)
-        tot_res += self._generic_evaluator(4, 'jaro_winkler', row['s1'][::-1], row['s2'][::-1], real)
-        tot_res += self._generic_evaluator(11, 'monge_elkan', row['s1'], row['s2'], real)
-        tot_res += self._generic_evaluator(7, 'cosine', row['s1'], row['s2'], real)
-        tot_res += self._generic_evaluator(9, 'strike_a_match', row['s1'], row['s2'], real)
-        tot_res += self._generic_evaluator(12, 'soft_jaccard', row['s1'], row['s2'], real)
-        tot_res += self._generic_evaluator(5, 'sorted_winkler', row['s1'], row['s2'], real)
-        if permuted: tot_res += self._generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], real)
-        tot_res += self._generic_evaluator(10, 'skipgram', row['s1'], row['s2'], real)
-        tot_res += self._generic_evaluator(13, 'davies', row['s1'], row['s2'], real)
+        tot_res += self._generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(8, 'jaccard', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(2, 'jaro', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(3, 'jaro_winkler', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(4, 'jaro_winkler', row['s1'][::-1], row['s2'][::-1], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(11, 'monge_elkan', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(7, 'cosine', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(9, 'strike_a_match', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(12, 'soft_jaccard', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(5, 'sorted_winkler', row['s1'], row['s2'], flag_true_match, custom_thres)
+        if permuted: tot_res += self._generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(10, 'skipgram', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(13, 'davies', row['s1'], row['s2'], flag_true_match, custom_thres)
 
         if self.accuracyresults:
-            if real == 1.0:
+            if self.file is None:
+                file_name = 'dataset-accuracyresults-sim-metrics'
+                if canonical:
+                    file_name += '_canonical'
+                if sorting:
+                    file_name += '_sort'
+                self.file = open(file_name + '.csv', 'w+')
+
+            if flag_true_match == 1.0:
                 self.file.write("TRUE{0}".format(tot_res + "\n"))
             else:
                 self.file.write("FALSE{0}".format(tot_res + "\n"))
@@ -420,6 +392,25 @@ class calcSotAMetrics(baseMetrics):
 
         # if results:
         #     return self.result
+
+    def get_stats(self):
+        res = []
+        for idx in xrange(len(StaticValues.methods)):
+            try:
+                acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
+                      (self.num_true + self.num_false)
+                pre = (self.num_true_predicted_true[idx]) / \
+                      (self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx])
+                rec = (self.num_true_predicted_true[idx]) / \
+                      (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
+                f1 = 2.0 * ((pre * rec) / (pre + rec))
+
+                res.append([acc, pre, rec, f1])
+            except ZeroDivisionError:
+                res.append([0.0, 0.0, 0.0, 0.0])
+                pass
+
+        return res
 
 
 class calcCustomFEML(baseMetrics):
@@ -466,7 +457,7 @@ class calcCustomFEML(baseMetrics):
 
         super(calcCustomFEML, self).__init__(len(self.classifiers), njobs, accures)
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False, custom_thres=None):
         if row['res'] == "TRUE":
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(1.0)
             else: self.Y2.append(1.0)
@@ -477,19 +468,19 @@ class calcCustomFEML(baseMetrics):
         row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
         start_time = time.time()
-        sim1 = damerau_levenshtein(row['s1'], row['s2'])
-        sim8 = jaccard(row['s1'], row['s2'])
-        sim2 = jaro(row['s1'], row['s2'])
-        sim3 = jaro_winkler(row['s1'], row['s2'])
-        sim4 = jaro_winkler(row['s1'][::-1], row['s2'][::-1])
-        sim11 = monge_elkan(row['s1'], row['s2'])
-        sim7 = cosine(row['s1'], row['s2'])
-        sim9 = strike_a_match(row['s1'], row['s2'])
-        sim12 = soft_jaccard(row['s1'], row['s2'])
-        sim5 = sorted_winkler(row['s1'], row['s2'])
-        if permuted: sim6 = permuted_winkler(row['s1'], row['s2'])
-        sim10 = skipgram(row['s1'], row['s2'])
-        sim13 = davies(row['s1'], row['s2'])
+        sim1 = StaticValues.algorithms['damerau_levenshtein'](row['s1'], row['s2'])
+        sim8 = StaticValues.algorithms['jaccard'](row['s1'], row['s2'])
+        sim2 = StaticValues.algorithms['jaro'](row['s1'], row['s2'])
+        sim3 = StaticValues.algorithms['jaro_winkler'](row['s1'], row['s2'])
+        sim4 = StaticValues.algorithms['jaro_winkler'](row['s1'][::-1], row['s2'][::-1])
+        sim11 = StaticValues.algorithms['monge_elkan'](row['s1'], row['s2'])
+        sim7 = StaticValues.algorithms['cosine'](row['s1'], row['s2'])
+        sim9 = StaticValues.algorithms['strike_a_match'](row['s1'], row['s2'])
+        sim12 = StaticValues.algorithms['soft_jaccard'](row['s1'], row['s2'])
+        sim5 = StaticValues.algorithms['sorted_winkler'](row['s1'], row['s2'])
+        if permuted: sim6 = StaticValues.algorithms['permuted_winkler'](row['s1'], row['s2'])
+        sim10 = StaticValues.algorithms['skipgram'](row['s1'], row['s2'])
+        sim13 = StaticValues.algorithms['davies'](row['s1'], row['s2'])
         self.timer += (time.time() - start_time)
         if permuted:
             if len(self.X1) < ((self.num_true + self.num_false) / 2.0):

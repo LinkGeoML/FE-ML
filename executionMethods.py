@@ -16,6 +16,7 @@ from nltk.corpus import stopwords
 import femlAlgorithms as femlAlgs
 from helpers import perform_stemming, normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
 from external.datasetcreator import detect_alphabet, fields, strip_accents
+from helpers import StaticValues
 
 
 class Evaluator:
@@ -175,6 +176,38 @@ class Evaluator:
                 if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                 self.evalClass.print_stats()
 
+    def evaluate_metrics_with_various_thres(self, dataset='dataset-string-similarity.txt'):
+        if self.evalClass is not None:
+            print "Reading dataset..."
+            relpath = getRelativePathtoWorking(dataset)
+
+            all_res = {}
+            with open(relpath) as csvfile:
+                reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
+                                        delimiter='\t')
+
+                for m in StaticValues.method_names: all_res[m] = []
+                for i in xrange(5, 99, 5):
+                    print 'Computing stats for threshold {0}...'.format(float(i / 100.0))
+
+                    csvfile.seek(0)
+                    for row in reader:
+                        if self.latin and (row['a1'] != 'LATIN' or row['a2'] != 'LATIN'): continue
+
+                        self.evalClass.evaluate(
+                            row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, float(i / 100.0)
+                        )
+                    if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
+                    tmp_res = self.evalClass.get_stats()
+
+                    for idx, m in enumerate(StaticValues.method_names):
+                        all_res[m].append([i, tmp_res[idx]])
+
+                    self.evalClass.reset_vars()
+
+            for m in StaticValues.method_names: print m, max(all_res[m], key=lambda x: x[1][0])
+
+
     def test_cases(self, dataset):
         if not os.path.exists("output"):
             os.makedirs("output")
@@ -276,20 +309,6 @@ class Evaluator:
                     f.write('\n')
 
     def print_false_posneg(self, datasets):
-        method_names = [
-            "damerau_levenshtein",
-            "jaccard",
-            "jaro",
-            "jaro_winkler",
-            "jaro_winkler_reversed",
-            "monge_elkan",
-            "cosine",
-            "strike_a_match",
-            "soft_jaccard",
-            "sorted_winkler",
-            "skipgram",
-            "davies"
-        ]
         if not os.path.exists("output"):
             os.makedirs("output")
 
@@ -317,17 +336,17 @@ class Evaluator:
 
             res1 = pd.read_csv(
                 datasets[1], sep='\t',
-                names=["res1"] + list(map(lambda x: "res1_{0}".format(x), method_names))
+                names=["res1"] + list(map(lambda x: "res1_{0}".format(x), StaticValues.method_names))
             )
             res2 = pd.read_csv(
                 datasets[2], sep='\t',
-                names=["res2"] + list(map(lambda x: "res2_{0}".format(x), method_names))
+                names=["res2"] + list(map(lambda x: "res2_{0}".format(x), StaticValues.method_names))
             )
 
             mismatches = pd.concat([reader, res1, res2], axis=1)
             mismatches = mismatches.sort_values(by=['res'], ascending=False)
 
-            for metric_name in method_names:
+            for metric_name in StaticValues.method_names:
                 negDf = mismatches[
                     (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
                     (mismatches.res1 == mismatches['res1_{0}'.format(metric_name)]) &

@@ -7,6 +7,9 @@ from nltk.corpus import stopwords
 from langdetect import detect, lang_detect_exception
 import pycountry
 
+from external.datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, \
+    strike_a_match, soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
+
 
 sys.path.append(os.path.abspath('../Toponym-Matching'))
 
@@ -77,3 +80,64 @@ def sorted_nicely(l):
 #     reverse = dict((value, key) for key, value in enums.iteritems())
 #     enums['reverse_mapping'] = reverse
 #     return type('Enum', (), enums)
+
+
+class StaticValues:
+    algorithms = {
+        'damerau_levenshtein': damerau_levenshtein,
+        'davies': davies,
+        'skipgram': skipgram,
+        'permuted_winkler': permuted_winkler,
+        'sorted_winkler': sorted_winkler,
+        'soft_jaccard': soft_jaccard,
+        'strike_a_match': strike_a_match,
+        'cosine': cosine,
+        'monge_elkan': monge_elkan,
+        'jaro_winkler': jaro_winkler,
+        'jaro': jaro,
+        'jaccard': jaccard,
+    }
+
+    methods = [["Damerau-Levenshtein", 0.55],
+               ["Jaro", 0.75],
+               ["Jaro-Winkler", 0.7],
+               ["Jaro-Winkler reversed", 0.75],
+               ["Sorted Jaro-Winkler", 0.7],
+               ["Permuted Jaro-Winkler", 0.7],
+               ["Cosine N-grams", 0.4],
+               ["Jaccard N-grams", 0.25],
+               ["Dice bigrams", 0.5],
+               ["Jaccard skipgrams", 0.45],
+               ["Monge-Elkan", 0.7],
+               ["Soft-Jaccard", 0.6],
+               ["Davis and De Salles", 0.65]]
+
+    nameIDs = {
+        'damerau_levenshtein': 0,
+        'davies': 12,
+        'skipgram': 9,
+        'permuted_winkler': 5,
+        'sorted_winkler': 4,
+        'soft_jaccard': 11,
+        'strike_a_match': 8,
+        'cosine': 6,
+        'monge_elkan': 10,
+        'jaro_winkler': 2,
+        'jaro': 1,
+        'jaccard': 7,
+    }
+
+    method_names = [
+        "damerau_levenshtein",
+        "jaccard",
+        "jaro",
+        "jaro_winkler",
+        "jaro_winkler_reversed",
+        "monge_elkan",
+        "cosine",
+        "strike_a_match",
+        "soft_jaccard",
+        "sorted_winkler",
+        "skipgram",
+        "davies"
+    ]
