@@ -276,6 +276,20 @@ class Evaluator:
                     f.write('\n')
 
     def print_false_posneg(self, datasets):
+        method_names = [
+            "damerau_levenshtein",
+            "jaccard",
+            "jaro",
+            "jaro_winkler",
+            "jaro_winkler_reversed",
+            "monge_elkan",
+            "cosine",
+            "strike_a_match",
+            "soft_jaccard",
+            "sorted_winkler",
+            "skipgram",
+            "davies"
+        ]
         if not os.path.exists("output"):
             os.makedirs("output")
 
@@ -291,68 +305,35 @@ class Evaluator:
                 (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
                 (mismatches.res1 == True) & (mismatches.res1 != mismatches.res2)
             ]
-            negDf.to_csv('./output/false_negatives.txt', sep='\t', encoding='utf-8', columns=['s1', 's2'])
+            negDf.to_csv('./output/false_negatives.csv', sep='\t', encoding='utf-8', columns=['s1', 's2'])
             posDf = mismatches[
                 (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
                 (mismatches.res1 == False) & (mismatches.res1 != mismatches.res2)
             ]
-            posDf.to_csv('./output/false_positives.txt', sep='\t', encoding='utf-8', columns=['s1', 's2'])
+            posDf.to_csv('./output/false_positives.csv', sep='\t', encoding='utf-8', columns=['s1', 's2'])
         elif len(datasets) == 3:
             reader = pd.read_csv(getTMabsPath(datasets[0]), sep='\t',
                                  names=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"])
+
             res1 = pd.read_csv(
                 datasets[1], sep='\t',
-                names=[
-                    "res1",
-                    "res1_damerau_levenshtein",
-                    "res1_jaccard",
-                    "res1_jaro",
-                    "res1_jaro_winkler",
-                    "res1_jaro_winkler_reversed",
-                    "res1_monge_elkan",
-                    "res1_cosine",
-                    "res1_strike_a_match",
-                    "res1_soft_jaccard",
-                    "res1_sorted_winkler",
-                    "res1_skipgram",
-                    "res1_davies",]
+                names=["res1"] + list(map(lambda x: "res1_{0}".format(x), method_names))
             )
             res2 = pd.read_csv(
                 datasets[2], sep='\t',
-                names=[
-                    "res2",
-                    "res2_damerau_levenshtein",
-                    "res2_jaccard",
-                    "res2_jaro",
-                    "res2_jaro_winkler",
-                    "res2_jaro_winkler_reversed",
-                    "res2_monge_elkan",
-                    "res2_cosine",
-                    "res2_strike_a_match",
-                    "res2_soft_jaccard",
-                    "res2_sorted_winkler",
-                    "res2_skipgram",
-                    "res2_davies", ]
+                names=["res2"] + list(map(lambda x: "res2_{0}".format(x), method_names))
             )
-
-            # print "No of rows for res1 dataset: {0}".format(res1.shape[0] / 2)
-            # resDf1 = pd.concat([res1.iloc[res1.shape[0] / 2:], res1.iloc[:res1.shape[0] / 2]], ignore_index=True)
-            #
-            # print "No of rows for res2 dataset: {0}".format(res2.shape[0] / 2)
-            # resDf2 = pd.concat([res2.iloc[res2.shape[0] / 2:], res2.iloc[:res2.shape[0] / 2]], ignore_index=True)
 
             mismatches = pd.concat([reader, res1, res2], axis=1)
             mismatches = mismatches.sort_values(by=['res'], ascending=False)
 
-            for metric_name in [
-                'damerau_levenshtein', 'jaccard', 'jaro', 'jaro_winkler', 'jaro_winkler_reversed', 'monge_elkan',
-                'cosine', 'strike_a_match', 'soft_jaccard', 'sorted_winkler','skipgram', 'davies']:
+            for metric_name in method_names:
                 negDf = mismatches[
                     (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
                     (mismatches.res1 == mismatches['res1_{0}'.format(metric_name)]) &
                     (mismatches.res2 != mismatches['res2_{0}'.format(metric_name)])
                     ]
-                negDf.to_csv('./output/false_enhancedmetric_{0}.txt'.format(metric_name), sep='\t',
+                negDf.to_csv('./output/false_enhancedmetric_{0}.csv'.format(metric_name), sep='\t',
                              encoding='utf-8', columns=['s1', 's2', 'res'])
 
                 tmpDf = mismatches[ mismatches.res1 != mismatches.res2 ]
