@@ -98,19 +98,19 @@ class StaticValues:
         'jaccard': jaccard,
     }
 
-    methods = [["Damerau-Levenshtein", 0.55],
-               ["Jaro", 0.75],
-               ["Jaro-Winkler", 0.7],
-               ["Jaro-Winkler reversed", 0.75],
-               ["Sorted Jaro-Winkler", 0.7],
-               ["Permuted Jaro-Winkler", 0.7],
-               ["Cosine N-grams", 0.4],
-               ["Jaccard N-grams", 0.25],
-               ["Dice bigrams", 0.5],
-               ["Jaccard skipgrams", 0.45],
-               ["Monge-Elkan", 0.7],
-               ["Soft-Jaccard", 0.6],
-               ["Davis and De Salles", 0.65]]
+    methods = [["Damerau-Levenshtein", {'orig': 0.55, 'sorted': 0.60}],
+               ["Jaro", {'orig': 0.75, 'sorted': 0.85}],
+               ["Jaro-Winkler", {'orig': 0.7, 'sorted': 0.75}],
+               ["Jaro-Winkler reversed", {'orig': 0.75, 'sorted': 0.85}],
+               ["Sorted Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85}],
+               ["Permuted Jaro-Winkler", {'orig': 0.7, 'sorted': 0.7}],
+               ["Cosine N-grams", {'orig': 0.4, 'sorted': 0.35}],
+               ["Jaccard N-grams", {'orig': 0.25, 'sorted': 0.8}],
+               ["Dice bigrams", {'orig': 0.5, 'sorted': 0.55}],
+               ["Jaccard skipgrams", {'orig': 0.45, 'sorted': 0.85}],
+               ["Monge-Elkan", {'orig': 0.7, 'sorted': 0.55}],
+               ["Soft-Jaccard", {'orig': 0.6, 'sorted': 0.55}],
+               ["Davis and De Salles", {'orig': 0.65, 'sorted': 60}]]
 
     nameIDs = {
         'damerau_levenshtein': 0,

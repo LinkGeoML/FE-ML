@@ -168,11 +168,15 @@ class Evaluator:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
+                thres = 'orig'
+                if self.sorting:
+                    thres = 'sorted'
+
                 for row in reader:
                     if self.latin and (row['a1'] != 'LATIN' or row['a2'] != 'LATIN'): continue
 
                     self.evalClass.evaluate(
-                        row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies
+                        row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, thres
                     )
                 if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                 self.evalClass.print_stats()
@@ -203,7 +207,7 @@ class Evaluator:
                     tmp_res = self.evalClass.get_stats()
 
                     for key, val in tmp_res.iteritems():
-                        all_res[key].append([i, val])
+                        all_res[key].append([float(i / 100.0), val])
 
                     self.evalClass.reset_vars()
 
@@ -344,11 +348,13 @@ class Evaluator:
 
             res1 = pd.read_csv(
                 datasets[1], sep='\t',
-                names=["res1"] + list(map(lambda x: "res1_{0}".format(x), StaticValues.methods_as_saved))
+                names=["res1"] + list(map(lambda x: "res1_{0}".format(x), StaticValues.methods_as_saved)) + \
+                      ["res1_transformed_s1", "res1_transformed_s2"]
             )
             res2 = pd.read_csv(
                 datasets[2], sep='\t',
-                names=["res2"] + list(map(lambda x: "res2_{0}".format(x), StaticValues.methods_as_saved))
+                names=["res2"] + list(map(lambda x: "res2_{0}".format(x), StaticValues.methods_as_saved)) + \
+                      ["res2_transformed_s1", "res2_transformed_s2"]
             )
 
             mismatches = pd.concat([reader, res1, res2], axis=1)
@@ -361,7 +367,7 @@ class Evaluator:
                     (mismatches.res2 != mismatches['res2_{0}'.format(metric_name)])
                     ]
                 negDf.to_csv('./output/false_enhancedmetric_{0}.csv'.format(metric_name), sep='\t',
-                             encoding='utf-8', columns=['s1', 's2', 'res'])
+                             encoding='utf-8', columns=['s1', 's2', 'res', "res2_transformed_s1", "res2_transformed_s2"])
 
                 tmpDf = mismatches[ mismatches.res1 != mismatches.res2 ]
                 if not tmpDf.empty: print tmpDf

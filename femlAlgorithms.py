@@ -45,13 +45,15 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         b = b.replace('-', ' ')
 
     if sorting:
-        if StaticValues.algorithms['damerau_levenshtein'](a.replace(" ", ""), b.replace(" ", "")) < 0.87:
-        # if damerau_levenshtein(a.replace(" ", ""), b.replace(" ", "")) <= damerau_levenshtein(a, b):
+        tmp_a = a.replace(' ', '')
+        tmp_b = b.replace(' ', '')
+
+        if StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) < 0.87:
             a = " ".join(sorted_nicely(a.split(delimiter)))
             b = " ".join(sorted_nicely(b.split(delimiter)))
-        elif StaticValues.algorithms['damerau_levenshtein'](a.replace(" ", ""), b.replace(" ", "")) > StaticValues.algorithms['damerau_levenshtein'](a, b):
-            a = a.replace(" ", "")
-            b = b.replace(" ", "")
+        elif StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) > StaticValues.algorithms['damerau_levenshtein'](a, b):
+            a = tmp_a
+            b = tmp_b
 
     if stemming:
         a = perform_stemming(a)
@@ -287,18 +289,18 @@ class baseMetrics:
         else: self.num_false += 1.0
 
     @abstractmethod
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres=None):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig'):
         pass
 
     @abstractmethod
     def print_stats(self):
         pass
 
-    def prediction(self, sim_id, pred_val, real_val, custom_thres=None):
+    def prediction(self, sim_id, pred_val, real_val, custom_thres):
         result = ""
         var_name = ""
 
-        thres = StaticValues.methods[sim_id - 1][1] if custom_thres is None else custom_thres
+        thres = StaticValues.methods[sim_id - 1][1][custom_thres] if isinstance(custom_thres, basestring) else custom_thres
         if real_val == 1.0:
             if pred_val >= thres:
                 var_name = 'num_true_predicted_true'
@@ -321,15 +323,15 @@ class calcSotAMetrics(baseMetrics):
     def __init__(self, njobs, accures):
         super(calcSotAMetrics, self).__init__(len(StaticValues.methods), njobs, accures)
 
-    def _generic_evaluator(self, idx, algnm, str1, str2, match, custom_thres):
+    def _generic_evaluator(self, idx, algnm, str1, str2, is_a_match, custom_thres):
         start_time = time.time()
-        sim = StaticValues.algorithms[algnm](str1, str2)
-        res, varnm = self.prediction(idx, sim, match, custom_thres)
+        sim_val = StaticValues.algorithms[algnm](str1, str2)
+        res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
         self.timers[idx - 1] += (time.time() - start_time)
         self.predictedState[varnm][idx - 1] += 1.0
         return res
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres=None):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig'):
         tot_res = ""
         flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
 
@@ -355,13 +357,13 @@ class calcSotAMetrics(baseMetrics):
                 if canonical:
                     file_name += '_canonical'
                 if sorting:
-                    file_name += '_sort'
+                    file_name += '_sorted'
                 self.file = open(file_name + '.csv', 'w+')
 
             if flag_true_match == 1.0:
-                self.file.write("TRUE{0}".format(tot_res + "\n"))
+                self.file.write("TRUE{0}\t{1}\t{2}\n".format(tot_res, row['s1'].encode('utf8'), row['s2'].encode('utf8')))
             else:
-                self.file.write("FALSE{0}".format(tot_res + "\n"))
+                self.file.write("FALSE{0}\t{1}\t{2}\n".format(tot_res, row['s1'].encode('utf8'), row['s2'].encode('utf8')))
 
     def print_stats(self):
         for idx in range(len(StaticValues.methods)):
