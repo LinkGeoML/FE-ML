@@ -394,8 +394,8 @@ class calcSotAMetrics(baseMetrics):
         #     return self.result
 
     def get_stats(self):
-        res = []
-        for idx in xrange(len(StaticValues.methods)):
+        res = {}
+        for idx, m in enumerate(StaticValues.methods):
             try:
                 acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
                       (self.num_true + self.num_false)
@@ -405,9 +405,8 @@ class calcSotAMetrics(baseMetrics):
                       (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
                 f1 = 2.0 * ((pre * rec) / (pre + rec))
 
-                res.append([acc, pre, rec, f1])
+                res[m[0]] = [acc, pre, rec, f1]
             except ZeroDivisionError:
-                res.append([0.0, 0.0, 0.0, 0.0])
                 pass
 
         return res

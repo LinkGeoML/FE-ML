@@ -127,7 +127,7 @@ class StaticValues:
         'jaccard': 7,
     }
 
-    method_names = [
+    methods_as_saved = [
         "damerau_levenshtein",
         "jaccard",
         "jaro",

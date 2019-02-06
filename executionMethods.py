@@ -10,6 +10,7 @@ from functools import partial
 # import unicodedata
 import re
 import pandas as pd
+import time
 
 from nltk.corpus import stopwords
 
@@ -181,12 +182,13 @@ class Evaluator:
             print "Reading dataset..."
             relpath = getRelativePathtoWorking(dataset)
 
+            start_time = time.time()
             all_res = {}
             with open(relpath) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
-                for m in StaticValues.method_names: all_res[m] = []
+                for m in StaticValues.methods: all_res[m[0]] = []
                 for i in xrange(5, 99, 5):
                     print 'Computing stats for threshold {0}...'.format(float(i / 100.0))
 
@@ -200,12 +202,18 @@ class Evaluator:
                     if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                     tmp_res = self.evalClass.get_stats()
 
-                    for idx, m in enumerate(StaticValues.method_names):
-                        all_res[m].append([i, tmp_res[idx]])
+                    for key, val in tmp_res.iteritems():
+                        all_res[key].append([i, val])
 
                     self.evalClass.reset_vars()
 
-            for m in StaticValues.method_names: print m, max(all_res[m], key=lambda x: x[1][0])
+            print 'The process took {0:.2f} sec'.format(time.time() - start_time)
+            for k, val in all_res.iteritems():
+                if len(val) == 0:
+                    print '{0} is empty'.format(k)
+                    continue
+
+                print k, max(val, key=lambda x: x[1][0])
 
 
     def test_cases(self, dataset):
@@ -336,17 +344,17 @@ class Evaluator:
 
             res1 = pd.read_csv(
                 datasets[1], sep='\t',
-                names=["res1"] + list(map(lambda x: "res1_{0}".format(x), StaticValues.method_names))
+                names=["res1"] + list(map(lambda x: "res1_{0}".format(x), StaticValues.methods_as_saved))
             )
             res2 = pd.read_csv(
                 datasets[2], sep='\t',
-                names=["res2"] + list(map(lambda x: "res2_{0}".format(x), StaticValues.method_names))
+                names=["res2"] + list(map(lambda x: "res2_{0}".format(x), StaticValues.methods_as_saved))
             )
 
             mismatches = pd.concat([reader, res1, res2], axis=1)
             mismatches = mismatches.sort_values(by=['res'], ascending=False)
 
-            for metric_name in StaticValues.method_names:
+            for metric_name in StaticValues.methods_as_saved:
                 negDf = mismatches[
                     (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
                     (mismatches.res1 == mismatches['res1_{0}'.format(metric_name)]) &
