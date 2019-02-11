@@ -112,19 +112,34 @@ class StaticValues:
     # Jaccard skipgrams [0.45, [0.6268896, 0.7344004693566002, 0.397558, 0.5158612965057345]]
     # Monge - Elkan [0.7, [0.595671, 0.6582955812714475, 0.397862, 0.49596916445086014]]
     # Davis and De Salles [0.65, [0.6209832, 0.7103262630715932, 0.4085916, 0.5187750663908612]]
+
+    # Cosine N - grams[0.55, [0.6532216, 0.7929532870384532, 0.4147336, 0.5446186008887582]]
+    # Jaro - Winkler[0.85, [0.6491346, 0.7978714819972373, 0.3994684, 0.53238758536534]]
+    # Dice bigrams[0.55, [0.6555378, 0.7904536249887021, 0.4232876, 0.5513353438841664]]
+    # Sorted Jaro - Winkler[0.85, [0.648052, 0.7972029375820032, 0.3971276, 0.5301569027211673]]
+    # Jaro[0.8, [0.6608854, 0.8305803701685476, 0.4042232, 0.5437947592601909]]
+    # Jaccard N - grams[0.35, [0.6550174, 0.7885240616947825, 0.423656, 0.5511771071606344]]
+    # Jaro - Winkler reversed[0.75, [0.6593874, 0.7642860032751504, 0.4609308, 0.575054076922098]]
+    # Soft - Jaccard[0.7, [0.64672, 0.7896897918308743, 0.3999564, 0.5309838982821329]]
+    # Permuted Jaro - Winkler is empty
+    # Damerau - Levenshtein[0.6, [0.663373, 0.8265968105769285, 0.4134872, 0.5512323323568598]]
+    # Jaccard skipgrams[0.55, [0.658001, 0.8075493146365296, 0.414872, 0.5481409645765263]]
+    # Monge - Elkan[0.85, [0.6490476, 0.8150739024555232, 0.3855756, 0.5235043338474573]]
+    # Davis and De Salles[0.7, [0.6477734, 0.7471548658801334, 0.4467224, 0.5591375669786182]]
+
     methods = [["Damerau-Levenshtein", {'orig': 0.55, 'sorted': 0.60}],
-               ["Jaro", {'orig': 0.75, 'sorted': 0.85}],
-               ["Jaro-Winkler", {'orig': 0.7, 'sorted': 0.75}],
-               ["Jaro-Winkler reversed", {'orig': 0.75, 'sorted': 0.85}],
+               ["Jaro", {'orig': 0.75, 'sorted': 0.8}],
+               ["Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85}],
+               ["Jaro-Winkler reversed", {'orig': 0.75, 'sorted': 0.75}],
                ["Sorted Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85}],
                ["Permuted Jaro-Winkler", {'orig': 0.7, 'sorted': 0.7}],
-               ["Cosine N-grams", {'orig': 0.4, 'sorted': 0.35}],
-               ["Jaccard N-grams", {'orig': 0.25, 'sorted': 0.8}],
+               ["Cosine N-grams", {'orig': 0.4, 'sorted': 0.7}],
+               ["Jaccard N-grams", {'orig': 0.25, 'sorted': 0.35}],
                ["Dice bigrams", {'orig': 0.5, 'sorted': 0.55}],
-               ["Jaccard skipgrams", {'orig': 0.45, 'sorted': 0.7}],
-               ["Monge-Elkan", {'orig': 0.7, 'sorted': 0.55}],
-               ["Soft-Jaccard", {'orig': 0.6, 'sorted': 0.55}],
-               ["Davis and De Salles", {'orig': 0.65, 'sorted': 0.65}]]
+               ["Jaccard skipgrams", {'orig': 0.45, 'sorted': 0.55}],
+               ["Monge-Elkan", {'orig': 0.7, 'sorted': 0.85}],
+               ["Soft-Jaccard", {'orig': 0.6, 'sorted': 0.7}],
+               ["Davis and De Salles", {'orig': 0.65, 'sorted': 0.7}]]
 
     nameIDs = {
         'damerau_levenshtein': 0,
