@@ -6,7 +6,6 @@ from abc import ABCMeta, abstractmethod
 import math
 import re
 import itertools
-import unicodedata
 
 import numpy as np
 from sklearn.neural_network import MLPClassifier
@@ -24,7 +23,7 @@ from external.datasetcreator import strip_accents
 from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
-def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' '):
+def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' ', thres=0.85):
     a = strA.decode('utf8') #.lower()
     b = strB.decode('utf8') #.lower()
 
@@ -37,7 +36,7 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         a = strip_accents(a.lower())
         b = strip_accents(b.lower())
 
-        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`]')
+        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ]')
         a = regex.sub('', a)
         b = regex.sub('', b)
 
@@ -48,7 +47,7 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         tmp_a = a.replace(' ', '')
         tmp_b = b.replace(' ', '')
 
-        if StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) < 0.87:
+        if StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) <= thres:
             a = " ".join(sorted_nicely(a.split(delimiter)))
             b = " ".join(sorted_nicely(b.split(delimiter)))
         elif StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) > StaticValues.algorithms['damerau_levenshtein'](a, b):
@@ -458,7 +457,7 @@ class calcCustomFEML(baseMetrics):
 
         super(calcCustomFEML, self).__init__(len(self.classifiers), njobs, accures)
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False, custom_thres=None):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False, custom_thres='orig'):
         if row['res'] == "TRUE":
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(1.0)
             else: self.Y2.append(1.0)

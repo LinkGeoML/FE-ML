@@ -98,6 +98,20 @@ class StaticValues:
         'jaccard': jaccard,
     }
 
+    # The process took 33196.57 sec
+    # Cosine N - grams [0.4, [0.6150486, 0.7036605891695503, 0.3975004, 0.5080190243028387]]
+    # Jaro - Winkler [0.7, [0.6358974, 0.7174139942418586, 0.4484288, 0.5518910407647016]]
+    # Dice bigrams [0.5, [0.6217942, 0.7536366733612166, 0.36189, 0.4889772378116455]]
+    # Sorted Jaro - Winkler [0.7, [0.6189116, 0.7144158504392482, 0.3962036, 0.5097229869855858]]
+    # Jaro [0.75, [0.6377728, 0.7694807735038321, 0.3933992, 0.5206265953651169]]
+    # Jaccard N - grams [0.25, [0.6171748, 0.7150005798190671, 0.3896736, 0.5044326282448593]]
+    # Jaro - Winkler reversed [0.75, [0.6516894, 0.7799749130854321, 0.4225876, 0.5481756216320132]]
+    # Soft - Jaccard [0.6, [0.5943208, 0.6965091995193149, 0.3343116, 0.4517780491325027]]
+    # Permuted Jaro - Winkler is empty
+    # Damerau - Levenshtein [0.55, [0.65068, 0.7865148627208187, 0.4136332, 0.5421475393248235]]
+    # Jaccard skipgrams [0.45, [0.6268896, 0.7344004693566002, 0.397558, 0.5158612965057345]]
+    # Monge - Elkan [0.7, [0.595671, 0.6582955812714475, 0.397862, 0.49596916445086014]]
+    # Davis and De Salles [0.65, [0.6209832, 0.7103262630715932, 0.4085916, 0.5187750663908612]]
     methods = [["Damerau-Levenshtein", {'orig': 0.55, 'sorted': 0.60}],
                ["Jaro", {'orig': 0.75, 'sorted': 0.85}],
                ["Jaro-Winkler", {'orig': 0.7, 'sorted': 0.75}],
@@ -107,10 +121,10 @@ class StaticValues:
                ["Cosine N-grams", {'orig': 0.4, 'sorted': 0.35}],
                ["Jaccard N-grams", {'orig': 0.25, 'sorted': 0.8}],
                ["Dice bigrams", {'orig': 0.5, 'sorted': 0.55}],
-               ["Jaccard skipgrams", {'orig': 0.45, 'sorted': 0.85}],
+               ["Jaccard skipgrams", {'orig': 0.45, 'sorted': 0.7}],
                ["Monge-Elkan", {'orig': 0.7, 'sorted': 0.55}],
                ["Soft-Jaccard", {'orig': 0.6, 'sorted': 0.55}],
-               ["Davis and De Salles", {'orig': 0.65, 'sorted': 60}]]
+               ["Davis and De Salles", {'orig': 0.65, 'sorted': 0.65}]]
 
     nameIDs = {
         'damerau_levenshtein': 0,
