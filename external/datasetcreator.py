@@ -125,12 +125,12 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
             # print randomname1 + "\t" + randomname2 + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
             #     randomname1) + "\t" + detect_alphabet(randomname2) + "\t" + country + "\t" + country
             file.write(randomname1 + "\t" + randomname2 + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
-                randomname1) + "\t" + detect_alphabet(randomname2) + "\t" + country + "\t" + country)
+                randomname1) + "\t" + detect_alphabet(randomname2) + "\t" + country + "\t" + country + "\n")
             if not (lastid is None):
                 # print lastname + "\t" + randomname3 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
                 # lastname) + "\t" + detect_alphabet(randomname3) + "\t" + firstcountry + "\t" + country
                 file.write(lastname + "\t" + randomname3 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
-                lastname) + "\t" + detect_alphabet(randomname3) + "\t" + firstcountry + "\t" + country)
+                lastname) + "\t" + detect_alphabet(randomname3) + "\t" + firstcountry + "\t" + country + "\n")
             lastname = randomname1
             if len(names) < 5:
                 lastid = id
@@ -154,12 +154,12 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
                 # print randomname4 + "\t" + aux + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
                 #     randomname4) + "\t" + detect_alphabet(aux) + "\t" + country + "\t" + country
                 file.write(randomname4 + "\t" + aux + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
-                    randomname4) + "\t" + detect_alphabet(aux) + "\t" + country + "\t" + country)
+                    randomname4) + "\t" + detect_alphabet(aux) + "\t" + country + "\t" + country + "\n")
                 if not (lastid is None):
                     # print lastname2 + "\t" + randomname5 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
                     # lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country
                     file.write(lastname2 + "\t" + randomname5 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
-                        lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country)
+                        lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country + "\n")
             lastname2 = random.sample([randomname2, randomname4], 1)[0]
             lastid = id
 

@@ -63,6 +63,10 @@ def main(args):
     evaluator = rc.Evaluator(args['--ml'], args['--sort'], args['--stemming'], args['--canonical'],
                              args['--permuted'], args['--print'], args['--onlyLATIN'])
 
+    if args['--buildDataset']:
+        evaluator.build_dataset()
+        sys.exit(0)
+
     fpath_ds = getTMabsPath(dataset_path[0])
     if os.path.isfile(fpath_ds):
         evaluator.initialize(fpath_ds, args['--ev'], args['--jobs'], args['--accuracyresults'])
@@ -70,7 +74,6 @@ def main(args):
         elif args['--test']: evaluator.test_cases(fpath_ds)
         elif args['--cmp']: evaluator.print_false_posneg(dataset_path)
         elif args['--optimalThres']: evaluator.evaluate_metrics_with_various_thres(fpath_ds)
-        elif args['--buildDataset']: evaluator.build_dataset()
         else: evaluator.evaluate_metrics(fpath_ds)
     else: print "No file {0} exists!!!\n".format(fpath_ds)
 
