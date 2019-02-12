@@ -13,7 +13,6 @@ import pandas as pd
 import time
 
 from nltk.corpus import stopwords
-from pip._vendor.pyparsing import oneOf
 
 import femlAlgorithms as femlAlgs
 from helpers import perform_stemming, normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
