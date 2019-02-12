@@ -79,14 +79,14 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
         reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
         for row in reader:
             names = set([name.strip() for name in ("" + row['alternatenames']).split(",") if len(name.strip()) > 2])
+            if len(row['name'].strip()) > 2: names.add(row['name'].strip())
+            if len(unicode(row['asciiname'], "utf-8").strip()) > 2: names.add(row['asciiname'].strip())
             # remove non LATIN names
             if only_latin:
                 for n in list(names):
                     if detect_alphabet(n) != 'LATIN':
-                        names.pop()
+                        names.remove(n)
 
-            if len(row['name'].strip()) > 2: names.add(row['name'].strip())
-            if len(unicode(row['asciiname'], "utf-8").strip()) > 2: names.add(row['asciiname'].strip())
             if len(names) < 3: continue
             id = row['geonameid']
             country = row['country_code']
@@ -185,7 +185,7 @@ def filter_dataset(input='dataset-unfiltered.txt', num_instances=2500000):
             neg.append(line)
     pos = random.sample(pos, len(pos))
     neg = random.sample(neg, len(neg))
-    for i in range(num_instances):
+    for i in range(min(num_instances, len(pos), len(neg))):
         file.write(pos[i])
         file.write(neg[i])
     print "Filtering ended."
