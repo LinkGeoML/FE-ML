@@ -25,6 +25,7 @@ Options:
   --cmp                     Print output results that a comparison produces. Default is False.
   --onlyLATIN               Check for similarities only both strings use LATIN chars. Default is False.
   --optimalThres            Find best threshold for metrics.
+  --buildDataset            Build the dataset for evaluation.
 
 Arguments:
   evaluator_type            'SotAMetrics' (default)
@@ -69,6 +70,7 @@ def main(args):
         elif args['--test']: evaluator.test_cases(fpath_ds)
         elif args['--cmp']: evaluator.print_false_posneg(dataset_path)
         elif args['--optimalThres']: evaluator.evaluate_metrics_with_various_thres(fpath_ds)
+        elif args['--buildDataset']: evaluator.build_dataset()
         else: evaluator.evaluate_metrics(fpath_ds)
     else: print "No file {0} exists!!!\n".format(fpath_ds)
 

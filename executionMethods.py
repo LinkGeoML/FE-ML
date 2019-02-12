@@ -13,10 +13,11 @@ import pandas as pd
 import time
 
 from nltk.corpus import stopwords
+from pip._vendor.pyparsing import oneOf
 
 import femlAlgorithms as femlAlgs
 from helpers import perform_stemming, normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
-from external.datasetcreator import detect_alphabet, fields, strip_accents
+from external.datasetcreator import detect_alphabet, fields, strip_accents, filter_dataset, build_dataset_from_geonames
 from helpers import StaticValues
 
 
@@ -219,7 +220,6 @@ class Evaluator:
 
                 print k, max(val, key=lambda x: x[1][0])
 
-
     def test_cases(self, dataset):
         if not os.path.exists("output"):
             os.makedirs("output")
@@ -372,3 +372,7 @@ class Evaluator:
                 tmpDf = mismatches[ mismatches.res1 != mismatches.res2 ]
                 if not tmpDf.empty: print tmpDf
         else: print "Wrong number {0} of input datasets to cmp".format(len(datasets))
+
+    def build_dataset(self):
+        build_dataset_from_geonames(only_latin=self.latin)
+        filter_dataset()

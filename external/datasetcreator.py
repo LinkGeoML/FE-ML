@@ -53,7 +53,7 @@ def detect_alphabet(str):
 
 
 # The geonames dataset can be obtained from http://download.geonames.org/export/dump/allCountries.zip
-def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfiltered.txt'):
+def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfiltered.txt', only_latin=False):
     csv.field_size_limit(sys.maxsize)
     lastname = None
     lastname2 = None
@@ -79,6 +79,12 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
         reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
         for row in reader:
             names = set([name.strip() for name in ("" + row['alternatenames']).split(",") if len(name.strip()) > 2])
+            # remove non LATIN names
+            if only_latin:
+                for n in list(names):
+                    if detect_alphabet(n) != 'LATIN':
+                        names.pop()
+
             if len(row['name'].strip()) > 2: names.add(row['name'].strip())
             if len(unicode(row['asciiname'], "utf-8").strip()) > 2: names.add(row['asciiname'].strip())
             if len(names) < 3: continue
@@ -116,11 +122,15 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
                 continue
             if randomname1 is None or randomname2 is None or id is None or country is None:
                 continue
-            print randomname1 + "\t" + randomname2 + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
-                randomname1) + "\t" + detect_alphabet(randomname2) + "\t" + country + "\t" + country
-            if not (
-                    lastid is None): print lastname + "\t" + randomname3 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
-                lastname) + "\t" + detect_alphabet(randomname3) + "\t" + firstcountry + "\t" + country
+            # print randomname1 + "\t" + randomname2 + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
+            #     randomname1) + "\t" + detect_alphabet(randomname2) + "\t" + country + "\t" + country
+            file.write(randomname1 + "\t" + randomname2 + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
+                randomname1) + "\t" + detect_alphabet(randomname2) + "\t" + country + "\t" + country)
+            if not (lastid is None):
+                # print lastname + "\t" + randomname3 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
+                # lastname) + "\t" + detect_alphabet(randomname3) + "\t" + firstcountry + "\t" + country
+                file.write(lastname + "\t" + randomname3 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
+                lastname) + "\t" + detect_alphabet(randomname3) + "\t" + firstcountry + "\t" + country)
             lastname = randomname1
             if len(names) < 5:
                 lastid = id
@@ -141,11 +151,15 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
                 if damerau_levenshtein(randomname5, lastname2) == 0.0 and random.random() < 0.5: break
             if attempts > 0:
                 aux = random.sample([randomname1, randomname2], 1)[0]
-                print randomname4 + "\t" + aux + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
-                    randomname4) + "\t" + detect_alphabet(aux) + "\t" + country + "\t" + country
-                if not (
-                        lastid is None): print lastname2 + "\t" + randomname5 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
-                    lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country
+                # print randomname4 + "\t" + aux + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
+                #     randomname4) + "\t" + detect_alphabet(aux) + "\t" + country + "\t" + country
+                file.write(randomname4 + "\t" + aux + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
+                    randomname4) + "\t" + detect_alphabet(aux) + "\t" + country + "\t" + country)
+                if not (lastid is None):
+                    # print lastname2 + "\t" + randomname5 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
+                    # lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country
+                    file.write(lastname2 + "\t" + randomname5 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
+                        lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country)
             lastname2 = random.sample([randomname2, randomname4], 1)[0]
             lastid = id
 
