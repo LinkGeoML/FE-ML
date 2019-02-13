@@ -40,8 +40,12 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         a = regex.sub('', a)
         b = regex.sub('', b)
 
-        a = a.replace('-', ' ')
-        b = b.replace('-', ' ')
+        # replace dashes with space
+        # a = a.replace('-', ' ')
+        # b = b.replace('-', ' ')
+        # TODO: choose one of the two: replace dashes with no_space
+        a = a.replace('-', '')
+        b = b.replace('-', '')
 
     if sorting:
         tmp_a = a.replace(' ', '')
@@ -62,6 +66,9 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
 
 
 class FEMLFeatures:
+    def __init__(self):
+        pass
+
     # TODO to_be_removed = "()/.,:!'"  # check the list of chars
     # Returned vals: #1: str1 is subset of str2, #2 str2 is subset of str1
     @staticmethod
@@ -135,27 +142,26 @@ class FEMLFeatures:
         if tokens < 1: tokens = 1
         return list(itertools.chain.from_iterable([[tokens[i:i + ngram] for i in range(len(tokens) - (ngram - 1))]]))
 
+    def _check_size(self, s):
+        if not len(s) == 3:
+            raise ValueError('expected size 3, got %d' % len(s))
+
     def containsInPos(self, str1, str2):
         fvec_str1 = []
         fvec_str2 = []
 
-        step = math.ceil(len(str1) / 3)
-        for idx in xrange(0, len(str1), step):
-            if str1[idx:idx + step]:
-                sim = StaticValues.algorithms['damerau_levenshtein'](str1[idx:idx + step], str2)
-                if sim >= 0.55:
-                    fvec_str1.append(1)
-                else:
-                    fvec_str1.append(0)
+        sep_step = int(math.ceil(len(str1) / 3.0))
+        for idx in xrange(0, len(str1), sep_step):
+            if str1[idx:idx + sep_step]:
+                fvec_str1.append(StaticValues.algorithms['damerau_levenshtein'](str1[idx:idx + sep_step], str2))
 
-        step = math.ceil(len(str2) / 3)
-        for idx in xrange(0, len(str2), step):
-            if str2[idx:idx + step]:
-                sim = StaticValues.algorithms['damerau_levenshtein'](str1, str2[idx:idx + step])
-                if sim >= 0.55:
-                    fvec_str2.append(1)
-                else:
-                    fvec_str2.append(0)
+        sep_step = int(math.ceil(len(str2) / 3.0))
+        for idx in xrange(0, len(str2), sep_step):
+            if str2[idx:idx + sep_step]:
+                fvec_str2.append(StaticValues.algorithms['damerau_levenshtein'](str1, str2[idx:idx + sep_step]))
+
+        self._check_size(fvec_str1)
+        self._check_size(fvec_str2)
 
         return fvec_str1, fvec_str2
 

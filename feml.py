@@ -81,5 +81,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-    arguments = docopt(__doc__, version='FE-ML 0.1')
+    arguments = docopt(__doc__, version='FE-ML 0.2')
     main(arguments)
