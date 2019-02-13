@@ -219,6 +219,42 @@ class Evaluator:
 
                 print k, max(val, key=lambda x: x[1][0])
 
+    def evaluate_sorting_with_various_thres(self, dataset='dataset-string-similarity.txt'):
+        if self.evalClass is not None:
+            print "Reading dataset..."
+            relpath = getRelativePathtoWorking(dataset)
+
+            start_time = time.time()
+            all_res = {}
+            with open(relpath) as csvfile:
+                reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
+                                        delimiter='\t')
+
+                for m in StaticValues.methods: all_res[m[0]] = []
+                for i in xrange(55, 86, 5):
+                    print 'Computing stats for threshold {0}...'.format(float(i / 100.0))
+
+                    csvfile.seek(0)
+                    for row in reader:
+                        if self.latin and (row['a1'] != 'LATIN' or row['a2'] != 'LATIN'): continue
+
+                        self.evalClass.evaluate_sorting(row, float(i / 100.0), self.stemming, self.permuted)
+                    if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
+                    tmp_res = self.evalClass.get_stats()
+
+                    for key, val in tmp_res.iteritems():
+                        all_res[key].append([float(i / 100.0), val])
+
+                    self.evalClass.reset_vars()
+
+            print 'The process took {0:.2f} sec'.format(time.time() - start_time)
+            for k, val in all_res.iteritems():
+                if len(val) == 0:
+                    print '{0} is empty'.format(k)
+                    continue
+
+                print k, max(val, key=lambda x: x[1][0])
+
     def test_cases(self, dataset):
         if not os.path.exists("output"):
             os.makedirs("output")
