@@ -61,7 +61,7 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
     country = None
     skip = random.randint(10, 100)
     file = open(output, "w+")
-    max_no_attempts = 100
+    max_no_attempts = 1000
     with open(input) as csvfile:
         reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
         for row in reader:
@@ -144,8 +144,8 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
                 if not (randomname4.lower() == randomname1.lower()) and not (
                         randomname4.lower() == randomname2.lower()): break
                 curr_attempt += 1
-                if curr_attempt > max_no_attempts * 10: break
-            if curr_attempt > max_no_attempts*10:
+                if curr_attempt > (max_no_attempts): break
+            if curr_attempt > max_no_attempts:
                 print "Failed to find alternative names..."
                 lastid = id
                 lastname2 = randomname2

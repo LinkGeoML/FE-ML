@@ -8,7 +8,6 @@ import json
 from operator import is_not
 from functools import partial
 # import unicodedata
-import re
 import pandas as pd
 import time
 
