@@ -16,7 +16,7 @@ from nltk.corpus import stopwords
 
 import femlAlgorithms as femlAlgs
 from helpers import perform_stemming, normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
-from external.datasetcreator import detect_alphabet, fields, strip_accents, filter_dataset, build_dataset_from_geonames
+from external.datasetcreator import detect_alphabet, strip_accents, filter_dataset, build_dataset_from_geonames
 from helpers import StaticValues
 
 
