@@ -162,6 +162,7 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
                         lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country + "\n")
             lastname2 = random.sample([randomname2, randomname4], 1)[0]
             lastid = id
+    file.close()
 
 
 def filter_dataset(input='dataset-unfiltered.txt', num_instances=2500000):
