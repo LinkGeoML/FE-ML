@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import csv
+import os.path
 import sys
 import math
 import random
@@ -53,7 +54,9 @@ def detect_alphabet(str):
 
 
 # The geonames dataset can be obtained from http://download.geonames.org/export/dump/allCountries.zip
-def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfiltered.txt', only_latin=False):
+def build_dataset_from_geonames(output='dataset-unfiltered.txt', only_latin=False):
+    datasets = ['allCountries.txt', 'cities15000.txt', 'cities5000.txt', 'cities1000.txt', 'cities500.txt']
+
     csv.field_size_limit(sys.maxsize)
     lastname = None
     lastname2 = None
@@ -62,117 +65,122 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
     skip = random.randint(10, 100)
     file = open(output, "w+")
     max_no_attempts = 1000
-    with open(input) as csvfile:
-        reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
-        for row in reader:
-            skip = skip - 1
-            if skip > 0: continue
-            names = set([name.strip() for name in ("" + row['alternatenames']).split(",") if len(name.strip()) > 2])
-            if len(names) < 5: continue
-            lastid = row['geonameid']
-            firstcountry = row['country_code']
-            lastname = random.sample(names, 1)[0]
-            lastname2 = random.sample(names, 1)[0]
-            while True:
-                lastname2 = random.sample(names, 1)[0]
-                if not (lastname2.lower() == lastname.lower()): break
-    with open(input) as csvfile:
-        reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
-        for row in reader:
-            names = set([name.strip() for name in ("" + row['alternatenames']).split(",") if len(name.strip()) > 2])
-            if len(row['name'].strip()) > 2: names.add(row['name'].strip())
-            if len(unicode(row['asciiname'], "utf-8").strip()) > 2: names.add(row['asciiname'].strip())
-            # remove non LATIN names
-            if only_latin:
-                for n in list(names):
-                    if detect_alphabet(n) != 'LATIN':
-                        names.remove(n)
+    for input in datasets:
+        if not os.path.isfile(input):
+            print "File {0} does not exist".format(input)
+            continue
 
-            if len(names) < 3: continue
-            id = row['geonameid']
-            country = row['country_code']
-            randomname1 = random.sample(names, 1)[0]
-            randomname3 = random.sample(names, 1)[0]
-            randomname5 = random.sample(names, 1)[0]
-            while True:
-                randomname2 = random.sample(names, 1)[0]
-                if not (randomname1.lower() == randomname2.lower()): break
-            attempts = max_no_attempts
-            while attempts > 0:
-                attempts = attempts - 1
+        with open(input) as csvfile:
+            reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
+            for row in reader:
+                skip = skip - 1
+                if skip > 0: continue
+                names = set([name.strip() for name in ("" + row['alternatenames']).split(",") if len(name.strip()) > 2])
+                if len(names) < 5: continue
+                lastid = row['geonameid']
+                firstcountry = row['country_code']
+                lastname = random.sample(names, 1)[0]
+                lastname2 = random.sample(names, 1)[0]
+                while True:
+                    lastname2 = random.sample(names, 1)[0]
+                    if not (lastname2.lower() == lastname.lower()): break
+        with open(input) as csvfile:
+            reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
+            for row in reader:
+                names = set([name.strip() for name in ("" + row['alternatenames']).split(",") if len(name.strip()) > 2])
+                if len(row['name'].strip()) > 2: names.add(row['name'].strip())
+                if len(unicode(row['asciiname'], "utf-8").strip()) > 2: names.add(row['asciiname'].strip())
+                # remove non LATIN names
+                if only_latin:
+                    for n in list(names):
+                        if detect_alphabet(n) != 'LATIN':
+                            names.remove(n)
+
+                if len(names) < 3: continue
+                id = row['geonameid']
+                country = row['country_code']
+                randomname1 = random.sample(names, 1)[0]
                 randomname3 = random.sample(names, 1)[0]
-                if lastname is None or (
-                        jaccard(randomname3, lastname) > 0.0 and not (randomname3.lower() == lastname.lower())): break
-                if damerau_levenshtein(randomname3, lastname) == 0.0 and random.random() < 0.5: break
-            if attempts <= 0:
-                auxl = lastname
-                lastname = lastname2
-                lastname2 = auxl
+                randomname5 = random.sample(names, 1)[0]
+                while True:
+                    randomname2 = random.sample(names, 1)[0]
+                    if not (randomname1.lower() == randomname2.lower()): break
                 attempts = max_no_attempts
                 while attempts > 0:
                     attempts = attempts - 1
                     randomname3 = random.sample(names, 1)[0]
-                    if lastname is None or (jaccard(randomname3, lastname) > 0.0 and not (
-                            randomname3.lower() == lastname.lower())): break
+                    if lastname is None or (
+                            jaccard(randomname3, lastname) > 0.0 and not (randomname3.lower() == lastname.lower())): break
                     if damerau_levenshtein(randomname3, lastname) == 0.0 and random.random() < 0.5: break
-            if attempts <= 0:
-                lastid = id
-                lastname = randomname1
-                lastname2 = randomname2
-                firstcountry = row['country_code']
-                continue
-            if randomname1 is None or randomname2 is None or id is None or country is None:
-                continue
-            # print randomname1 + "\t" + randomname2 + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
-            #     randomname1) + "\t" + detect_alphabet(randomname2) + "\t" + country + "\t" + country
-            file.write(randomname1 + "\t" + randomname2 + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
-                randomname1) + "\t" + detect_alphabet(randomname2) + "\t" + country + "\t" + country + "\n")
-            if not (lastid is None):
-                # print lastname + "\t" + randomname3 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
-                # lastname) + "\t" + detect_alphabet(randomname3) + "\t" + firstcountry + "\t" + country
-                file.write(lastname + "\t" + randomname3 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
-                lastname) + "\t" + detect_alphabet(randomname3) + "\t" + firstcountry + "\t" + country + "\n")
-            lastname = randomname1
-            if len(names) < 5:
-                lastid = id
-                lastname2 = randomname2
-                firstcountry = country
-                continue
-            curr_attempt = 0
-            while True:
-                randomname4 = random.sample(names, 1)[0]
-                if not (randomname4.lower() == randomname1.lower()) and not (
-                        randomname4.lower() == randomname2.lower()): break
-                curr_attempt += 1
-                if curr_attempt > (max_no_attempts): break
-            if curr_attempt > max_no_attempts:
-                print "Failed to find alternative names..."
-                lastid = id
-                lastname2 = randomname2
-                firstcountry = country
-                continue
-
-            attempts = max_no_attempts
-            while attempts > 0:
-                attempts = attempts - 1
-                randomname5 = random.sample(names, 1)[0]
-                if lastname2 is None or (jaccard(randomname5, lastname2) > 0.0 and not (
-                        randomname5.lower() == lastname2.lower()) and not (
-                        randomname5.lower() == randomname3.lower())): break
-                if damerau_levenshtein(randomname5, lastname2) == 0.0 and random.random() < 0.5: break
-            if attempts > 0:
-                aux = random.sample([randomname1, randomname2], 1)[0]
-                # print randomname4 + "\t" + aux + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
-                #     randomname4) + "\t" + detect_alphabet(aux) + "\t" + country + "\t" + country
-                file.write(randomname4 + "\t" + aux + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
-                    randomname4) + "\t" + detect_alphabet(aux) + "\t" + country + "\t" + country + "\n")
+                if attempts <= 0:
+                    auxl = lastname
+                    lastname = lastname2
+                    lastname2 = auxl
+                    attempts = max_no_attempts
+                    while attempts > 0:
+                        attempts = attempts - 1
+                        randomname3 = random.sample(names, 1)[0]
+                        if lastname is None or (jaccard(randomname3, lastname) > 0.0 and not (
+                                randomname3.lower() == lastname.lower())): break
+                        if damerau_levenshtein(randomname3, lastname) == 0.0 and random.random() < 0.5: break
+                if attempts <= 0:
+                    lastid = id
+                    lastname = randomname1
+                    lastname2 = randomname2
+                    firstcountry = row['country_code']
+                    continue
+                if randomname1 is None or randomname2 is None or id is None or country is None:
+                    continue
+                # print randomname1 + "\t" + randomname2 + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
+                #     randomname1) + "\t" + detect_alphabet(randomname2) + "\t" + country + "\t" + country
+                file.write(randomname1 + "\t" + randomname2 + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
+                    randomname1) + "\t" + detect_alphabet(randomname2) + "\t" + country + "\t" + country + "\n")
                 if not (lastid is None):
-                    # print lastname2 + "\t" + randomname5 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
-                    # lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country
-                    file.write(lastname2 + "\t" + randomname5 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
-                        lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country + "\n")
-            lastname2 = random.sample([randomname2, randomname4], 1)[0]
-            lastid = id
+                    # print lastname + "\t" + randomname3 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
+                    # lastname) + "\t" + detect_alphabet(randomname3) + "\t" + firstcountry + "\t" + country
+                    file.write(lastname + "\t" + randomname3 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
+                    lastname) + "\t" + detect_alphabet(randomname3) + "\t" + firstcountry + "\t" + country + "\n")
+                lastname = randomname1
+                if len(names) < 5:
+                    lastid = id
+                    lastname2 = randomname2
+                    firstcountry = country
+                    continue
+                curr_attempt = 0
+                while True:
+                    randomname4 = random.sample(names, 1)[0]
+                    if not (randomname4.lower() == randomname1.lower()) and not (
+                            randomname4.lower() == randomname2.lower()): break
+                    curr_attempt += 1
+                    if curr_attempt > max_no_attempts: break
+                if curr_attempt > max_no_attempts:
+                    print "Failed to find alternative names..."
+                    lastid = id
+                    lastname2 = randomname2
+                    firstcountry = country
+                    continue
+
+                attempts = max_no_attempts
+                while attempts > 0:
+                    attempts = attempts - 1
+                    randomname5 = random.sample(names, 1)[0]
+                    if lastname2 is None or (jaccard(randomname5, lastname2) > 0.0 and not (
+                            randomname5.lower() == lastname2.lower()) and not (
+                            randomname5.lower() == randomname3.lower())): break
+                    if damerau_levenshtein(randomname5, lastname2) == 0.0 and random.random() < 0.5: break
+                if attempts > 0:
+                    aux = random.sample([randomname1, randomname2], 1)[0]
+                    # print randomname4 + "\t" + aux + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
+                    #     randomname4) + "\t" + detect_alphabet(aux) + "\t" + country + "\t" + country
+                    file.write(randomname4 + "\t" + aux + "\tTRUE\t" + id + "\t" + id + "\t" + detect_alphabet(
+                        randomname4) + "\t" + detect_alphabet(aux) + "\t" + country + "\t" + country + "\n")
+                    if not (lastid is None):
+                        # print lastname2 + "\t" + randomname5 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
+                        # lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country
+                        file.write(lastname2 + "\t" + randomname5 + "\tFALSE\t" + lastid + "\t" + id + "\t" + detect_alphabet(
+                            lastname2) + "\t" + detect_alphabet(randomname5) + "\t" + firstcountry + "\t" + country + "\n")
+                lastname2 = random.sample([randomname2, randomname4], 1)[0]
+                lastid = id
     file.close()
 
 
