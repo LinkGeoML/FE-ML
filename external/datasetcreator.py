@@ -61,6 +61,7 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
     country = None
     skip = random.randint(10, 100)
     file = open(output, "w+")
+    max_no_attempts = 100
     with open(input) as csvfile:
         reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
         for row in reader:
@@ -96,7 +97,7 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
             while True:
                 randomname2 = random.sample(names, 1)[0]
                 if not (randomname1.lower() == randomname2.lower()): break
-            attempts = 1000
+            attempts = max_no_attempts
             while attempts > 0:
                 attempts = attempts - 1
                 randomname3 = random.sample(names, 1)[0]
@@ -107,7 +108,7 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
                 auxl = lastname
                 lastname = lastname2
                 lastname2 = auxl
-                attempts = 1000
+                attempts = max_no_attempts
                 while attempts > 0:
                     attempts = attempts - 1
                     randomname3 = random.sample(names, 1)[0]
@@ -137,11 +138,21 @@ def build_dataset_from_geonames(input='allCountries.txt', output='dataset-unfilt
                 lastname2 = randomname2
                 firstcountry = country
                 continue
+            curr_attempt = 0
             while True:
                 randomname4 = random.sample(names, 1)[0]
                 if not (randomname4.lower() == randomname1.lower()) and not (
                         randomname4.lower() == randomname2.lower()): break
-            attempts = 1000
+                curr_attempt += 1
+                if curr_attempt > max_no_attempts * 10: break
+            if curr_attempt > max_no_attempts*10:
+                print "Failed to find alternative names..."
+                lastid = id
+                lastname2 = randomname2
+                firstcountry = country
+                continue
+
+            attempts = max_no_attempts
             while attempts > 0:
                 attempts = attempts - 1
                 randomname5 = random.sample(names, 1)[0]
