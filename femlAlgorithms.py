@@ -349,6 +349,9 @@ class calcSotAMetrics(baseMetrics):
         if permuted: tot_res += self._generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(10, 'skipgram', row['s1'], row['s2'], flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(13, 'davies', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(14, 'l_jaro_winkler', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(15, 'l_jaro_winkler', row['s1'][::-1], row['s2'][::-1], flag_true_match,
+                                           custom_thres)
 
         if self.accuracyresults:
             if self.file is None:

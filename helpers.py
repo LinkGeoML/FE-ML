@@ -8,7 +8,7 @@ from langdetect import detect, lang_detect_exception
 import pycountry
 
 from external.datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, \
-    strike_a_match, soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies
+    strike_a_match, soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies, l_jaro_winkler
 
 
 sys.path.append(os.path.abspath('../Toponym-Matching'))
@@ -96,6 +96,7 @@ class StaticValues:
         'jaro_winkler': jaro_winkler,
         'jaro': jaro,
         'jaccard': jaccard,
+        'l_jaro_winkler': l_jaro_winkler,
     }
 
     # The process took 33196.57 sec
@@ -129,19 +130,23 @@ class StaticValues:
     # Monge - Elkan[0.85, [0.6490476, 0.8150739024555232, 0.3855756, 0.5235043338474573]]
     # Davis and De Salles[0.7, [0.6477734, 0.7471548658801334, 0.4467224, 0.5591375669786182]]
 
-    methods = [["Damerau-Levenshtein", {'orig': 0.55, 'sorted': 0.60}],
-               ["Jaro", {'orig': 0.75, 'sorted': 0.8}],
-               ["Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85}],
-               ["Jaro-Winkler reversed", {'orig': 0.75, 'sorted': 0.75}],
-               ["Sorted Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85}],
-               ["Permuted Jaro-Winkler", {'orig': 0.7, 'sorted': 0.7}],
-               ["Cosine N-grams", {'orig': 0.4, 'sorted': 0.7}],
-               ["Jaccard N-grams", {'orig': 0.25, 'sorted': 0.35}],
-               ["Dice bigrams", {'orig': 0.5, 'sorted': 0.55}],
-               ["Jaccard skipgrams", {'orig': 0.45, 'sorted': 0.55}],
-               ["Monge-Elkan", {'orig': 0.7, 'sorted': 0.85}],
-               ["Soft-Jaccard", {'orig': 0.6, 'sorted': 0.7}],
-               ["Davis and De Salles", {'orig': 0.65, 'sorted': 0.7}]]
+    methods = [
+        ["Damerau-Levenshtein", {'orig': 0.55, 'sorted': 0.60}],
+        ["Jaro", {'orig': 0.75, 'sorted': 0.8}],
+        ["Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85}],
+        ["Jaro-Winkler reversed", {'orig': 0.75, 'sorted': 0.75}],
+        ["Sorted Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85}],
+        ["Permuted Jaro-Winkler", {'orig': 0.7, 'sorted': 0.7}],
+        ["Cosine N-grams", {'orig': 0.4, 'sorted': 0.7}],
+        ["Jaccard N-grams", {'orig': 0.25, 'sorted': 0.35}],
+        ["Dice bigrams", {'orig': 0.5, 'sorted': 0.55}],
+        ["Jaccard skipgrams", {'orig': 0.45, 'sorted': 0.55}],
+        ["Monge-Elkan", {'orig': 0.7, 'sorted': 0.85}],
+        ["Soft-Jaccard", {'orig': 0.6, 'sorted': 0.7}],
+        ["Davis and De Salles", {'orig': 0.65, 'sorted': 0.7}],
+        ["LinkGeoML Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85}],
+        ["LinkGeoML Jaro-Winkler reversed", {'orig': 0.75, 'sorted': 0.75}],
+    ]
 
     nameIDs = {
         'damerau_levenshtein': 0,
@@ -156,6 +161,7 @@ class StaticValues:
         'jaro_winkler': 2,
         'jaro': 1,
         'jaccard': 7,
+        'l_jaro_winkler': 13,
     }
 
     methods_as_saved = [
@@ -170,5 +176,7 @@ class StaticValues:
         "soft_jaccard",
         "sorted_winkler",
         "skipgram",
-        "davies"
+        "davies",
+        "l_jaro_winkler",
+        "l_jaro_winkler_reversed"
     ]
