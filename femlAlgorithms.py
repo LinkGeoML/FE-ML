@@ -23,7 +23,7 @@ from external.datasetcreator import strip_accents
 from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
-def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' ', thres=0.85):
+def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' ', thres=0.65):
     a = strA.decode('utf8') #.lower()
     b = strB.decode('utf8') #.lower()
 
