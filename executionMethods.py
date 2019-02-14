@@ -10,6 +10,7 @@ from functools import partial
 # import unicodedata
 import pandas as pd
 import time
+import re
 
 from nltk.corpus import stopwords
 
@@ -254,105 +255,159 @@ class Evaluator:
 
                 print k, max(val, key=lambda x: x[1][0])
 
-    def test_cases(self, dataset):
-        if not os.path.exists("output"):
-            os.makedirs("output")
+    def test_cases(self, dataset, test_case=0):
+        if test_case == 0:
+            print "Please choose a meaningful no for test to run"
+            return
+        elif test_case == 1:
+            if not os.path.exists("output"):
+                os.makedirs("output")
 
-        abbr = Counter()
-        fscoresless = open("./output/lower_score_on_transformation.csv", "w")
-        fscoresless.write("strA\tstrB\tsorted_strA\tsorted_strB\n")
+            abbr = Counter()
+            fscoresless = open("./output/lower_score_on_transformation.csv", "w")
+            fscoresless.write("strA\tstrB\tsorted_strA\tsorted_strB\n")
 
-        feml = femlAlgs.FEMLFeatures()
-        with open(dataset) as csvfile:
-            reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
-                                    delimiter='\t')
+            feml = femlAlgs.FEMLFeatures()
+            with open(dataset) as csvfile:
+                reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
+                                        delimiter='\t')
 
-            for row in reader:
-                if feml.cmp_score_after_transformation(row, sorting=True, canonical=True) is False:
-                    a = strip_accents(row['s1'].decode('utf8'))
-                    b = strip_accents(row['s2'].decode('utf8'))
+                for row in reader:
+                    if feml.cmp_score_after_transformation(row, sorting=True, canonical=True) is False:
+                        a = strip_accents(row['s1'].decode('utf8'))
+                        b = strip_accents(row['s2'].decode('utf8'))
 
-                    fscoresless.write("{}\t{}\t{}\t{}\n".format(
-                        row['s1'], row['s2'],
-                        " ".join(sorted_nicely(a.lower().split(" "))).encode('ASCII', 'ignore'),
-                        " ".join(sorted_nicely(b.lower().split(" "))).encode('ASCII', 'ignore')
-                    ))
+                        fscoresless.write("{}\t{}\t{}\t{}\n".format(
+                            row['s1'], row['s2'],
+                            " ".join(sorted_nicely(a.lower().split(" "))).encode('ASCII', 'ignore'),
+                            " ".join(sorted_nicely(b.lower().split(" "))).encode('ASCII', 'ignore')
+                        ))
 
-                # Calc frequent terms
-                # (str1, str2)
-                for str in ['s1', 's2']:
-                    ab = detect_alphabet(row[str])
-                    if ab not in self.termsperalphabet.keys():
-                        self.termsperalphabet[ab] = {
-                            'gram': Counter(),
-                            '2gram_1': Counter(), '3gram_1': Counter(),
-                            '2gram_2': Counter(), '3gram_2': Counter(), '3gram_3': Counter(),
-                        }
+                    # Calc frequent terms
+                    # (str1, str2)
+                    for str in ['s1', 's2']:
+                        ab = detect_alphabet(row[str])
+                        if ab not in self.termsperalphabet.keys():
+                            self.termsperalphabet[ab] = {
+                                'gram': Counter(),
+                                '2gram_1': Counter(), '3gram_1': Counter(),
+                                '2gram_2': Counter(), '3gram_2': Counter(), '3gram_3': Counter(),
+                            }
 
-                    fterms, stop_words = normalize_str(row[str], self.stop_words)
-                    for term in fterms:
-                        self.termsperalphabet[ab]['gram'][term] += 1
-                    for gram in list(itertools.chain.from_iterable(
-                            [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
-                        if len(gram) == 2:
-                            self.termsperalphabet[ab]['2gram_1'][gram[0]] += 1
-                            self.termsperalphabet[ab]['2gram_2'][gram[1]] += 1
-                        else:
-                            self.termsperalphabet[ab]['3gram_1'][gram[0]] += 1
-                            self.termsperalphabet[ab]['3gram_2'][gram[1]] += 1
-                            self.termsperalphabet[ab]['3gram_3'][gram[2]] += 1
+                        fterms, stop_words = normalize_str(row[str], self.stop_words)
+                        for term in fterms:
+                            self.termsperalphabet[ab]['gram'][term] += 1
+                        for gram in list(itertools.chain.from_iterable(
+                                [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
+                            if len(gram) == 2:
+                                self.termsperalphabet[ab]['2gram_1'][gram[0]] += 1
+                                self.termsperalphabet[ab]['2gram_2'][gram[1]] += 1
+                            else:
+                                self.termsperalphabet[ab]['3gram_1'][gram[0]] += 1
+                                self.termsperalphabet[ab]['3gram_2'][gram[1]] += 1
+                                self.termsperalphabet[ab]['3gram_3'][gram[2]] += 1
 
-                # calc the number of abbr that exist
-                freq1 = feml.containsAbbr(row['s1'])
-                freq2 = feml.containsAbbr(row['s2'])
-                if freq1 != '-': abbr[freq1] += 1
-                if freq2 != '-' and freq1 != freq2: abbr[freq2] += 1
+                    # calc the number of abbr that exist
+                    freq1 = feml.containsAbbr(row['s1'])
+                    freq2 = feml.containsAbbr(row['s2'])
+                    if freq1 != '-': abbr[freq1] += 1
+                    if freq2 != '-' and freq1 != freq2: abbr[freq2] += 1
 
-        if not fscoresless.closed:
-            fscoresless.close()
+            if not fscoresless.closed:
+                fscoresless.close()
 
-        with open("./output/abbr.csv", "w") as f:
-            f.write('abbr\tcount\n')
-            for value, count in abbr.most_common():
-                f.write("{}\t{}\n".format(value, count))
+            with open("./output/abbr.csv", "w") as f:
+                f.write('abbr\tcount\n')
+                for value, count in abbr.most_common():
+                    f.write("{}\t{}\n".format(value, count))
 
-        for k, v in self.termsperalphabet.items():
-            with open("./output/freqterms_for_{}.csv".format(k), "w") as f:
-                f.write('gram\t')
-                f.write('bigram_pos_1\t')
-                f.write('bigram_pos_2\t')
-                f.write('trigram_pos_1\t')
-                f.write('trigram_pos_2\t')
-                f.write('trigram_pos_3')
-                f.write('\n')
-
-                sorted_freq_gram_terms = v['gram'].most_common()
-                sorted_freq_bigram_terms_pos1 = v['2gram_1'].most_common()
-                sorted_freq_bigram_terms_pos2 = v['2gram_2'].most_common()
-                sorted_freq_trigram_terms_pos1 = v['3gram_1'].most_common()
-                sorted_freq_trigram_terms_pos2 = v['3gram_2'].most_common()
-                sorted_freq_trigram_terms_pos3 = v['3gram_3'].most_common()
-
-                min_top = min(
-                    len(sorted_freq_gram_terms),
-                    len(sorted_freq_bigram_terms_pos1),
-                    len(sorted_freq_bigram_terms_pos2),
-                    len(sorted_freq_trigram_terms_pos1),
-                    len(sorted_freq_trigram_terms_pos2),
-                    len(sorted_freq_trigram_terms_pos3),
-                )
-
-                for i in range(min_top):
-                    f.write("{},{}\t".format(sorted_freq_gram_terms[i][0], sorted_freq_gram_terms[i][1]))
-                    f.write("{},{}\t".format(sorted_freq_bigram_terms_pos1[i][0], sorted_freq_bigram_terms_pos1[i][1]))
-                    f.write("{},{}\t".format(sorted_freq_bigram_terms_pos2[i][0], sorted_freq_bigram_terms_pos2[i][1]))
-                    f.write(
-                        "{},{}\t".format(sorted_freq_trigram_terms_pos1[i][0], sorted_freq_trigram_terms_pos1[i][1]))
-                    f.write(
-                        "{},{}\t".format(sorted_freq_trigram_terms_pos2[i][0], sorted_freq_trigram_terms_pos2[i][1]))
-                    f.write(
-                        "{},{}\t".format(sorted_freq_trigram_terms_pos3[i][0], sorted_freq_trigram_terms_pos3[i][1]))
+            for k, v in self.termsperalphabet.items():
+                with open("./output/freqterms_for_{}.csv".format(k), "w") as f:
+                    f.write('gram\t')
+                    f.write('bigram_pos_1\t')
+                    f.write('bigram_pos_2\t')
+                    f.write('trigram_pos_1\t')
+                    f.write('trigram_pos_2\t')
+                    f.write('trigram_pos_3')
                     f.write('\n')
+
+                    sorted_freq_gram_terms = v['gram'].most_common()
+                    sorted_freq_bigram_terms_pos1 = v['2gram_1'].most_common()
+                    sorted_freq_bigram_terms_pos2 = v['2gram_2'].most_common()
+                    sorted_freq_trigram_terms_pos1 = v['3gram_1'].most_common()
+                    sorted_freq_trigram_terms_pos2 = v['3gram_2'].most_common()
+                    sorted_freq_trigram_terms_pos3 = v['3gram_3'].most_common()
+
+                    min_top = min(
+                        len(sorted_freq_gram_terms),
+                        len(sorted_freq_bigram_terms_pos1),
+                        len(sorted_freq_bigram_terms_pos2),
+                        len(sorted_freq_trigram_terms_pos1),
+                        len(sorted_freq_trigram_terms_pos2),
+                        len(sorted_freq_trigram_terms_pos3),
+                    )
+
+                    for i in range(min_top):
+                        f.write("{},{}\t".format(sorted_freq_gram_terms[i][0], sorted_freq_gram_terms[i][1]))
+                        f.write("{},{}\t".format(sorted_freq_bigram_terms_pos1[i][0], sorted_freq_bigram_terms_pos1[i][1]))
+                        f.write("{},{}\t".format(sorted_freq_bigram_terms_pos2[i][0], sorted_freq_bigram_terms_pos2[i][1]))
+                        f.write(
+                            "{},{}\t".format(sorted_freq_trigram_terms_pos1[i][0], sorted_freq_trigram_terms_pos1[i][1]))
+                        f.write(
+                            "{},{}\t".format(sorted_freq_trigram_terms_pos2[i][0], sorted_freq_trigram_terms_pos2[i][1]))
+                        f.write(
+                            "{},{}\t".format(sorted_freq_trigram_terms_pos3[i][0], sorted_freq_trigram_terms_pos3[i][1]))
+                        f.write('\n')
+        elif test_case == 2:
+            ngram_stats = {}
+
+            with open(dataset) as csvfile:
+                reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
+                                        delimiter='\t')
+
+                # feml = femlAlgs.FEMLFeatures()
+                for row in reader:
+                    row['s1'], row['s2'] = femlAlgs.transform(row['s1'], row['s2'], canonical=True)
+
+                    for str in ['s1', 's2']:
+                        ngrams_tokens, _ = normalize_str(row[str], self.stop_words)
+
+                        if str not in ngram_stats.keys():
+                            ngram_stats[str] = {
+                                '2gram': Counter(), '3gram': Counter(), '4gram': Counter(),
+                                'gram_token': Counter(), '2gram_token': Counter(), '3gram_token': Counter()
+                            }
+                        # ngrams tokens
+                        for term in ngrams_tokens:
+                            ngram_stats[str]['gram_token'][term] += 1
+                        for gram in list(itertools.chain.from_iterable(
+                                [[ngrams_tokens[i:i + n] for i in range(len(ngrams_tokens) - (n - 1))]
+                                 for n in [2, 3]])
+                        ):
+                            if len(gram) == 2:
+                                ngram_stats[str]['2gram_token'][' '.join(gram)] += 1
+                            else:
+                                ngram_stats[str]['3gram_token'][' '.join(gram)] += 1
+
+                        # ngrams chars
+                        # ngrams = zip(*[''.join(strA_ngrams_tokens)[i:] for i in range(n) for n in [2, 3, 4]])
+                        for gram in list(itertools.chain.from_iterable(
+                                [[''.join(ngrams_tokens)[i:i + n] for i in range(len(''.join(ngrams_tokens)) - (n - 1))]
+                                 for n in [2, 3, 4]])
+                        ):
+                            if len(gram) == 2:
+                                ngram_stats[str]['2gram'][gram] += 1
+                            elif len(gram) == 3:
+                                ngram_stats[str]['3gram'][gram] += 1
+                            elif len(gram) == 4:
+                                ngram_stats[str]['4gram'][gram] += 1
+
+        for str in ['s1', 's2']:
+            for nm in ngram_stats[str].keys():
+                with open("./output/{0}_{1}s.csv".format(str, nm), "w+") as f:
+                    f.write('gram\tcount\n')
+                    for value, count in ngram_stats[str][nm].most_common():
+                        f.write("{}\t{}\n".format(value.encode('utf8'), count))
 
     def print_false_posneg(self, datasets):
         if not os.path.exists("output"):

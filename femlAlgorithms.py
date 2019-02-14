@@ -36,7 +36,7 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         a = strip_accents(a.lower())
         b = strip_accents(b.lower())
 
-        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ]')
+        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.]|\sBD')
         a = regex.sub('', a)
         b = regex.sub('', b)
 
@@ -138,9 +138,12 @@ class FEMLFeatures:
         return len(set(str))
 
     @staticmethod
-    def freq_tokens(tokens, ngram=1):
+    def ngram_tokens(tokens, ngram=1):
         if tokens < 1: tokens = 1
         return list(itertools.chain.from_iterable([[tokens[i:i + ngram] for i in range(len(tokens) - (ngram - 1))]]))
+
+    def ngrams(str, ngram=1):
+       pass
 
     def _check_size(self, s):
         if not len(s) == 3:
