@@ -418,7 +418,7 @@ class Evaluator:
             with open("./output/abbr.csv", "w+") as f:
                 f.write('abbr\tcount\tstr\n')
                 for value, count in abbr_stats.most_common():
-                    f.write("{0}\t{1}\t{2}\n".format(value, count, ','.join(orig_strs[value])))
+                    f.write("{0}\t{1}\t{2}\n".format(value, count, ','.join(orig_strs[value][:10])))
 
             # for str in ['s1', 's2']:
             for nm in ngram_stats.keys():
