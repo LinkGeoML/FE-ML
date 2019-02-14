@@ -263,7 +263,7 @@ class Evaluator:
             if not os.path.exists("output"):
                 os.makedirs("output")
 
-            abbr = Counter()
+            abbr_stats = Counter()
             fscoresless = open("./output/lower_score_on_transformation.csv", "w")
             fscoresless.write("strA\tstrB\tsorted_strA\tsorted_strB\n")
 
@@ -310,15 +310,15 @@ class Evaluator:
                     # calc the number of abbr that exist
                     freq1 = feml.containsAbbr(row['s1'])
                     freq2 = feml.containsAbbr(row['s2'])
-                    if freq1 != '-': abbr[freq1] += 1
-                    if freq2 != '-' and freq1 != freq2: abbr[freq2] += 1
+                    if freq1 != '-': abbr_stats[freq1] += 1
+                    if freq2 != '-' and freq1 != freq2: abbr_stats[freq2] += 1
 
             if not fscoresless.closed:
                 fscoresless.close()
 
             with open("./output/abbr.csv", "w") as f:
                 f.write('abbr\tcount\n')
-                for value, count in abbr.most_common():
+                for value, count in abbr_stats.most_common():
                     f.write("{}\t{}\n".format(value, count))
 
             for k, v in self.termsperalphabet.items():
@@ -359,35 +359,48 @@ class Evaluator:
                             "{},{}\t".format(sorted_freq_trigram_terms_pos3[i][0], sorted_freq_trigram_terms_pos3[i][1]))
                         f.write('\n')
         elif test_case == 2:
-            ngram_stats = {}
+            ngram_stats = {
+                '2gram': Counter(), '3gram': Counter(), '4gram': Counter(),
+                'gram_token': Counter(), '2gram_token': Counter(), '3gram_token': Counter()
+            }
+            abbr_stats = Counter()
+            orig_strs = {}
 
             with open(dataset) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
-                # feml = femlAlgs.FEMLFeatures()
+                feml = femlAlgs.FEMLFeatures()
                 for row in reader:
-                    row['s1'], row['s2'] = femlAlgs.transform(row['s1'], row['s2'], canonical=True)
+                    # row['s1'], row['s2'] = femlAlgs.transform(row['s1'], row['s2'], canonical=True)
 
                     for str in ['s1', 's2']:
+                        # calc the number of abbr that exist
+                        abbr_str = feml.containsAbbr(row[str])
+                        if abbr_str != '-':
+                            if abbr_str not in orig_strs.keys(): orig_strs[abbr_str] = []
+                            abbr_stats[abbr_str] += 1
+                            orig_strs[abbr_str].append(row[str])
+
+                        row[str] = femlAlgs.transform_str(row[str], canonical=True)
                         ngrams_tokens, _ = normalize_str(row[str], self.stop_words)
 
-                        if str not in ngram_stats.keys():
-                            ngram_stats[str] = {
-                                '2gram': Counter(), '3gram': Counter(), '4gram': Counter(),
-                                'gram_token': Counter(), '2gram_token': Counter(), '3gram_token': Counter()
-                            }
+                        # if str not in ngram_stats.keys():
+                        #     ngram_stats[str] = {
+                        #         '2gram': Counter(), '3gram': Counter(), '4gram': Counter(),
+                        #         'gram_token': Counter(), '2gram_token': Counter(), '3gram_token': Counter()
+                        #     }
                         # ngrams tokens
                         for term in ngrams_tokens:
-                            ngram_stats[str]['gram_token'][term] += 1
+                            ngram_stats['gram_token'][term] += 1
                         for gram in list(itertools.chain.from_iterable(
                                 [[ngrams_tokens[i:i + n] for i in range(len(ngrams_tokens) - (n - 1))]
                                  for n in [2, 3]])
                         ):
                             if len(gram) == 2:
-                                ngram_stats[str]['2gram_token'][' '.join(gram)] += 1
+                                ngram_stats['2gram_token'][' '.join(gram)] += 1
                             else:
-                                ngram_stats[str]['3gram_token'][' '.join(gram)] += 1
+                                ngram_stats['3gram_token'][' '.join(gram)] += 1
 
                         # ngrams chars
                         # ngrams = zip(*[''.join(strA_ngrams_tokens)[i:] for i in range(n) for n in [2, 3, 4]])
@@ -396,17 +409,22 @@ class Evaluator:
                                  for n in [2, 3, 4]])
                         ):
                             if len(gram) == 2:
-                                ngram_stats[str]['2gram'][gram] += 1
+                                ngram_stats['2gram'][gram] += 1
                             elif len(gram) == 3:
-                                ngram_stats[str]['3gram'][gram] += 1
+                                ngram_stats['3gram'][gram] += 1
                             elif len(gram) == 4:
-                                ngram_stats[str]['4gram'][gram] += 1
+                                ngram_stats['4gram'][gram] += 1
 
-        for str in ['s1', 's2']:
-            for nm in ngram_stats[str].keys():
-                with open("./output/{0}_{1}s.csv".format(str, nm), "w+") as f:
+            with open("./output/abbr.csv", "w+") as f:
+                f.write('abbr\tcount\tstr\n')
+                for value, count in abbr_stats.most_common():
+                    f.write("{0}\t{1}\t{2}\n".format(value, count, orig_strs[value]))
+
+            # for str in ['s1', 's2']:
+            for nm in ngram_stats.keys():
+                with open("./output/{0}s.csv".format(nm), "w+") as f:
                     f.write('gram\tcount\n')
-                    for value, count in ngram_stats[str][nm].most_common():
+                    for value, count in ngram_stats[nm].most_common():
                         f.write("{}\t{}\n".format(value.encode('utf8'), count))
 
     def print_false_posneg(self, datasets):

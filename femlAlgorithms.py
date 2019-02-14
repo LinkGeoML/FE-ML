@@ -36,13 +36,13 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         a = strip_accents(a.lower())
         b = strip_accents(b.lower())
 
-        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.]|\sBD')
+        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.-]')
         a = regex.sub('', a)
         b = regex.sub('', b)
 
         # replace dashes with space
-        a = a.replace('-', ' ')
-        b = b.replace('-', ' ')
+        # a = a.replace('-', ' ')
+        # b = b.replace('-', ' ')
         # # TODO: choose one of the two: replace dashes with no_space
         # a = a.replace('-', '')
         # b = b.replace('-', '')
@@ -63,6 +63,24 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         b = perform_stemming(b)
 
     return a, b
+
+
+def transform_str(str, stemming=False, canonical=False, delimiter=' '):
+    a = str.decode('utf8')
+
+    if canonical:
+        # NFKD: first applies a canonical decomposition, i.e., translates each character into its decomposed form.
+        # and afterwards apply the compatibility decomposition, i.e. replace all compatibility characters with their
+        # equivalents.
+        a = strip_accents(a.lower())
+
+        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.-]')
+        a = regex.sub('', a)
+
+    if stemming:
+        a = perform_stemming(a)
+
+    return a
 
 
 class FEMLFeatures:
