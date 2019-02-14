@@ -41,11 +41,11 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         b = regex.sub('', b)
 
         # replace dashes with space
-        # a = a.replace('-', ' ')
-        # b = b.replace('-', ' ')
-        # TODO: choose one of the two: replace dashes with no_space
-        a = a.replace('-', '')
-        b = b.replace('-', '')
+        a = a.replace('-', ' ')
+        b = b.replace('-', ' ')
+        # # TODO: choose one of the two: replace dashes with no_space
+        # a = a.replace('-', '')
+        # b = b.replace('-', '')
 
     if sorting:
         tmp_a = a.replace(' ', '')
