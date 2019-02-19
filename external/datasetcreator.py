@@ -56,7 +56,7 @@ def detect_alphabet(str):
 # The geonames dataset can be obtained from http://download.geonames.org/export/dump/allCountries.zip
 def build_dataset_from_geonames(output='dataset-unfiltered.txt', only_latin=False):
     # remove dupls after running this script
-    # cat - n dataset-string-similarity.txt | sort - k2 - k1n | uniq - f1 | sort - nk1, 1 | cut - f2 -
+    # cat -n dataset-string-similarity.txt | sort -k2 -k1n | uniq -f1 | sort -nk1,1 | cut -f2-
     datasets = ['allCountries.txt', 'cities5000.txt', 'cities500.txt']
 
     csv.field_size_limit(sys.maxsize)
@@ -79,6 +79,11 @@ def build_dataset_from_geonames(output='dataset-unfiltered.txt', only_latin=Fals
                 skip = skip - 1
                 if skip > 0: continue
                 names = set([name.strip() for name in ("" + row['alternatenames']).split(",") if len(name.strip()) > 2])
+                # remove non LATIN names
+                if only_latin:
+                    for n in list(names):
+                        if not check_alphabet(n, 'LATIN'): names.remove(n)
+
                 if len(names) < 5: continue
                 lastid = row['geonameid']
                 firstcountry = row['country_code']
