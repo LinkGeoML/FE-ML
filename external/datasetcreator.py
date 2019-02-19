@@ -215,7 +215,7 @@ def filter_dataset(input='dataset-unfiltered.txt', num_instances=2500000):
     for i in range(min(num_instances, len(pos), len(neg))):
         file.write(pos[i])
         file.write(neg[i])
-    print "Filtering ended with {0}.".format(min(num_instances, len(pos), len(neg)))
+    print "Filtering ended with {0}.".format(min(num_instances * 2, len(pos) + len(neg)))
     file.close()
 
 
