@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 import math
 import re
 import itertools
+import glob
 
 import numpy as np
 from sklearn.neural_network import MLPClassifier
@@ -23,7 +24,7 @@ from external.datasetcreator import strip_accents
 from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
-def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' ', thres=0.6):
+def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' ', thres=0.6, only_sorting=False):
     a = strA.decode('utf8') #.lower()
     b = strB.decode('utf8') #.lower()
 
@@ -43,9 +44,6 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         # replace dashes with space
         # a = a.replace('-', ' ')
         # b = b.replace('-', ' ')
-        # # TODO: choose one of the two: replace dashes with no_space
-        # a = a.replace('-', '')
-        # b = b.replace('-', '')
 
     if sorting:
         tmp_a = a.replace(' ', '')
@@ -57,6 +55,9 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         elif StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) > StaticValues.algorithms['damerau_levenshtein'](a, b):
             a = tmp_a
             b = tmp_b
+    elif only_sorting:
+        a = " ".join(sorted_nicely(a.split(delimiter)))
+        b = " ".join(sorted_nicely(b.split(delimiter)))
 
     if stemming:
         a = perform_stemming(a)
@@ -189,10 +190,18 @@ class FEMLFeatures:
     def lsimilarity(self, strA, strB, stop_words):
         # TODO identifyAndExpandAbbr
         # remove punctuations and stopwords, lowercase, sort alphanumerically
-        lstrA, _ = normalize_str(strA, sorting=True, stop_words=stop_words)
-        lstrB, _ = normalize_str(strB, sorting=True, stop_words=stop_words)
+        # lstrA, _ = normalize_str(strA, sorting=True, stop_words=stop_words)
+        # lstrB, _ = normalize_str(strB, sorting=True, stop_words=stop_words)
+        a, b = transform(strA, strB, only_sorting=True)
+        specialTerms = { 'a': [], 'b': [] }
+        if not os.path.isdir(os.path.join(os.getcwd(), 'input/')):
+            print "Folder ./input/ does not exist"
+
+            for f in glob.iglob('*gram*.csv'):
+                pass
+
         # TODO extractSpecialTerms
-        base, mis = self.compareAndSplit_names(lstrA, lstrB)
+        baseTerms, mismatchTerms = self.compareAndSplit_names(a, b)
 
     def compareAndSplit_names(self, listA, listB):
         mis = {'A': [], 'B': []}

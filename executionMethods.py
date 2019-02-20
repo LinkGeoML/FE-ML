@@ -387,7 +387,7 @@ class Evaluator:
                         ngrams_tokens, _ = normalize_str(row[str], self.stop_words)
 
                         # search for dashes in strings
-                        no_dashed_strs += feml.containsDashConnected_words(row['str'])
+                        no_dashed_strs += feml.containsDashConnected_words(row[str])
 
                         # if str not in ngram_stats.keys():
                         #     ngram_stats[str] = {
