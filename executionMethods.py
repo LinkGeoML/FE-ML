@@ -365,6 +365,7 @@ class Evaluator:
             }
             abbr_stats = Counter()
             orig_strs = {}
+            no_dashed_strs = 0
 
             with open(dataset) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
@@ -384,6 +385,9 @@ class Evaluator:
 
                         row[str] = femlAlgs.transform_str(row[str], canonical=True)
                         ngrams_tokens, _ = normalize_str(row[str], self.stop_words)
+
+                        # search for dashes in strings
+                        no_dashed_strs += feml.containsDashConnected_words(row['str'])
 
                         # if str not in ngram_stats.keys():
                         #     ngram_stats[str] = {
@@ -414,6 +418,8 @@ class Evaluator:
                                 ngram_stats['3gram'][gram] += 1
                             elif len(gram) == 4:
                                 ngram_stats['4gram'][gram] += 1
+
+            print "Found {} dashed words in the dataset.".format(no_dashed_strs)
 
             with open("./output/abbr.csv", "w+") as f:
                 f.write('abbr\tcount\tstr\n')
