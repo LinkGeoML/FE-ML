@@ -36,8 +36,9 @@ fields = ["geonameid",
 
 def check_alphabet(str, alphabet, only=True):
     ad = AlphabetDetector()
+    uni_string = unicode(str, "utf-8")
     if only:
-        return ad.only_alphabet_chars(str, alphabet.upper())
+        return ad.only_alphabet_chars(uni_string, alphabet.upper())
     else:
         for i in str:
             if ad.is_in_alphabet(i, alphabet.upper()): return True
