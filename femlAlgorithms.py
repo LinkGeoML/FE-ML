@@ -186,7 +186,7 @@ class FEMLFeatures:
 
         return fvec_str1, fvec_str2
 
-    def fagiSim(self, strA, strB, stop_words):
+    def lsimilarity(self, strA, strB, stop_words):
         # TODO identifyAndExpandAbbr
         # remove punctuations and stopwords, lowercase, sort alphanumerically
         lstrA, _ = normalize_str(strA, sorting=True, stop_words=stop_words)

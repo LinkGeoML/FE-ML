@@ -40,7 +40,7 @@ def check_alphabet(str, alphabet, only=True):
     if only:
         return ad.only_alphabet_chars(uni_string, alphabet.upper())
     else:
-        for i in str:
+        for i in uni_string:
             if ad.is_in_alphabet(i, alphabet.upper()): return True
         return False
 
@@ -74,6 +74,7 @@ def build_dataset_from_geonames(output='dataset-unfiltered.txt', only_latin=Fals
             print "File {0} does not exist".format(input)
             continue
 
+        print "Working on dataset {}...".format(input)
         with open(input) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
             for row in reader:
