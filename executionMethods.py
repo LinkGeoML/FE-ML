@@ -383,11 +383,11 @@ class Evaluator:
                             abbr_stats[abbr_str] += 1
                             orig_strs[abbr_str].append(row[str])
 
-                        row[str] = femlAlgs.transform_str(row[str], canonical=True)
-                        ngrams_tokens, _ = normalize_str(row[str], self.stop_words)
-
                         # search for dashes in strings
                         no_dashed_strs += feml.containsDashConnected_words(row[str])
+
+                        row[str] = femlAlgs.transform_str(row[str], canonical=True)
+                        ngram_tokens, _ = normalize_str(row[str], self.stop_words)
 
                         # if str not in ngram_stats.keys():
                         #     ngram_stats[str] = {
@@ -395,10 +395,10 @@ class Evaluator:
                         #         'gram_token': Counter(), '2gram_token': Counter(), '3gram_token': Counter()
                         #     }
                         # ngrams tokens
-                        for term in ngrams_tokens:
+                        for term in ngram_tokens:
                             ngram_stats['gram_token'][term] += 1
                         for gram in list(itertools.chain.from_iterable(
-                                [[ngrams_tokens[i:i + n] for i in range(len(ngrams_tokens) - (n - 1))]
+                                [[ngram_tokens[i:i + n] for i in range(len(ngram_tokens) - (n - 1))]
                                  for n in [2, 3]])
                         ):
                             if len(gram) == 2:
@@ -409,7 +409,7 @@ class Evaluator:
                         # ngrams chars
                         # ngrams = zip(*[''.join(strA_ngrams_tokens)[i:] for i in range(n) for n in [2, 3, 4]])
                         for gram in list(itertools.chain.from_iterable(
-                                [[''.join(ngrams_tokens)[i:i + n] for i in range(len(''.join(ngrams_tokens)) - (n - 1))]
+                                [[''.join(ngram_tokens)[i:i + n] for i in range(len(''.join(ngram_tokens)) - (n - 1))]
                                  for n in [2, 3, 4]])
                         ):
                             if len(gram) == 2:

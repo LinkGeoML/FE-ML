@@ -81,6 +81,7 @@ def build_dataset_from_geonames(output='dataset-unfiltered.txt', only_latin=Fals
                 skip = skip - 1
                 if skip > 0: continue
                 names = set([name.strip() for name in ("" + row['alternatenames']).split(",") if len(name.strip()) > 2])
+
                 # remove non LATIN names
                 if only_latin:
                     for n in list(names):
@@ -100,7 +101,8 @@ def build_dataset_from_geonames(output='dataset-unfiltered.txt', only_latin=Fals
                 names = set([name.strip() for name in ("" + row['alternatenames']).split(",") if len(name.strip()) > 2])
                 if len(row['name'].strip()) > 2: names.add(row['name'].strip())
                 if len(unicode(row['asciiname'], "utf-8").strip()) > 2: names.add(row['asciiname'].strip())
-                # remove non LATIN names
+
+                # nonLATIN = False
                 if only_latin:
                     for n in list(names):
                         if not check_alphabet(n, 'LATIN'): names.remove(n)
