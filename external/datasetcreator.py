@@ -542,17 +542,8 @@ def _compareAndSplit_names(a, b, thres=0.75):
     return base, mis
 
 
-def lsimilarity(str1, str2):
-    from femlAlgorithms import transform
-
-    split_thres = 0.75
-
+def lsimilarity(a, b, split_thres=0.75):
     # TODO identifyAndExpandAbbr
-
-    # remove punctuations and stopwords, lowercase, sort alphanumerically
-    # lstrA, _ = normalize_str(strA, sorting=True, stop_words=stop_words)
-    # lstrB, _ = normalize_str(strB, sorting=True, stop_words=stop_words)
-    a, b = transform(str1, str2, canonical=True, only_sorting=True)
 
     specialTerms = dict(a=[], b=[])
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
@@ -567,8 +558,8 @@ def lsimilarity(str1, str2):
     baseTerms, mismatchTerms = _compareAndSplit_names(a, b, split_thres)
     # baseTerms, mismatchTerms = {'a': [], 'b': []}, {'a': [], 'b': []}
 
-    thres = jaro_winkler(" ".join(baseTerms['a']) + u'', " ".join(baseTerms['b']) + u'') * lsimilarity_weights[0] + \
-            jaro_winkler(" ".join(mismatchTerms['a']) + u'', " ".join(mismatchTerms['b']) + u'') * lsimilarity_weights[0] + \
-            jaro_winkler(" ".join(specialTerms['a']) + u'', " ".join(specialTerms['b']) + u'') * lsimilarity_weights[0]
+    thres = jaro_winkler(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u'') * lsimilarity_weights[0] + \
+            jaro_winkler(' '.join(mismatchTerms['a']) + u'', ' '.join(mismatchTerms['b']) + u'') * lsimilarity_weights[0] + \
+            jaro_winkler(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'') * lsimilarity_weights[0]
 
     return thres

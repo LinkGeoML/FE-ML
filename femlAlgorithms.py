@@ -291,7 +291,7 @@ class baseMetrics:
         self.njobs = njobs
 
     def __del__(self):
-        if self.accuracyresults and not self.file.closed:
+        if self.accuracyresults and self.file is not None and not self.file.closed:
             self.file.close()
 
     def reset_vars(self):
@@ -375,7 +375,7 @@ class calcSotAMetrics(baseMetrics):
         tot_res += self._generic_evaluator(14, 'l_jaro_winkler', a, b, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(15, 'l_jaro_winkler', a[::-1], b[::-1], flag_true_match,
                                            custom_thres)
-        tot_res += self._generic_evaluator(16, 'lsimilarity', row['s1'], row['s2'], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(16, 'lsimilarity', a, b, flag_true_match, custom_thres)
         # tot_res += self._generic_evaluator(17, 'lsimilarity', row['s1'], row['s2'], flag_true_match, custom_thres)
 
         if self.accuracyresults:
