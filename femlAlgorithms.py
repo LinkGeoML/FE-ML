@@ -7,6 +7,7 @@ import math
 import re
 import itertools
 import glob
+import csv
 
 import numpy as np
 from sklearn.neural_network import MLPClassifier
@@ -20,7 +21,7 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis, LinearD
 from sklearn import preprocessing
 from xgboost import XGBClassifier
 
-from external.datasetcreator import strip_accents
+from external.datasetcreator import strip_accents, freq_terms, lsimilarity_weights
 from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
@@ -85,6 +86,8 @@ def transform_str(str, stemming=False, canonical=False, delimiter=' '):
 
 
 class FEMLFeatures:
+    no_freq_terms = 250
+
     def __init__(self):
         pass
 
@@ -97,7 +100,7 @@ class FEMLFeatures:
         return set(strA).issubset(set(strB)), set(strB).issubset(set(strA))
 
     @staticmethod
-    def contains_freq_term(self, str, freqTerms=None):
+    def contains_freq_term(str, freqTerms=None):
         str, _ = normalize_str(str)
         return True if freqTerms != None and str in freqTerms else False
 
@@ -187,48 +190,27 @@ class FEMLFeatures:
 
         return fvec_str1, fvec_str2
 
-    def lsimilarity(self, strA, strB, stop_words):
-        # TODO identifyAndExpandAbbr
-        # remove punctuations and stopwords, lowercase, sort alphanumerically
-        # lstrA, _ = normalize_str(strA, sorting=True, stop_words=stop_words)
-        # lstrB, _ = normalize_str(strB, sorting=True, stop_words=stop_words)
-        a, b = transform(strA, strB, only_sorting=True)
-        specialTerms = { 'a': [], 'b': [] }
+    def update_freterms_list(self, weights=None):
+        if weights is not None and len(weights) >= 3:
+            lsimilarity_weights = list(weights)
+
         if not os.path.isdir(os.path.join(os.getcwd(), 'input/')):
             print "Folder ./input/ does not exist"
+        else:
+            for f in glob.iglob('./input/*gram*.csv'):
+                with open(f) as csvfile:
+                    print "Loading frequent terms from file {}...".format(f)
+                    reader = csv.DictReader(csvfile, fieldnames=["term", "no"], delimiter='\t')
+                    header = reader.fieldnames
+                    # go to next line after header
+                    next(reader)
 
-            for f in glob.iglob('*gram*.csv'):
-                pass
+                    for i, row in enumerate(reader):
+                        if i > FEMLFeatures.no_freq_terms:
+                            break
 
-        # TODO extractSpecialTerms
-        baseTerms, mismatchTerms = self.compareAndSplit_names(a, b)
-
-    def compareAndSplit_names(self, listA, listB):
-        mis = {'A': [], 'B': []}
-        base = {'A': [], 'B': []}
-
-        cur = {'A': 0, 'B': 0}
-        while cur['A'] < len(listA) and cur['B'] < len(listB):
-            sim = StaticValues.algorithms['jaro_winkler'](listA[cur['A']], listB[cur['B']])
-            if sim > 0.5:
-                base['A'].append(listA[cur['A']])
-                base['B'].append(listA[cur['B']])
-                cur['A'] += 1
-                cur['B'] += 1
-            else:
-                if listA[cur['A']] < listB[cur['B']]:
-                    mis['B'].append(listB[cur['B']])
-                    cur['B'] += 1
-                else:
-                    mis['A'].append(listB[cur['A']])
-                    cur['A'] += 1
-
-        if cur['A'] < len(listA):
-            mis['A'].extend(listA[cur['A'] + 1:])
-        if cur['B'] < len(listB):
-            mis['B'].extend(listB[cur['B'] + 1:])
-
-        return base, mis
+                        freq_terms.append(row['term'].decode('utf8'))
+            print 'Loading frequent terms finished.'
 
     def _generic_metric_cmp(self, funcnm, a, b, sorting, stemming, canonical, invert=False):
         res = None
@@ -294,9 +276,11 @@ class baseMetrics:
 
         self.timer = 0.0
         self.timers = [0.0] * size
-        # self.result = {}
+
         self.file = None
         self.accuracyresults = accuracyresults
+
+        self.feml_features = FEMLFeatures()
 
         self.predictedState = {
             'num_true_predicted_true': self.num_true_predicted_true,
@@ -307,7 +291,7 @@ class baseMetrics:
         self.njobs = njobs
 
     def __del__(self):
-        if self.accuracyresults:
+        if self.accuracyresults and not self.file.closed:
             self.file.close()
 
     def reset_vars(self):
@@ -353,6 +337,9 @@ class baseMetrics:
 
         return result, var_name
 
+    def initialize_structs_for_feml(self, w):
+        self.feml_features.update_freterms_list(w)
+
 
 class calcSotAMetrics(baseMetrics):
     def __init__(self, njobs, accures):
@@ -370,24 +357,26 @@ class calcSotAMetrics(baseMetrics):
         tot_res = ""
         flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
 
-        row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
+        a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
-        tot_res += self._generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(8, 'jaccard', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(2, 'jaro', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(3, 'jaro_winkler', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(4, 'jaro_winkler', row['s1'][::-1], row['s2'][::-1], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(11, 'monge_elkan', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(7, 'cosine', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(9, 'strike_a_match', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(12, 'soft_jaccard', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(5, 'sorted_winkler', row['s1'], row['s2'], flag_true_match, custom_thres)
-        if permuted: tot_res += self._generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(10, 'skipgram', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(13, 'davies', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(14, 'l_jaro_winkler', row['s1'], row['s2'], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(15, 'l_jaro_winkler', row['s1'][::-1], row['s2'][::-1], flag_true_match,
+        tot_res += self._generic_evaluator(1, 'damerau_levenshtein', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(8, 'jaccard', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(2, 'jaro', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(3, 'jaro_winkler', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(4, 'jaro_winkler', a[::-1], b[::-1], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(11, 'monge_elkan', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(7, 'cosine', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(9, 'strike_a_match', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(12, 'soft_jaccard', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(5, 'sorted_winkler', a, b, flag_true_match, custom_thres)
+        if permuted: tot_res += self._generic_evaluator(6, 'permuted_winkler', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(10, 'skipgram', a, b, flag_true_match, custom_thres)
+        # tot_res += self._generic_evaluator(13, 'davies', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(14, 'l_jaro_winkler', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(15, 'l_jaro_winkler', a[::-1], b[::-1], flag_true_match,
                                            custom_thres)
+        tot_res += self._generic_evaluator(16, 'lsimilarity', row['s1'], row['s2'], flag_true_match, custom_thres)
+        # tot_res += self._generic_evaluator(17, 'lsimilarity', row['s1'], row['s2'], flag_true_match, custom_thres)
 
         if self.accuracyresults:
             if self.file is None:
@@ -399,9 +388,9 @@ class calcSotAMetrics(baseMetrics):
                 self.file = open(file_name + '.csv', 'w+')
 
             if flag_true_match == 1.0:
-                self.file.write("TRUE{0}\t{1}\t{2}\n".format(tot_res, row['s1'].encode('utf8'), row['s2'].encode('utf8')))
+                self.file.write("TRUE{0}\t{1}\t{2}\n".format(tot_res, a.encode('utf8'), b.encode('utf8')))
             else:
-                self.file.write("FALSE{0}\t{1}\t{2}\n".format(tot_res, row['s1'].encode('utf8'), row['s2'].encode('utf8')))
+                self.file.write("FALSE{0}\t{1}\t{2}\n".format(tot_res, a.encode('utf8'), b.encode('utf8')))
 
     def evaluate_sorting(self, row, custom_thres, stemming=False, permuted=False):
         tot_res = ""
@@ -461,8 +450,7 @@ class calcSotAMetrics(baseMetrics):
                 print ""
                 sys.stdout.flush()
             except ZeroDivisionError:
-                pass
-                # print "{0} is divided by zero\n".format(idx)
+                print "{0} is divided by zero\n".format(StaticValues.methods[idx][0])
 
         # if results:
         #     return self.result

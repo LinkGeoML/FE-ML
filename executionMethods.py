@@ -14,7 +14,7 @@ import re
 
 from nltk.corpus import stopwords
 
-import femlAlgorithms as femlAlgs
+from femlAlgorithms import calcSotAMetrics, calcSotAML, calcCustomFEML, calcDLearning, FEMLFeatures, transform_str
 from helpers import perform_stemming, normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
 from external.datasetcreator import detect_alphabet, strip_accents, filter_dataset, build_dataset_from_geonames
 from helpers import StaticValues
@@ -22,10 +22,10 @@ from helpers import StaticValues
 
 class Evaluator:
     evaluatorType_action = {
-        'SotAMetrics': femlAlgs.calcSotAMetrics,
-        'SotAML': femlAlgs.calcSotAML,
-        'customFEML': femlAlgs.calcCustomFEML,
-        'DLearning': femlAlgs.calcDLearning,
+        'SotAMetrics': calcSotAMetrics,
+        'SotAML': calcSotAML,
+        'customFEML': calcCustomFEML,
+        'DLearning': calcDLearning,
     }
 
     def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, do_printing=False,
@@ -160,10 +160,11 @@ class Evaluator:
                 if self.abbr['A'][i] != '-' or self.abbr['B'][i] != '-':
                     f.write("{}\t{}\t{}\n".format(self.abbr['A'][i], self.abbr['B'][i], i))
 
-    def evaluate_metrics(self, dataset='dataset-string-similarity.txt'):
+    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', weights=None):
         if self.evalClass is not None:
             print "Reading dataset..."
             relpath = getRelativePathtoWorking(dataset)
+            self.evalClass.initialize_structs_for_feml(weights)
             with open(relpath) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
@@ -255,11 +256,8 @@ class Evaluator:
 
                 print k, max(val, key=lambda x: x[1][0])
 
-    def test_cases(self, dataset, test_case=0):
-        if test_case == 0:
-            print "Please choose a meaningful no for test to run"
-            return
-        elif test_case == 1:
+    def test_cases(self, dataset, test_case):
+        if test_case - 1 == 0:
             if not os.path.exists("output"):
                 os.makedirs("output")
 
@@ -267,7 +265,7 @@ class Evaluator:
             fscoresless = open("./output/lower_score_on_transformation.csv", "w")
             fscoresless.write("strA\tstrB\tsorted_strA\tsorted_strB\n")
 
-            feml = femlAlgs.FEMLFeatures()
+            feml = FEMLFeatures()
             with open(dataset) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
@@ -358,7 +356,7 @@ class Evaluator:
                         f.write(
                             "{},{}\t".format(sorted_freq_trigram_terms_pos3[i][0], sorted_freq_trigram_terms_pos3[i][1]))
                         f.write('\n')
-        elif test_case == 2:
+        elif test_case - 1 == 1:
             ngram_stats = {
                 '2gram': Counter(), '3gram': Counter(), '4gram': Counter(),
                 'gram_token': Counter(), '2gram_token': Counter(), '3gram_token': Counter()
@@ -371,7 +369,7 @@ class Evaluator:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
-                feml = femlAlgs.FEMLFeatures()
+                feml = FEMLFeatures()
                 for row in reader:
                     # row['s1'], row['s2'] = femlAlgs.transform(row['s1'], row['s2'], canonical=True)
 
@@ -386,7 +384,7 @@ class Evaluator:
                         # search for dashes in strings
                         no_dashed_strs += feml.containsDashConnected_words(row[str])
 
-                        row[str] = femlAlgs.transform_str(row[str], canonical=True)
+                        row[str] = transform_str(row[str], canonical=True)
                         ngram_tokens, _ = normalize_str(row[str], self.stop_words)
 
                         # if str not in ngram_stats.keys():
@@ -432,6 +430,8 @@ class Evaluator:
                     f.write('gram\tcount\n')
                     for value, count in ngram_stats[nm].most_common():
                         f.write("{}\t{}\n".format(value.encode('utf8'), count))
+        else:
+            print "Test #{} does not exist!!! Please choose a valid test to execute.".format(test_case)
 
     def print_false_posneg(self, datasets):
         if not os.path.exists("output"):

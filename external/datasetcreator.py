@@ -12,6 +12,8 @@ import numpy as np
 import itertools
 import unicodedata
 from alphabet_detector import AlphabetDetector
+import re
+
 
 fields = ["geonameid",
           "name",
@@ -506,3 +508,67 @@ def _jaro_winkler(ying, yang, long_tolerance, winklerize):
 
 def l_jaro_winkler(s1, s2, long_tolerance=False):
     return _jaro_winkler(s1, s2, long_tolerance, True)
+
+
+freq_terms = []
+lsimilarity_weights = [0.5, 0.25, 0.25]
+
+
+def _compareAndSplit_names(a, b, thres=0.75):
+    mis = {'a': [], 'b': []}
+    base = {'a': [], 'b': []}
+    idx_a, idx_b = 0, 0
+
+    l1, l2 = a.split(), b.split()
+    while idx_a < len(l1) and idx_b < len(l2):
+        str1, str2 = l1.pop(0), l2.pop(0)
+        if jaro_winkler(str1, str2) > thres:
+            base['a'].append(str1)
+            base['b'].append(str2)
+            idx_a += 1
+            idx_b += 1
+        else:
+            if str1 < str2:
+                mis['b'].append(str2)
+                idx_b += 1
+            else:
+                mis['a'].append(str1)
+                idx_a += 1
+
+    # if idx_a < len(l1):
+    mis['a'].extend(l1)
+    mis['b'].extend(l2)
+
+    return base, mis
+
+
+def lsimilarity(str1, str2):
+    from femlAlgorithms import transform
+
+    split_thres = 0.75
+
+    # TODO identifyAndExpandAbbr
+
+    # remove punctuations and stopwords, lowercase, sort alphanumerically
+    # lstrA, _ = normalize_str(strA, sorting=True, stop_words=stop_words)
+    # lstrB, _ = normalize_str(strB, sorting=True, stop_words=stop_words)
+    a, b = transform(str1, str2, canonical=True, only_sorting=True)
+
+    specialTerms = dict(a=[], b=[])
+    # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
+    # specialTerms['b'] = filter(lambda x: x in b, freq_terms)
+    for x in freq_terms:
+        if x in a: specialTerms['a'].append(x)
+        if x in b: specialTerms['b'].append(x)
+
+    a = re.sub("|".join(specialTerms['a']), ' ', a)
+    b = re.sub("|".join(specialTerms['b']), ' ', b)
+
+    baseTerms, mismatchTerms = _compareAndSplit_names(a, b, split_thres)
+    # baseTerms, mismatchTerms = {'a': [], 'b': []}, {'a': [], 'b': []}
+
+    thres = jaro_winkler(" ".join(baseTerms['a']) + u'', " ".join(baseTerms['b']) + u'') * lsimilarity_weights[0] + \
+            jaro_winkler(" ".join(mismatchTerms['a']) + u'', " ".join(mismatchTerms['b']) + u'') * lsimilarity_weights[0] + \
+            jaro_winkler(" ".join(specialTerms['a']) + u'', " ".join(specialTerms['b']) + u'') * lsimilarity_weights[0]
+
+    return thres

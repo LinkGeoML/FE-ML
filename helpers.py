@@ -8,7 +8,7 @@ from langdetect import detect, lang_detect_exception
 import pycountry
 
 from external.datasetcreator import damerau_levenshtein, jaccard, jaro, jaro_winkler, monge_elkan, cosine, \
-    strike_a_match, soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies, l_jaro_winkler
+    strike_a_match, soft_jaccard, sorted_winkler, permuted_winkler, skipgram, davies, l_jaro_winkler, lsimilarity
 
 
 sys.path.append(os.path.abspath('../Toponym-Matching'))
@@ -97,6 +97,7 @@ class StaticValues:
         'jaro': jaro,
         'jaccard': jaccard,
         'l_jaro_winkler': l_jaro_winkler,
+        'lsimilarity': lsimilarity
     }
 
     # The process took 33196.57 sec
@@ -146,6 +147,7 @@ class StaticValues:
         ["Davis and De Salles", {'orig': 0.65, 'sorted': 0.7}],
         ["LinkGeoML Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85}],
         ["LinkGeoML Jaro-Winkler reversed", {'orig': 0.75, 'sorted': 0.75}],
+        ["LinkGeoML Similarity", {'orig': 0.7, 'sorted': 0.7}],
     ]
 
     nameIDs = {
@@ -162,6 +164,7 @@ class StaticValues:
         'jaro': 1,
         'jaccard': 7,
         'l_jaro_winkler': 13,
+        'lsimilarity': 15,
     }
 
     methods_as_saved = [
@@ -178,5 +181,6 @@ class StaticValues:
         "skipgram",
         "davies",
         "l_jaro_winkler",
-        "l_jaro_winkler_reversed"
+        "l_jaro_winkler_reversed",
+        "lsimilarity",
     ]

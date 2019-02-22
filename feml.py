@@ -46,7 +46,6 @@ Arguments:
 """
 
 import os, sys
-import helpers
 # import configparser
 from docopt import docopt
 from kitchen.text.converters import getwriter
@@ -72,7 +71,7 @@ def main(args):
     if os.path.isfile(fpath_ds):
         evaluator.initialize(fpath_ds, args['--ev'], args['--jobs'], args['--accuracyresults'])
         if args['--print']: evaluator.do_the_printing()
-        elif args['--test']: evaluator.test_cases(fpath_ds, int(args['--test']))
+        elif int(args['--test']): evaluator.test_cases(fpath_ds, int(args['--test']))
         elif args['--cmp']: evaluator.print_false_posneg(dataset_path)
         elif args['--optimalThres']: evaluator.evaluate_metrics_with_various_thres(fpath_ds)
         elif args['--optimalSortingThres']: evaluator.evaluate_sorting_with_various_thres(fpath_ds)
