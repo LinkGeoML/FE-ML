@@ -9,12 +9,10 @@ from operator import is_not
 from functools import partial
 # import unicodedata
 import pandas as pd
-import time
-import re
 
 from nltk.corpus import stopwords
 
-from femlAlgorithms import calcSotAMetrics, calcSotAML, calcCustomFEML, calcDLearning, FEMLFeatures, transform_str
+from femlAlgorithms import *
 from helpers import perform_stemming, normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
 from external.datasetcreator import detect_alphabet, strip_accents, filter_dataset, build_dataset_from_geonames
 from helpers import StaticValues
@@ -26,6 +24,7 @@ class Evaluator:
         'SotAML': calcSotAML,
         'customFEML': calcCustomFEML,
         'DLearning': calcDLearning,
+        'TestMetrics': testMetrics
     }
 
     def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, do_printing=False,
@@ -72,34 +71,11 @@ class Evaluator:
                 for lang in FREElanguages:
                     self.stop_words.extend(data[lang])
 
-        # feml = femlAlgs.FEMLFeatures()
         with open(dataset) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                     delimiter='\t')
             for row in reader:
                 self.evalClass.preprocessing(row)
-
-        #         # Calc frequent terms
-        #         # (str1, str2)
-        #         for str in ['s1', 's2']:
-        #             fterms, stop_words = normalize_str(row[str], self.stop_words)
-        #             for term in fterms:
-        #                 self.termfrequencies['gram'][term] += 1
-        #             for gram in list(itertools.chain.from_iterable(
-        #                 [[fterms[i:i + n] for i in range(len(fterms) - (n - 1))] for n in [2, 3]])):
-        #                 if len(gram) == 2:
-        #                     self.termfrequencies['2gram_1'][gram[0]] += 1
-        #                     self.termfrequencies['2gram_2'][gram[1]] += 1
-        #                 else:
-        #                     self.termfrequencies['3gram_1'][gram[0]] += 1
-        #                     self.termfrequencies['3gram_2'][gram[1]] += 1
-        #                     self.termfrequencies['3gram_3'][gram[2]] += 1
-        #
-        #         # calc the number of abbr that exist
-        #         self.abbr['A'].append(feml.containsAbbr(row['s1']))
-        #         self.abbr['B'].append(feml.containsAbbr(row['s2']))
-
-        return 0
 
     def do_the_printing(self):
         if not os.path.exists("output"):
@@ -174,8 +150,6 @@ class Evaluator:
                     thres = 'sorted'
 
                 for row in reader:
-                    if self.latin and (row['a1'] != 'LATIN' or row['a2'] != 'LATIN'): continue
-
                     self.evalClass.evaluate(
                         row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, thres
                     )
@@ -199,8 +173,6 @@ class Evaluator:
 
                     csvfile.seek(0)
                     for row in reader:
-                        if self.latin and (row['a1'] != 'LATIN' or row['a2'] != 'LATIN'): continue
-
                         self.evalClass.evaluate(
                             row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, float(i / 100.0)
                         )
@@ -283,8 +255,8 @@ class Evaluator:
 
                     # Calc frequent terms
                     # (str1, str2)
-                    for str in ['s1', 's2']:
-                        ab = detect_alphabet(row[str])
+                    for sstr in ['s1', 's2']:
+                        ab = detect_alphabet(row[sstr])
                         if ab not in self.termsperalphabet.keys():
                             self.termsperalphabet[ab] = {
                                 'gram': Counter(),
@@ -292,7 +264,7 @@ class Evaluator:
                                 '2gram_2': Counter(), '3gram_2': Counter(), '3gram_3': Counter(),
                             }
 
-                        fterms, stop_words = normalize_str(row[str], self.stop_words)
+                        fterms, stop_words = normalize_str(row[sstr], self.stop_words)
                         for term in fterms:
                             self.termsperalphabet[ab]['gram'][term] += 1
                         for gram in list(itertools.chain.from_iterable(
@@ -373,26 +345,20 @@ class Evaluator:
                 for row in reader:
                     # row['s1'], row['s2'] = femlAlgs.transform(row['s1'], row['s2'], canonical=True)
 
-                    for str in ['s1', 's2']:
+                    for sstr in ['s1', 's2']:
                         # calc the number of abbr that exist
-                        abbr_str = feml.containsAbbr(row[str])
+                        abbr_str = feml.containsAbbr(row[sstr])
                         if abbr_str != '-':
                             if abbr_str not in orig_strs.keys(): orig_strs[abbr_str] = []
                             abbr_stats[abbr_str] += 1
-                            orig_strs[abbr_str].append(row[str])
+                            orig_strs[abbr_str].append(row[sstr])
 
                         # search for dashes in strings
-                        no_dashed_strs += feml.containsDashConnected_words(row[str])
+                        no_dashed_strs += feml.containsDashConnected_words(row[sstr])
 
-                        row[str] = transform_str(row[str], canonical=True)
-                        ngram_tokens, _ = normalize_str(row[str], self.stop_words)
+                        row[sstr] = transform_str(row[sstr], canonical=True)
+                        ngram_tokens, _ = normalize_str(row[sstr], self.stop_words)
 
-                        # if str not in ngram_stats.keys():
-                        #     ngram_stats[str] = {
-                        #         '2gram': Counter(), '3gram': Counter(), '4gram': Counter(),
-                        #         'gram_token': Counter(), '2gram_token': Counter(), '3gram_token': Counter()
-                        #     }
-                        # ngrams tokens
                         for term in ngram_tokens:
                             ngram_stats['gram_token'][term] += 1
                         for gram in list(itertools.chain.from_iterable(
@@ -424,12 +390,54 @@ class Evaluator:
                 for value, count in abbr_stats.most_common():
                     f.write("{0}\t{1}\t{2}\n".format(value, count, ','.join(orig_strs[value][:10])))
 
-            # for str in ['s1', 's2']:
             for nm in ngram_stats.keys():
                 with open("./output/{0}s.csv".format(nm), "w+") as f:
                     f.write('gram\tcount\n')
                     for value, count in ngram_stats[nm].most_common():
                         f.write("{}\t{}\n".format(value.encode('utf8'), count))
+        elif test_case - 1 == 2:
+            if self.evalClass is not None:
+                print "Reading dataset..."
+                relpath = getRelativePathtoWorking(dataset)
+
+                start_time = time.time()
+                all_res = {}
+                with open(relpath) as csvfile:
+                    reader = csv.DictReader(csvfile,
+                                            fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
+                                            delimiter='\t')
+
+                    feml = FEMLFeatures()
+                    for m in StaticValues.methods: all_res[m[0]] = []
+                    for n in xrange(4, 8):
+                        combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.combinations([1, 2, 3, 4, 5], 2) if sum(seq) == (10 - n)]
+                        for w in [(0.5, 0.25, 0.25), (0.34, 0.33, 0.33)] + combs:
+                            w = (n, ) + w if len(w) == 2 else w
+                            feml.update_weights(w)
+                            print 'Computing stats for weights ({})'.format(', '.join(map(str, w)))
+                            for i in xrange(30, 91, 5):
+                                print 'Computing stats for threshold {0}...'.format(float(i / 100.0))
+
+                                csvfile.seek(0)
+                                for row in reader:
+                                    self.evalClass.evaluate(
+                                        row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies,
+                                        float(i / 100.0)
+                                    )
+                                if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
+                                tmp_res = self.evalClass.get_stats()
+
+                                for key, val in tmp_res.iteritems():
+                                    all_res[key].append([float(i / 100.0), val])
+
+                                self.evalClass.reset_vars()
+
+                            print 'The process took {0:.2f} sec'.format(time.time() - start_time)
+                            for k, val in all_res.iteritems():
+                                if len(val) == 0:
+                                    continue
+
+                                print k, max(val, key=lambda x: x[1][0])
         else:
             print "Test #{} does not exist!!! Please choose a valid test to execute.".format(test_case)
 

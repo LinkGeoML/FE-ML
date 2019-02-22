@@ -511,10 +511,10 @@ def l_jaro_winkler(s1, s2, long_tolerance=False):
 
 
 freq_terms = []
-lsimilarity_weights = [0.5, 0.25, 0.25]
+lsimilarity_weights = []
 
 
-def _compareAndSplit_names(a, b, thres=0.75):
+def _compareAndSplit_names(a, b, thres):
     mis = {'a': [], 'b': []}
     base = {'a': [], 'b': []}
     idx_a, idx_b = 0, 0
@@ -543,7 +543,7 @@ def _compareAndSplit_names(a, b, thres=0.75):
 
 
 def lsimilarity(a, b, split_thres=0.75):
-    # TODO identifyAndExpandAbbr
+    if len(lsimilarity_weights) == 0: lsimilarity_weights.extend([0.5, 0.25, 0.25])
 
     specialTerms = dict(a=[], b=[])
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)

@@ -192,7 +192,7 @@ class FEMLFeatures:
 
     def update_freterms_list(self, weights=None):
         if weights is not None and len(weights) >= 3:
-            lsimilarity_weights = list(weights)
+            lsimilarity_weights.extend(weights[:3])
 
         if not os.path.isdir(os.path.join(os.getcwd(), 'input/')):
             print "Folder ./input/ does not exist"
@@ -201,7 +201,7 @@ class FEMLFeatures:
                 with open(f) as csvfile:
                     print "Loading frequent terms from file {}...".format(f)
                     reader = csv.DictReader(csvfile, fieldnames=["term", "no"], delimiter='\t')
-                    header = reader.fieldnames
+                    _ = reader.fieldnames
                     # go to next line after header
                     next(reader)
 
@@ -210,7 +210,11 @@ class FEMLFeatures:
                             break
 
                         freq_terms.append(row['term'].decode('utf8'))
-            print 'Loading frequent terms finished.'
+            print 'Frequent terms loaded.'
+
+    def update_weights(self, w):
+        if isinstance(w, tuple) and len(w) >= 3:
+            lsimilarity_weights.extend(w[:3])
 
     def _generic_metric_cmp(self, funcnm, a, b, sorting, stemming, canonical, invert=False):
         res = None
@@ -311,9 +315,53 @@ class baseMetrics:
     def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig'):
         pass
 
-    @abstractmethod
     def print_stats(self):
-        pass
+        for idx in range(len(StaticValues.methods)):
+            try:
+                timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
+                acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
+                      (self.num_true + self.num_false)
+                pre = (self.num_true_predicted_true[idx]) / \
+                      (self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx])
+                rec = (self.num_true_predicted_true[idx]) / \
+                      (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
+                f1 = 2.0 * ((pre * rec) / (pre + rec))
+
+                print "Metric = Supervised Classifier :", StaticValues.methods[idx][0]
+                print "Accuracy =", acc
+                print "Precision =", pre
+                print "Recall =", rec
+                print "F1 =", f1
+                print "Processing time per 50K records =", timer
+                print ""
+                print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
+                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(StaticValues.methods[idx][0], acc, pre, rec, f1, timer)
+                print ""
+                sys.stdout.flush()
+            except ZeroDivisionError:
+                pass
+                # print "{0} is divided by zero\n".format(StaticValues.methods[idx][0])
+
+        # if results:
+        #     return self.result
+
+    def get_stats(self):
+        res = {}
+        for idx, m in enumerate(StaticValues.methods):
+            try:
+                acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
+                      (self.num_true + self.num_false)
+                pre = (self.num_true_predicted_true[idx]) / \
+                      (self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx])
+                rec = (self.num_true_predicted_true[idx]) / \
+                      (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
+                f1 = 2.0 * ((pre * rec) / (pre + rec))
+
+                res[m[0]] = [acc, pre, rec, f1]
+            except ZeroDivisionError:
+                pass
+
+        return res
 
     def prediction(self, sim_id, pred_val, real_val, custom_thres):
         result = ""
@@ -371,12 +419,10 @@ class calcSotAMetrics(baseMetrics):
         tot_res += self._generic_evaluator(5, 'sorted_winkler', a, b, flag_true_match, custom_thres)
         if permuted: tot_res += self._generic_evaluator(6, 'permuted_winkler', a, b, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(10, 'skipgram', a, b, flag_true_match, custom_thres)
-        # tot_res += self._generic_evaluator(13, 'davies', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(13, 'davies', a, b, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(14, 'l_jaro_winkler', a, b, flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(15, 'l_jaro_winkler', a[::-1], b[::-1], flag_true_match,
-                                           custom_thres)
+        tot_res += self._generic_evaluator(15, 'l_jaro_winkler', a[::-1], b[::-1], flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(16, 'lsimilarity', a, b, flag_true_match, custom_thres)
-        # tot_res += self._generic_evaluator(17, 'lsimilarity', row['s1'], row['s2'], flag_true_match, custom_thres)
 
         if self.accuracyresults:
             if self.file is None:
@@ -425,53 +471,6 @@ class calcSotAMetrics(baseMetrics):
                 self.file.write("TRUE{0}\t{1}\t{2}\n".format(tot_res, row['s1'].encode('utf8'), row['s2'].encode('utf8')))
             else:
                 self.file.write("FALSE{0}\t{1}\t{2}\n".format(tot_res, row['s1'].encode('utf8'), row['s2'].encode('utf8')))
-
-    def print_stats(self):
-        for idx in range(len(StaticValues.methods)):
-            try:
-                timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
-                acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
-                      (self.num_true + self.num_false)
-                pre = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx])
-                rec = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
-                f1 = 2.0 * ((pre * rec) / (pre + rec))
-
-                print "Metric = Supervised Classifier :", StaticValues.methods[idx][0]
-                print "Accuracy =", acc
-                print "Precision =", pre
-                print "Recall =", rec
-                print "F1 =", f1
-                print "Processing time per 50K records =", timer
-                print ""
-                print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
-                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(StaticValues.methods[idx][0], acc, pre, rec, f1, timer)
-                print ""
-                sys.stdout.flush()
-            except ZeroDivisionError:
-                print "{0} is divided by zero\n".format(StaticValues.methods[idx][0])
-
-        # if results:
-        #     return self.result
-
-    def get_stats(self):
-        res = {}
-        for idx, m in enumerate(StaticValues.methods):
-            try:
-                acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
-                      (self.num_true + self.num_false)
-                pre = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx])
-                rec = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
-                f1 = 2.0 * ((pre * rec) / (pre + rec))
-
-                res[m[0]] = [acc, pre, rec, f1]
-            except ZeroDivisionError:
-                pass
-
-        return res
 
 
 class calcCustomFEML(baseMetrics):
@@ -676,6 +675,40 @@ class calcDLearning(baseMetrics):
 
 class calcSotAML(baseMetrics):
     pass
+
+
+class testMetrics(baseMetrics):
+    def __init__(self, njobs, accures):
+        super(testMetrics, self).__init__(len(StaticValues.methods), njobs, accures)
+
+    def _generic_evaluator(self, idx, algnm, str1, str2, is_a_match, custom_thres):
+        start_time = time.time()
+        sim_val = StaticValues.algorithms[algnm](str1, str2, custom_thres)
+        res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
+        self.timers[idx - 1] += (time.time() - start_time)
+        self.predictedState[varnm][idx - 1] += 1.0
+        return res
+
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres=0.75):
+        tot_res = ""
+        flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
+
+        a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
+        tot_res += self._generic_evaluator(16, 'lsimilarity', a, b, flag_true_match, custom_thres)
+
+        if self.accuracyresults:
+            if self.file is None:
+                file_name = 'dataset-accuracyresults-sim-metrics'
+                if canonical:
+                    file_name += '_canonical'
+                if sorting:
+                    file_name += '_sorted'
+                self.file = open(file_name + '.csv', 'w+')
+
+            if flag_true_match == 1.0:
+                self.file.write("TRUE{0}\t{1}\t{2}\n".format(tot_res, a.encode('utf8'), b.encode('utf8')))
+            else:
+                self.file.write("FALSE{0}\t{1}\t{2}\n".format(tot_res, a.encode('utf8'), b.encode('utf8')))
 
 
 """
