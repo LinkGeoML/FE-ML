@@ -510,8 +510,9 @@ def l_jaro_winkler(s1, s2, long_tolerance=False):
     return _jaro_winkler(s1, s2, long_tolerance, True)
 
 
-freq_terms = []
-lsimilarity_weights = []
+class LSimilarityVars:
+    freq_terms = []
+    lsimilarity_weights = []
 
 
 def _compareAndSplit_names(a, b, thres):
@@ -543,12 +544,12 @@ def _compareAndSplit_names(a, b, thres):
 
 
 def lsimilarity(a, b, split_thres=0.75):
-    if len(lsimilarity_weights) == 0: lsimilarity_weights.extend([0.5, 0.25, 0.25])
+    if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.25, 0.25])
 
     specialTerms = dict(a=[], b=[])
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
     # specialTerms['b'] = filter(lambda x: x in b, freq_terms)
-    for x in freq_terms:
+    for x in LSimilarityVars.freq_terms:
         if x in a: specialTerms['a'].append(x)
         if x in b: specialTerms['b'].append(x)
 
@@ -558,8 +559,8 @@ def lsimilarity(a, b, split_thres=0.75):
     baseTerms, mismatchTerms = _compareAndSplit_names(a, b, split_thres)
     # baseTerms, mismatchTerms = {'a': [], 'b': []}, {'a': [], 'b': []}
 
-    thres = jaro_winkler(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u'') * lsimilarity_weights[0] + \
-            jaro_winkler(' '.join(mismatchTerms['a']) + u'', ' '.join(mismatchTerms['b']) + u'') * lsimilarity_weights[0] + \
-            jaro_winkler(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'') * lsimilarity_weights[0]
+    thres = jaro_winkler(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u'') * LSimilarityVars.lsimilarity_weights[0] + \
+            jaro_winkler(' '.join(mismatchTerms['a']) + u'', ' '.join(mismatchTerms['b']) + u'') * LSimilarityVars.lsimilarity_weights[0] + \
+            jaro_winkler(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'') * LSimilarityVars.lsimilarity_weights[0]
 
     return thres

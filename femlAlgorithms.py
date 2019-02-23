@@ -21,7 +21,7 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis, LinearD
 from sklearn import preprocessing
 from xgboost import XGBClassifier
 
-from external.datasetcreator import strip_accents, freq_terms, lsimilarity_weights
+from external.datasetcreator import strip_accents, LSimilarityVars
 from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
@@ -176,12 +176,12 @@ class FEMLFeatures:
         fvec_str2 = []
 
         sep_step = int(math.ceil(len(str1) / 3.0))
-        for idx in xrange(0, len(str1), sep_step):
+        for idx in range(0, len(str1), sep_step):
             if str1[idx:idx + sep_step]:
                 fvec_str1.append(StaticValues.algorithms['damerau_levenshtein'](str1[idx:idx + sep_step], str2))
 
         sep_step = int(math.ceil(len(str2) / 3.0))
-        for idx in xrange(0, len(str2), sep_step):
+        for idx in range(0, len(str2), sep_step):
             if str2[idx:idx + sep_step]:
                 fvec_str2.append(StaticValues.algorithms['damerau_levenshtein'](str1, str2[idx:idx + sep_step]))
 
@@ -192,7 +192,7 @@ class FEMLFeatures:
 
     def update_freterms_list(self, weights=None):
         if weights is not None and len(weights) >= 3:
-            lsimilarity_weights.extend(weights[:3])
+            LSimilarityVars.lsimilarity_weights.extend(weights[:3])
 
         if not os.path.isdir(os.path.join(os.getcwd(), 'input/')):
             print "Folder ./input/ does not exist"
@@ -209,13 +209,13 @@ class FEMLFeatures:
                         if i > FEMLFeatures.no_freq_terms:
                             break
 
-                        freq_terms.append(row['term'].decode('utf8'))
+                        LSimilarityVars.freq_terms.append(row['term'].decode('utf8'))
             print 'Frequent terms loaded.'
 
     def update_weights(self, w):
         if isinstance(w, tuple) and len(w) >= 3:
-            del lsimilarity_weights[:]
-            lsimilarity_weights.extend(w[:3])
+            del LSimilarityVars.lsimilarity_weights[:]
+            LSimilarityVars.lsimilarity_weights.extend(w[:3])
 
     def _generic_metric_cmp(self, funcnm, a, b, sorting, stemming, canonical, invert=False):
         res = None
@@ -328,16 +328,16 @@ class baseMetrics:
                       (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
                 f1 = 2.0 * ((pre * rec) / (pre + rec))
 
-                print "Metric = Supervised Classifier :", StaticValues.methods[idx][0]
-                print "Accuracy =", acc
-                print "Precision =", pre
-                print "Recall =", rec
-                print "F1 =", f1
-                print "Processing time per 50K records =", timer
-                print ""
-                print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
-                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(StaticValues.methods[idx][0], acc, pre, rec, f1, timer)
-                print ""
+                print("Metric = Supervised Classifier :", StaticValues.methods[idx][0])
+                print("Accuracy =", acc)
+                print("Precision =", pre)
+                print("Recall =", rec)
+                print("F1 =", f1)
+                print("Processing time per 50K records =", timer)
+                print("")
+                print("| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)")
+                print("||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(StaticValues.methods[idx][0], acc, pre, rec, f1, timer))
+                print("")
                 sys.stdout.flush()
             except ZeroDivisionError:
                 pass
@@ -512,8 +512,8 @@ class calcCustomFEML(baseMetrics):
             ExtraTreesClassifier(n_estimators=150, random_state=0, n_jobs=int(njobs), max_depth=50),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
-        self.scores = [[] for _ in xrange(len(self.classifiers))]
-        self.importances = [0.0 for _ in xrange(len(self.classifiers))]
+        self.scores = [[] for _ in range(len(self.classifiers))]
+        self.importances = [0.0 for _ in range(len(self.classifiers))]
         self.mlalgs_to_run = self.abbr_names.keys()
 
         super(calcCustomFEML, self).__init__(len(self.classifiers), njobs, accures)
@@ -542,6 +542,8 @@ class calcCustomFEML(baseMetrics):
         if permuted: sim6 = StaticValues.algorithms['permuted_winkler'](row['s1'], row['s2'])
         sim10 = StaticValues.algorithms['skipgram'](row['s1'], row['s2'])
         sim13 = StaticValues.algorithms['davies'](row['s1'], row['s2'])
+
+        sim16 = StaticValues.algorithms['lsimilarity'](row['s1'], row['s2'])
         self.timer += (time.time() - start_time)
         if permuted:
             if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
@@ -562,7 +564,7 @@ class calcCustomFEML(baseMetrics):
         # for i, (name, clf) in enumerate(zip(self.names, self.classifiers)):
         for name in self.mlalgs_to_run:
             if name not in self.abbr_names.keys():
-                print '{} is not a valid ML algorithm'.format(name)
+                print('{} is not a valid ML algorithm'.format(name))
                 continue
 
             i = self.abbr_names[name]
@@ -570,7 +572,7 @@ class calcCustomFEML(baseMetrics):
 
             train_time = 0
             predictedL = list()
-            print "Training {}...".format(self.names[i])
+            print("Training {}...".format(self.names[i]))
             for train_X, train_Y, pred_X, pred_Y in zip(
                     [row for row in [self.X1, self.X2]], [row for row in [self.Y1, self.Y2]],
                     [row for row in [self.X2, self.X1]], [row for row in [self.Y2, self.Y1]]
@@ -589,10 +591,10 @@ class calcCustomFEML(baseMetrics):
                     self.importances[i] += model.coef_.ravel()
                 self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
 
-            print "Training took {:.3f} min".format(train_time / (2 * 60.0))
+            print("Training took {:.3f} min".format(train_time / (2 * 60.0)))
             self.timers[i] += self.timer
 
-            print "Matching records..."
+            print("Matching records...")
             real = self.Y2 + self.Y1
             for pos in range(len(real)):
                 if real[pos] == 1.0:
