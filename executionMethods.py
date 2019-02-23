@@ -408,13 +408,14 @@ class Evaluator:
                                             delimiter='\t')
 
                     feml = FEMLFeatures()
-                    for m in StaticValues.methods: all_res[m[0]] = []
-                    for n in xrange(4, 8):
-                        combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.combinations([1, 2, 3, 4, 5], 2) if sum(seq) == (10 - n)]
-                        for w in [(0.5, 0.25, 0.25), (0.34, 0.33, 0.33)] + combs:
-                            w = (n, ) + w if len(w) == 2 else w
+                    for n in [3.34] + list(xrange(4, 8)):
+                        combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.combinations([1, 1, 2, 2, 3, 3, 4, 5, 2.5, 2.5, 3.33, 3.33], 2) if sum(seq) == (10 - n)]
+                        for w in combs:
+                            w = (float(n/10.0), ) + w
                             feml.update_weights(w)
                             print 'Computing stats for weights ({})'.format(', '.join(map(str, w)))
+
+                            for m in StaticValues.methods: all_res[m[0]] = []
                             for i in xrange(30, 91, 5):
                                 print 'Computing stats for threshold {0}...'.format(float(i / 100.0))
 
