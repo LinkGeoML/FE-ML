@@ -409,7 +409,7 @@ class Evaluator:
                                             delimiter='\t')
 
                     feml = FEMLFeatures()
-                    for n in [3.34] + list(range(4, 9)):
+                    for n in [3.34] + list(range(4, 8)):
                         combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.product([1, 2, 3, 4, 5, 2.5, 3.33], repeat=2) if sum(seq) == (10 - n)]
                         for w in combs:
                             w = (float(n/10.0), ) + w
