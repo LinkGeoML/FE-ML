@@ -214,6 +214,7 @@ class FEMLFeatures:
 
     def update_weights(self, w):
         if isinstance(w, tuple) and len(w) >= 3:
+            del lsimilarity_weights[:]
             lsimilarity_weights.extend(w[:3])
 
     def _generic_metric_cmp(self, funcnm, a, b, sorting, stemming, canonical, invert=False):

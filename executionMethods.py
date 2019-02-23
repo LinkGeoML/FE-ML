@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import os, sys
 import csv
 from collections import Counter
@@ -81,20 +82,20 @@ class Evaluator:
         if not os.path.exists("output"):
             os.makedirs("output")
 
-        print "Printing 10 most common single freq terms..."
-        print "gram: {0}".format(self.termfrequencies['gram'].most_common(20))
+        print("Printing 10 most common single freq terms...")
+        print( "gram: {0}".format(self.termfrequencies['gram'].most_common(20)))
 
-        print "Printing 10 most common freq terms in bigrams..."
-        print "bi-gram pos 1: {0}".format(self.termfrequencies['2gram_1'].most_common(20))
-        print "\t pos 2: {0}".format(self.termfrequencies['2gram_2'].most_common(20))
+        print("Printing 10 most common freq terms in bigrams...")
+        print("bi-gram pos 1: {0}".format(self.termfrequencies['2gram_1'].most_common(20)))
+        print("\t pos 2: {0}".format(self.termfrequencies['2gram_2'].most_common(20)))
 
-        print "Printing 10 most common freq terms in trigrams..."
-        print "tri-gram pos 1: {0}".format(self.termfrequencies['3gram_1'].most_common(20))
-        print "\t pos 2: {0}".format(self.termfrequencies['3gram_2'].most_common(20))
-        print "\t pos 3: {0}".format(self.termfrequencies['3gram_3'].most_common(20))
+        print("Printing 10 most common freq terms in trigrams...")
+        print("tri-gram pos 1: {0}".format(self.termfrequencies['3gram_1'].most_common(20)))
+        print("\t pos 2: {0}".format(self.termfrequencies['3gram_2'].most_common(20)))
+        print("\t pos 3: {0}".format(self.termfrequencies['3gram_3'].most_common(20)))
 
-        print "Number of abbr found: {0}".format(len(filter(partial(is_not, '-'), self.abbr['A'])) +
-                                                 len(filter(partial(is_not, '-'), self.abbr['B'])))
+        print("Number of abbr found: {0}".format(len(filter(partial(is_not, '-'), self.abbr['A'])) +
+                                                 len(filter(partial(is_not, '-'), self.abbr['B']))))
 
         with open("./output/freqTerms.csv", "w") as f:
             f.write('gram\t')
@@ -138,7 +139,7 @@ class Evaluator:
 
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt', weights=None):
         if self.evalClass is not None:
-            print "Reading dataset..."
+            print( "Reading dataset...")
             relpath = getRelativePathtoWorking(dataset)
             self.evalClass.initialize_structs_for_feml(weights)
             with open(relpath) as csvfile:
@@ -158,7 +159,7 @@ class Evaluator:
 
     def evaluate_metrics_with_various_thres(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
-            print "Reading dataset..."
+            print("Reading dataset...")
             relpath = getRelativePathtoWorking(dataset)
 
             start_time = time.time()
@@ -169,7 +170,7 @@ class Evaluator:
 
                 for m in StaticValues.methods: all_res[m[0]] = []
                 for i in xrange(5, 99, 5):
-                    print 'Computing stats for threshold {0}...'.format(float(i / 100.0))
+                    print('Computing stats for threshold {0}...'.format(float(i / 100.0)))
 
                     csvfile.seek(0)
                     for row in reader:
@@ -179,22 +180,22 @@ class Evaluator:
                     if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                     tmp_res = self.evalClass.get_stats()
 
-                    for key, val in tmp_res.iteritems():
+                    for key, val in tmp_res.items():
                         all_res[key].append([float(i / 100.0), val])
 
                     self.evalClass.reset_vars()
 
-            print 'The process took {0:.2f} sec'.format(time.time() - start_time)
-            for k, val in all_res.iteritems():
+            print('The process took {0:.2f} sec'.format(time.time() - start_time))
+            for k, val in all_res.items():
                 if len(val) == 0:
-                    print '{0} is empty'.format(k)
+                    print('{0} is empty'.format(k))
                     continue
 
-                print k, max(val, key=lambda x: x[1][0])
+                print(k, max(val, key=lambda x: x[1][0]))
 
     def evaluate_sorting_with_various_thres(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
-            print "Reading dataset..."
+            print("Reading dataset...")
             relpath = getRelativePathtoWorking(dataset)
 
             start_time = time.time()
@@ -204,8 +205,8 @@ class Evaluator:
                                         delimiter='\t')
 
                 for m in StaticValues.methods: all_res[m[0]] = []
-                for i in xrange(55, 86, 5):
-                    print 'Computing stats for threshold {0}...'.format(float(i / 100.0))
+                for i in range(55, 86, 5):
+                    print('Computing stats for threshold {0}...'.format(float(i / 100.0)))
 
                     csvfile.seek(0)
                     for row in reader:
@@ -215,18 +216,18 @@ class Evaluator:
                     if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                     tmp_res = self.evalClass.get_stats()
 
-                    for key, val in tmp_res.iteritems():
+                    for key, val in tmp_res.items():
                         all_res[key].append([float(i / 100.0), val])
 
                     self.evalClass.reset_vars()
 
-            print 'The process took {0:.2f} sec'.format(time.time() - start_time)
-            for k, val in all_res.iteritems():
+            print('The process took {0:.2f} sec'.format(time.time() - start_time))
+            for k, val in all_res.items():
                 if len(val) == 0:
-                    print '{0} is empty'.format(k)
+                    print('{0} is empty'.format(k))
                     continue
 
-                print k, max(val, key=lambda x: x[1][0])
+                print(k, max(val, key=lambda x: x[1][0]))
 
     def test_cases(self, dataset, test_case):
         if test_case - 1 == 0:
@@ -383,7 +384,7 @@ class Evaluator:
                             elif len(gram) == 4:
                                 ngram_stats['4gram'][gram] += 1
 
-            print "Found {} dashed words in the dataset.".format(no_dashed_strs)
+            print("Found {} dashed words in the dataset.".format(no_dashed_strs))
 
             with open("./output/abbr.csv", "w+") as f:
                 f.write('abbr\tcount\tstr\n')
@@ -397,7 +398,7 @@ class Evaluator:
                         f.write("{}\t{}\n".format(value.encode('utf8'), count))
         elif test_case - 1 == 2:
             if self.evalClass is not None:
-                print "Reading dataset..."
+                print("Reading dataset...")
                 relpath = getRelativePathtoWorking(dataset)
 
                 start_time = time.time()
@@ -408,16 +409,19 @@ class Evaluator:
                                             delimiter='\t')
 
                     feml = FEMLFeatures()
-                    for n in [3.34] + list(xrange(4, 8)):
-                        combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.combinations([1, 1, 2, 2, 3, 3, 4, 5, 2.5, 2.5, 3.33, 3.33], 2) if sum(seq) == (10 - n)]
+                    for n in [3.34] + list(range(4, 9)):
+                        combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.product([1, 2, 3, 4, 5, 2.5, 3.33], repeat=2) if sum(seq) == (10 - n)]
                         for w in combs:
                             w = (float(n/10.0), ) + w
                             feml.update_weights(w)
-                            print 'Computing stats for weights ({})'.format(', '.join(map(str, w)))
+                            print('Computing stats for weights ({})'.format(', '.join(map(str, w))))
+                            print('Computing stats for threshold', end='')
 
                             for m in StaticValues.methods: all_res[m[0]] = []
-                            for i in xrange(30, 91, 5):
-                                print 'Computing stats for threshold {0}...'.format(float(i / 100.0))
+                            for i in range(30, 91, 5):
+                                print(' {0},'.format(float(i / 100.0)), end='')
+                                #  required for python before 3.3
+                                sys.stdout.flush()
 
                                 csvfile.seek(0)
                                 for row in reader:
@@ -428,19 +432,19 @@ class Evaluator:
                                 if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                                 tmp_res = self.evalClass.get_stats()
 
-                                for key, val in tmp_res.iteritems():
+                                for key, val in tmp_res.items():
                                     all_res[key].append([float(i / 100.0), val])
 
                                 self.evalClass.reset_vars()
 
-                            print 'The process took {0:.2f} sec'.format(time.time() - start_time)
-                            for k, val in all_res.iteritems():
+                            print('\nThe process took {0:.2f} sec'.format(time.time() - start_time))
+                            for k, val in all_res.items():
                                 if len(val) == 0:
                                     continue
 
-                                print k, max(val, key=lambda x: x[1][0])
+                                print(k, max(val, key=lambda x: x[1][0]))
         else:
-            print "Test #{} does not exist!!! Please choose a valid test to execute.".format(test_case)
+            print("Test #{} does not exist!!! Please choose a valid test to execute.".format(test_case))
 
     def print_false_posneg(self, datasets):
         if not os.path.exists("output"):
@@ -450,18 +454,18 @@ class Evaluator:
             reader = pd.read_csv(getTMabsPath(datasets[0]), sep='\t', names=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"])
             results = pd.read_csv(datasets[1], sep='\t', names=["res1", "res2"])
 
-            print "No of rows for dataset: {0}".format(results.shape[0]/2)
+            print("No of rows for dataset: {0}".format(results.shape[0]/2))
             resultDf = pd.concat([results.iloc[results.shape[0]/2:], results.iloc[:results.shape[0]/2]], ignore_index=True)
             mismatches = pd.concat([reader, resultDf], axis=1)
 
             negDf = mismatches[
                 (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
-                (mismatches.res1 == True) & (mismatches.res1 != mismatches.res2)
+                (mismatches.res1 is True) & (mismatches.res1 != mismatches.res2)
             ]
             negDf.to_csv('./output/false_negatives.csv', sep='\t', encoding='utf-8', columns=['s1', 's2'])
             posDf = mismatches[
                 (not self.latin or mismatches.a1 == 'LATIN') & (not self.latin or mismatches.a2 == 'LATIN') &
-                (mismatches.res1 == False) & (mismatches.res1 != mismatches.res2)
+                (mismatches.res1 is False) & (mismatches.res1 != mismatches.res2)
             ]
             posDf.to_csv('./output/false_positives.csv', sep='\t', encoding='utf-8', columns=['s1', 's2'])
         elif len(datasets) == 3:
@@ -492,8 +496,8 @@ class Evaluator:
                              encoding='utf-8', columns=['s1', 's2', 'res', "res2_transformed_s1", "res2_transformed_s2"])
 
                 tmpDf = mismatches[ mismatches.res1 != mismatches.res2 ]
-                if not tmpDf.empty: print tmpDf
-        else: print "Wrong number {0} of input datasets to cmp".format(len(datasets))
+                if not tmpDf.empty: print(tmpDf)
+        else: print("Wrong number {0} of input datasets to cmp".format(len(datasets)))
 
     def build_dataset(self):
         build_dataset_from_geonames(only_latin=self.latin)
