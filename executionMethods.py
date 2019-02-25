@@ -413,7 +413,6 @@ class Evaluator:
                         combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.product([1, 2, 3, 4, 5, 2.5, 3.33], repeat=2) if sum(seq) == (10 - n)]
                         for w in combs:
                             w = (float(n/10.0), ) + w
-                            print(w)
                             feml.update_weights(w)
                             print('Computing stats for weights ({})'.format(', '.join(map(str, w))))
                             print('Computing stats for threshold', end='')
@@ -443,7 +442,6 @@ class Evaluator:
                                 if len(val) == 0:
                                     continue
 
-                                print(k, val)
                                 print(k, max(val, key=lambda x: x[1][0]))
         else:
             print("Test #{} does not exist!!! Please choose a valid test to execute.".format(test_case))
