@@ -33,6 +33,7 @@ Arguments:
                             'SotAML'
                             'customFEML'
                             'DLearninng'
+                            'TestMetrics'
   ML_algs                   'rf' (Random Forest)
                             'et' (ExtraTreeClassifier)
                             'xgboost' (XGBoost)

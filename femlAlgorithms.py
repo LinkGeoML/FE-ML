@@ -21,7 +21,7 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis, LinearD
 from sklearn import preprocessing
 from xgboost import XGBClassifier
 
-from external.datasetcreator import strip_accents, LSimilarityVars
+from external.datasetcreator import strip_accents, LSimilarityVars, lsimilarity_terms
 from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
@@ -94,18 +94,15 @@ class FEMLFeatures:
     # TODO to_be_removed = "()/.,:!'"  # check the list of chars
     # Returned vals: #1: str1 is subset of str2, #2 str2 is subset of str1
     @staticmethod
-    def contains(strA, strB, sorting=False):
-        strA, _ = normalize_str(strA, sorting)
-        strB, _ = normalize_str(strB, sorting)
-        return set(strA).issubset(set(strB)), set(strB).issubset(set(strA))
+    def contains(str1, str2, sorting=False):
+        # strA, _ = normalize_str(strA, sorting)
+        # strB, _ = normalize_str(strB, sorting)
+        return set(str1.split()).issubset(set(str2.split())), set(str2.split()).issubset(set(str1.split()))
 
     @staticmethod
     def contains_freq_term(str, freqTerms=None):
         str, _ = normalize_str(str)
         return True if freqTerms != None and str in freqTerms else False
-
-    def contains_specific_freq_term(self, str):
-        pass
 
     @staticmethod
     def is_matched(str):
@@ -145,7 +142,8 @@ class FEMLFeatures:
         bflag = True if len(tokens) > 1 else False
         return bflag
 
-    def containsDashConnected_words(self, str):
+    @staticmethod
+    def containsDashConnected_words(str):
         """
         Hyphenated words are considered to be:
             * a number of word chars
@@ -155,9 +153,20 @@ class FEMLFeatures:
         return False if is_dashed is None else True
 
     @staticmethod
-    def no_of_words(str):
-        str, _ = normalize_str(str)
-        return len(set(str))
+    def no_of_words(str1, str2):
+        # str, _ = normalize_str(str)
+        return len(set(str1.split())), len(set(str2.split()))
+
+    @staticmethod
+    def containsFreqTerms(str1, str2):
+        specialTerms = dict(a=[], b=[])
+        # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
+        # specialTerms['b'] = filter(lambda x: x in b, freq_terms)
+        for idx, x in enumerate(LSimilarityVars.freq_terms):
+            if x in str1: specialTerms['a'].append([idx, x])
+            if x in str2: specialTerms['b'].append([idx, x])
+
+        return specialTerms['a'], specialTerms['b']
 
     @staticmethod
     def ngram_tokens(tokens, ngram=1):
@@ -175,15 +184,19 @@ class FEMLFeatures:
         fvec_str1 = []
         fvec_str2 = []
 
-        sep_step = int(math.ceil(len(str1) / 3.0))
-        for idx in range(0, len(str1), sep_step):
-            if str1[idx:idx + sep_step]:
-                fvec_str1.append(StaticValues.algorithms['damerau_levenshtein'](str1[idx:idx + sep_step], str2))
+        sep_step = int(round(len(str1) / 3.0))
+        fvec_str1.extend(
+            [StaticValues.algorithms['damerau_levenshtein'](str1[0:sep_step], str2),
+             StaticValues.algorithms['damerau_levenshtein'](str1[sep_step:2*sep_step], str2),
+             StaticValues.algorithms['damerau_levenshtein'](str1[2:sep_step], str2)]
+        )
 
-        sep_step = int(math.ceil(len(str2) / 3.0))
-        for idx in range(0, len(str2), sep_step):
-            if str2[idx:idx + sep_step]:
-                fvec_str2.append(StaticValues.algorithms['damerau_levenshtein'](str1, str2[idx:idx + sep_step]))
+        sep_step = int(round(len(str2) / 3.0))
+        fvec_str2.extend(
+            [StaticValues.algorithms['damerau_levenshtein'](str1, str2[0:sep_step]),
+             StaticValues.algorithms['damerau_levenshtein'](str1, str2[sep_step:2*sep_step]),
+             StaticValues.algorithms['damerau_levenshtein'](str1, str2[2*sep_step])]
+        )
 
         self._check_size(fvec_str1)
         self._check_size(fvec_str2)
@@ -195,11 +208,11 @@ class FEMLFeatures:
             LSimilarityVars.lsimilarity_weights.extend(weights[:3])
 
         if not os.path.isdir(os.path.join(os.getcwd(), 'input/')):
-            print "Folder ./input/ does not exist"
+            print("Folder ./input/ does not exist")
         else:
             for f in glob.iglob('./input/*gram*.csv'):
                 with open(f) as csvfile:
-                    print "Loading frequent terms from file {}...".format(f)
+                    print("Loading frequent terms from file {}...".format(f))
                     reader = csv.DictReader(csvfile, fieldnames=["term", "no"], delimiter='\t')
                     _ = reader.fieldnames
                     # go to next line after header
@@ -494,6 +507,8 @@ class calcCustomFEML(baseMetrics):
         "ExtraTreeClassifier", "XGBOOST"
     ]
 
+    max_important_features_toshow = 30
+
     def __init__(self, njobs, accures):
         self.X1 = []
         self.Y1 = []
@@ -543,16 +558,60 @@ class calcCustomFEML(baseMetrics):
         sim10 = StaticValues.algorithms['skipgram'](row['s1'], row['s2'])
         sim13 = StaticValues.algorithms['davies'](row['s1'], row['s2'])
 
-        sim16 = StaticValues.algorithms['lsimilarity'](row['s1'], row['s2'])
+        feature1_1, feature1_2, feature1_3 = lsimilarity_terms(row['s1'], row['s2'], 0.7)
+        feature2_1, feature2_2 = FEMLFeatures.contains(row['s1'], row['s2'])
+        feature3_1, feature3_2 = FEMLFeatures.no_of_words(row['s1'], row['s2'])
+        feature4_1 = FEMLFeatures.containsDashConnected_words(row['s1'])
+        feature4_2 = FEMLFeatures.containsDashConnected_words(row['s2'])
+        fterms_s1, fterms_s2 = FEMLFeatures.containsFreqTerms(row['s1'], row['s2'])
+        feature5_1 = False if len(fterms_s1) == 0 else True
+        feature5_2 = False if len(fterms_s2) == 0 else True
+        feature6_1, feature6_2 = FEMLFeatures().containsInPos(row['s1'], row['s2'])
+        feature7_1, feature7_2 = [False] * len(LSimilarityVars.freq_terms), [False] * len(LSimilarityVars.freq_terms)
+        for x in fterms_s1: feature7_1[x[0]] = True
+        for x in fterms_s2: feature7_2[x[0]] = True
+
         self.timer += (time.time() - start_time)
         if permuted:
             if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
                 self.X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-            else: self.X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                self.X1[-1].extend([feature1_1, feature1_2, feature1_3, feature2_1, feature2_2, feature3_1, feature3_2, feature4_1, feature4_2, feature5_1, feature5_2])
+                self.X1[-1].extend(map(lambda x: x == max(feature6_1), feature6_1))
+                self.X1[-1].extend(map(lambda x: x == max(feature6_2), feature6_2))
+                self.X1[-1].extend(feature7_1 + feature7_2)
+            else:
+                self.X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                self.X2[-1].extend(
+                    [feature1_1, feature1_2, feature1_3, feature2_1, feature2_2, feature3_1, feature3_2, feature4_1,
+                     feature4_2, feature5_1, feature5_2])
+                self.X2[-1].extend(map(lambda x: x == max(feature6_1), feature6_1))
+                self.X2[-1].extend(map(lambda x: x == max(feature6_2), feature6_2))
+                self.X2[-1].extend(feature7_1 + feature7_2)
         else:
             if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
                 self.X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-            else: self.X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                self.X1[-1].extend(
+                    [feature1_1, feature1_2, feature1_3, feature2_1, feature2_2, feature3_1, feature3_2, feature4_1,
+                     feature4_2, feature5_1, feature5_2])
+                self.X1[-1].extend(map(lambda x: x == max(feature6_1), feature6_1))
+                self.X1[-1].extend(map(lambda x: x == max(feature6_2), feature6_2))
+                self.X1[-1].extend(feature7_1 + feature7_2)
+            else:
+                self.X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                self.X2[-1].extend(
+                    [feature1_1, feature1_2, feature1_3, feature2_1, feature2_2, feature3_1, feature3_2, feature4_1,
+                     feature4_2, feature5_1, feature5_2])
+                self.X2[-1].extend(map(lambda x: x == max(feature6_1), feature6_1))
+                self.X2[-1].extend(map(lambda x: x == max(feature6_2), feature6_2))
+                self.X2[-1].extend(feature7_1 + feature7_2)
+
+        if self.file is None and self.accuracyresults:
+            file_name = 'dataset-accuracyresults-sim-metrics'
+            if canonical:
+                file_name += '_canonical'
+            if sorting:
+                file_name += '_sorted'
+            self.file = open(file_name + '.csv', 'w+')
 
     def train_classifiers(self, ml_algs, polynomial=False):
         if polynomial:
@@ -657,7 +716,7 @@ class calcCustomFEML(baseMetrics):
                         name)
                 else:
                     indices = np.argsort(importances)[::-1]
-                    for f in range(importances.shape[0]):
+                    for f in range(min(importances.shape[0], self.max_important_features_toshow)):
                             print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
 
                 # if hasattr(clf, "feature_importances_"):
