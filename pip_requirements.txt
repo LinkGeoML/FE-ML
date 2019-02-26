@@ -1,5 +1,14 @@
 nltk
 # python -m nltk.downloader stopwords
+# In case of tunneling do the following:
+# *) pip install PySocks
+# *) python
+# >>> import socks
+# >>> import socket
+# >>> socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 1080)
+# >>> socket.socket = socks.socksocket
+# >>> import nltk
+# >>> nltk.download('stopwords')
 langdetect
 pycountry
 docopt
