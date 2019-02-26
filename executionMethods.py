@@ -25,7 +25,8 @@ class Evaluator:
         'SotAML': calcSotAML,
         'customFEML': calcCustomFEML,
         'DLearning': calcDLearning,
-        'TestMetrics': testMetrics
+        'TestMetrics': testMetrics,
+        'customFEMLExtended': calcCustomFEMLExtended,
     }
 
     def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, do_printing=False,
@@ -154,7 +155,7 @@ class Evaluator:
                     self.evalClass.evaluate(
                         row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, thres
                     )
-                if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
+                if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs, polynomial=False, standardize=True)
                 self.evalClass.print_stats()
 
     def evaluate_metrics_with_various_thres(self, dataset='dataset-string-similarity.txt'):

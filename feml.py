@@ -34,6 +34,7 @@ Arguments:
                             'customFEML'
                             'DLearninng'
                             'TestMetrics'
+                            'customFEMLExtended'
   ML_algs                   'rf' (Random Forest)
                             'et' (ExtraTreeClassifier)
                             'xgboost' (XGBoost)
