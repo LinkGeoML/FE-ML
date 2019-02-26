@@ -200,10 +200,7 @@ class FEMLFeatures:
 
         return fvec_str1, fvec_str2
 
-    def update_freterms_list(self, weights=None):
-        if weights is not None and len(weights) >= 3:
-            LSimilarityVars.lsimilarity_weights.extend(weights[:3])
-
+    def get_freqterms(self):
         if not os.path.isdir(os.path.join(os.getcwd(), 'input/')):
             print("Folder ./input/ does not exist")
         else:
@@ -396,8 +393,8 @@ class baseMetrics:
 
         return result, var_name
 
-    def initialize_structs_for_feml(self, w):
-        self.feml_features.update_freterms_list(w)
+    def freq_terms_list(self):
+        self.feml_features.get_freqterms()
 
 
 class calcSotAMetrics(baseMetrics):
@@ -490,19 +487,20 @@ class calcCustomFEML(baseMetrics):
         'dt': 1,
         'rf': 2,
         'nn': 3,
-        'ada': 4,
-        'nb': 5,
+        # 'ada': 10,
+        'nb': 4,
         # 'qda': 8,
         # 'lda': 9,
-        'et': 6,
-        'xgboost': 7,
+        'et': 5,
+        'xgboost': 6,
     }
 
     names = [
-        "Linear SVM", # "Gaussian Process",
-        "Decision Tree", "Random Forest", "Neural Net", "AdaBoost", "Naive Bayes",
+        "Linear SVM",
+        "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes",
         "ExtraTreeClassifier", "XGBOOST"
         # "QDA", "LDA",
+        # "AdaBoost", "Gaussian Process",
     ]
 
     max_important_features_toshow = 10
@@ -519,7 +517,7 @@ class calcCustomFEML(baseMetrics):
             DecisionTreeClassifier(random_state=0, max_depth=50, max_features='auto'),
             RandomForestClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=50),
             MLPClassifier(alpha=1, random_state=0),
-            AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
+            # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
             # QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
             ExtraTreesClassifier(n_estimators=150, random_state=0, n_jobs=int(njobs), max_depth=50),
@@ -700,19 +698,20 @@ class calcCustomFEMLExtended(baseMetrics):
         'dt': 1,
         'rf': 2,
         'nn': 3,
-        'ada': 4,
-        'nb': 5,
+        # 'ada': 10,
+        'nb': 4,
         # 'qda': 8,
         # 'lda': 9,
-        'et': 6,
-        'xgboost': 7,
+        'et': 5,
+        'xgboost': 6,
     }
 
     names = [
-        "Linear SVM", # "Gaussian Process",
-        "Decision Tree", "Random Forest", "Neural Net", "AdaBoost", "Naive Bayes",
+        "Linear SVM",
+        "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes",
         "ExtraTreeClassifier", "XGBOOST"
         # "QDA", "LDA",
+        # "AdaBoost", "Gaussian Process",
     ]
 
     max_important_features_toshow = 20
@@ -729,7 +728,7 @@ class calcCustomFEMLExtended(baseMetrics):
             DecisionTreeClassifier(random_state=0, max_depth=50, max_features='auto'),
             RandomForestClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=50),
             MLPClassifier(alpha=1, random_state=0),
-            AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
+            # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
             # QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
             ExtraTreesClassifier(n_estimators=150, random_state=0, n_jobs=int(njobs), max_depth=50),

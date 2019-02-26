@@ -2,9 +2,7 @@
 
 from __future__ import print_function
 import os, sys
-import csv
 from collections import Counter
-import itertools
 import json
 from operator import is_not
 from functools import partial
@@ -138,11 +136,11 @@ class Evaluator:
                 if self.abbr['A'][i] != '-' or self.abbr['B'][i] != '-':
                     f.write("{}\t{}\t{}\n".format(self.abbr['A'][i], self.abbr['B'][i], i))
 
-    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', weights=None):
+    def evaluate_metrics(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
             print( "Reading dataset...")
             relpath = getRelativePathtoWorking(dataset)
-            self.evalClass.initialize_structs_for_feml(weights)
+            self.evalClass.freq_terms_list()
             with open(relpath) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')

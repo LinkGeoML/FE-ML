@@ -78,7 +78,7 @@ def main(args):
         elif args['--optimalThres']: evaluator.evaluate_metrics_with_various_thres(fpath_ds)
         elif args['--optimalSortingThres']: evaluator.evaluate_sorting_with_various_thres(fpath_ds)
         else: evaluator.evaluate_metrics(fpath_ds)
-    else: print "No file {0} exists!!!\n".format(fpath_ds)
+    else: print("No file {0} exists!!!\n".format(fpath_ds))
 
 
 if __name__ == "__main__":
