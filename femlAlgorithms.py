@@ -185,14 +185,14 @@ class FEMLFeatures:
         fvec_str1.extend(
             [StaticValues.algorithms['damerau_levenshtein'](str1[0:sep_step], str2),
              StaticValues.algorithms['damerau_levenshtein'](str1[sep_step:2*sep_step], str2),
-             StaticValues.algorithms['damerau_levenshtein'](str1[2:sep_step], str2)]
+             StaticValues.algorithms['damerau_levenshtein'](str1[2*sep_step:], str2)]
         )
 
         sep_step = int(round(len(str2) / 3.0))
         fvec_str2.extend(
             [StaticValues.algorithms['damerau_levenshtein'](str1, str2[0:sep_step]),
              StaticValues.algorithms['damerau_levenshtein'](str1, str2[sep_step:2*sep_step]),
-             StaticValues.algorithms['damerau_levenshtein'](str1, str2[2*sep_step])]
+             StaticValues.algorithms['damerau_levenshtein'](str1, str2[2*sep_step:])]
         )
 
         self._check_size(fvec_str1)
