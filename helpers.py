@@ -184,3 +184,24 @@ class StaticValues:
         "l_jaro_winkler_reversed",
         "lsimilarity",
     ]
+
+    classifiers_abbr = {
+        'lsvm': 0,
+        'dt': 1,
+        'rf': 2,
+        'nn': 3,
+        # 'ada': 10,
+        'nb': 4,
+        # 'qda': 8,
+        # 'lda': 9,
+        'et': 5,
+        'xgboost': 6,
+    }
+
+    classifiers = [
+        "Linear SVM",
+        "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes",
+        "ExtraTreeClassifier", "XGBOOST"
+        # "QDA", "LDA",
+        # "AdaBoost", "Gaussian Process",
+    ]

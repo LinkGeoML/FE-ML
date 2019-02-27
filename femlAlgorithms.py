@@ -482,27 +482,6 @@ class calcSotAMetrics(baseMetrics):
 
 
 class calcCustomFEML(baseMetrics):
-    abbr_names = {
-        'lsvm': 0,
-        'dt': 1,
-        'rf': 2,
-        'nn': 3,
-        # 'ada': 10,
-        'nb': 4,
-        # 'qda': 8,
-        # 'lda': 9,
-        'et': 5,
-        'xgboost': 6,
-    }
-
-    names = [
-        "Linear SVM",
-        "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes",
-        "ExtraTreeClassifier", "XGBOOST"
-        # "QDA", "LDA",
-        # "AdaBoost", "Gaussian Process",
-    ]
-
     max_important_features_toshow = 10
 
     def __init__(self, njobs, accures):
@@ -525,7 +504,7 @@ class calcCustomFEML(baseMetrics):
         ]
         self.scores = [[] for _ in range(len(self.classifiers))]
         self.importances = [0.0 for _ in range(len(self.classifiers))]
-        self.mlalgs_to_run = self.abbr_names.keys()
+        self.mlalgs_to_run = StaticValues.classifiers_abbr.keys()
 
         super(calcCustomFEML, self).__init__(len(self.classifiers), njobs, accures)
 
@@ -583,16 +562,16 @@ class calcCustomFEML(baseMetrics):
         if set(ml_algs) != {'all'}: self.mlalgs_to_run = ml_algs
         # for i, (name, clf) in enumerate(zip(self.names, self.classifiers)):
         for name in self.mlalgs_to_run:
-            if name not in self.abbr_names.keys():
+            if name not in StaticValues.classifiers_abbr.keys():
                 print('{} is not a valid ML algorithm'.format(name))
                 continue
 
-            i = self.abbr_names[name]
+            i = StaticValues.classifiers_abbr[name]
             model = self.classifiers[i]
 
             train_time = 0
             predictedL = list()
-            print("Training {}...".format(self.names[i]))
+            print("Training {}...".format(StaticValues.classifiers[i]))
             for train_X, train_Y, pred_X, pred_Y in zip(
                     [row for row in [self.X1, self.X2]], [row for row in [self.Y1, self.Y2]],
                     [row for row in [self.X2, self.X1]], [row for row in [self.Y2, self.Y1]]
@@ -643,10 +622,10 @@ class calcCustomFEML(baseMetrics):
 
     def print_stats(self):
         for name in self.mlalgs_to_run:
-            if name not in self.abbr_names.keys():
+            if name not in StaticValues.classifiers_abbr.keys():
                 continue
 
-            idx = self.abbr_names[name]
+            idx = StaticValues.classifiers_abbr[name]
             try:
                 timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
                 acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
@@ -657,7 +636,7 @@ class calcCustomFEML(baseMetrics):
                       (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
                 f1 = 2.0 * ( ( pre * rec ) / ( pre + rec ) )
 
-                print "Metric = Supervised Classifier :" , self.names[idx]
+                print "Metric = Supervised Classifier :" , StaticValues.classifiers[idx]
                 print "Score (X2, X1) = ", self.scores[idx][0], self.scores[idx][1]
                 print "Accuracy =", acc
                 print "Precision =", pre
@@ -667,7 +646,7 @@ class calcCustomFEML(baseMetrics):
                 print "Number of training instances =", min(len(self.Y1), len(self.Y2))
                 print ""
                 print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
-                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(self.names[idx], acc, pre, rec, f1, timer)
+                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(StaticValues.classifiers[idx], acc, pre, rec, f1, timer)
                 print ""
                 sys.stdout.flush()
 
@@ -693,27 +672,6 @@ class calcCustomFEML(baseMetrics):
 
 
 class calcCustomFEMLExtended(baseMetrics):
-    abbr_names = {
-        'lsvm': 0,
-        'dt': 1,
-        'rf': 2,
-        'nn': 3,
-        # 'ada': 10,
-        'nb': 4,
-        # 'qda': 8,
-        # 'lda': 9,
-        'et': 5,
-        'xgboost': 6,
-    }
-
-    names = [
-        "Linear SVM",
-        "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes",
-        "ExtraTreeClassifier", "XGBOOST"
-        # "QDA", "LDA",
-        # "AdaBoost", "Gaussian Process",
-    ]
-
     max_important_features_toshow = 20
 
     def __init__(self, njobs, accures):
@@ -736,7 +694,7 @@ class calcCustomFEMLExtended(baseMetrics):
         ]
         self.scores = [[] for _ in range(len(self.classifiers))]
         self.importances = [0.0 for _ in range(len(self.classifiers))]
-        self.mlalgs_to_run = self.abbr_names.keys()
+        self.mlalgs_to_run = StaticValues.classifiers_abbr.keys()
 
         super(calcCustomFEMLExtended, self).__init__(len(self.classifiers), njobs, accures)
 
@@ -837,16 +795,16 @@ class calcCustomFEMLExtended(baseMetrics):
         if set(ml_algs) != {'all'}: self.mlalgs_to_run = ml_algs
         # for i, (name, clf) in enumerate(zip(self.names, self.classifiers)):
         for name in self.mlalgs_to_run:
-            if name not in self.abbr_names.keys():
+            if name not in StaticValues.classifiers_abbr.keys():
                 print('{} is not a valid ML algorithm'.format(name))
                 continue
 
-            i = self.abbr_names[name]
+            i = StaticValues.classifiers_abbr[name]
             model = self.classifiers[i]
 
             train_time = 0
             predictedL = list()
-            print("Training {}...".format(self.names[i]))
+            print("Training {}...".format(StaticValues.classifiers[i]))
             for train_X, train_Y, pred_X, pred_Y in zip(
                     [row for row in [self.X1, self.X2]], [row for row in [self.Y1, self.Y2]],
                     [row for row in [self.X2, self.X1]], [row for row in [self.Y2, self.Y1]]
@@ -897,10 +855,10 @@ class calcCustomFEMLExtended(baseMetrics):
 
     def print_stats(self):
         for name in self.mlalgs_to_run:
-            if name not in self.abbr_names.keys():
+            if name not in StaticValues.classifiers_abbr.keys():
                 continue
 
-            idx = self.abbr_names[name]
+            idx = StaticValues.classifiers_abbr[name]
             try:
                 timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
                 acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
@@ -911,7 +869,7 @@ class calcCustomFEMLExtended(baseMetrics):
                       (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
                 f1 = 2.0 * ( ( pre * rec ) / ( pre + rec ) )
 
-                print "Metric = Supervised Classifier :" , self.names[idx]
+                print "Metric = Supervised Classifier :" , StaticValues.classifiers[idx]
                 print "Score (X2, X1) = ", self.scores[idx][0], self.scores[idx][1]
                 print "Accuracy =", acc
                 print "Precision =", pre
@@ -921,7 +879,7 @@ class calcCustomFEMLExtended(baseMetrics):
                 print "Number of training instances =", min(len(self.Y1), len(self.Y2))
                 print ""
                 print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
-                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(self.names[idx], acc, pre, rec, f1, timer)
+                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(StaticValues.classifiers[idx], acc, pre, rec, f1, timer)
                 print ""
                 sys.stdout.flush()
 
