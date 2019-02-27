@@ -141,6 +141,7 @@ class Evaluator:
             print( "Reading dataset...")
             relpath = getRelativePathtoWorking(dataset)
             self.evalClass.freq_terms_list()
+
             with open(relpath) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
@@ -162,11 +163,11 @@ class Evaluator:
             relpath = getRelativePathtoWorking(dataset)
 
             start_time = time.time()
-            all_res = {}
             with open(relpath) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
+                all_res = {}
                 for m in StaticValues.methods: all_res[m[0]] = []
                 for i in range(5, 99, 5):
                     print('Computing stats for threshold {0}...'.format(float(i / 100.0)))
@@ -198,11 +199,11 @@ class Evaluator:
             relpath = getRelativePathtoWorking(dataset)
 
             start_time = time.time()
-            all_res = {}
             with open(relpath) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
+                all_res = {}
                 for m in StaticValues.methods: all_res[m[0]] = []
                 for i in range(55, 86, 5):
                     print('Computing stats for threshold {0}...'.format(float(i / 100.0)))
@@ -399,26 +400,30 @@ class Evaluator:
             if self.evalClass is not None:
                 print("Reading dataset...")
                 relpath = getRelativePathtoWorking(dataset)
+                self.evalClass.freq_terms_list()
 
-                start_time = time.time()
-                all_res = {}
                 with open(relpath) as csvfile:
                     reader = csv.DictReader(csvfile,
                                             fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                             delimiter='\t')
 
+                    all_res = {}
+                    for m in StaticValues.methods: all_res[m[0]] = []
                     feml = FEMLFeatures()
                     for n in [3.34] + list(range(4, 8)):
                         combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.product([1, 2, 3, 4, 5, 2.5, 3.33], repeat=2) if sum(seq) == (10 - n)]
+
                         for w in combs:
                             w = (float(n/10.0), ) + w
                             feml.update_weights(w)
-                            print('Computing stats for weights ({})'.format(', '.join(map(str, w))))
+                            print('Computing stats for weights ({})'.format(','.join(map(str, w))))
                             print('Computing stats for threshold', end='')
 
-                            for m in StaticValues.methods: all_res[m[0]] = []
+                            separator = ''
+                            start_time = time.time()
                             for i in range(30, 91, 5):
-                                print(' {0},'.format(float(i / 100.0)), end='')
+                                print('{0} {1}'.format(separator, float(i / 100.0)), end='')
+                                separator = ','
                                 #  required for python before 3.3
                                 sys.stdout.flush()
 
@@ -436,12 +441,14 @@ class Evaluator:
 
                                 self.evalClass.reset_vars()
 
-                            print('\nThe process took {0:.2f} sec'.format(time.time() - start_time))
+                            print('\nThe process for weight ({0}) took {1:.2f} sec'.format(','.join(map(str, w)), time.time() - start_time))
                             for k, val in all_res.items():
                                 if len(val) == 0:
                                     continue
 
                                 print(k, max(val, key=lambda x: x[1][0]))
+
+                            for m in StaticValues.methods: all_res[m[0]][:] = []
         else:
             print("Test #{} does not exist!!! Please choose a valid test to execute.".format(test_case))
 

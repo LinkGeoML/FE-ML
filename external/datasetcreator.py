@@ -544,7 +544,7 @@ def _compareAndSplit_names(a, b, thres):
 
 
 def lsimilarity_terms(str1, str2, split_thres):
-    if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.4, 0.5, 0.1])
+    if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.1, 0.4])
 
     specialTerms = dict(a=[], b=[])
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
@@ -565,7 +565,7 @@ def lsimilarity_terms(str1, str2, split_thres):
            jaro_winkler(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'')
 
 
-def lsimilarity(str1, str2, split_thres=0.75):
+def lsimilarity(str1, str2, split_thres=0.55):
     baseTerms_val, mismatchTerms_val, specialTerms_val = lsimilarity_terms(str1, str2, split_thres)
 
     thres = baseTerms_val * LSimilarityVars.lsimilarity_weights[0] + \

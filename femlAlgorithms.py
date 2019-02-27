@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# identifying str and unicode on Python 2, or str on Python 3
+from six import string_types
 import os, sys
 import time
 from abc import ABCMeta, abstractmethod
@@ -325,7 +327,7 @@ class baseMetrics:
         pass
 
     def print_stats(self):
-        for idx in range(len(StaticValues.methods)):
+        for idx, m in enumerate(StaticValues.methods):
             try:
                 timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
                 acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
@@ -336,7 +338,7 @@ class baseMetrics:
                       (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
                 f1 = 2.0 * ((pre * rec) / (pre + rec))
 
-                print("Metric = Supervised Classifier :", StaticValues.methods[idx][0])
+                print("Metric = Supervised Classifier :", m[0])
                 print("Accuracy =", acc)
                 print("Precision =", pre)
                 print("Recall =", rec)
@@ -344,7 +346,7 @@ class baseMetrics:
                 print("Processing time per 50K records =", timer)
                 print("")
                 print("| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)")
-                print("||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(StaticValues.methods[idx][0], acc, pre, rec, f1, timer))
+                print("||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(m[0], acc, pre, rec, f1, timer))
                 print("")
                 sys.stdout.flush()
             except ZeroDivisionError:
@@ -369,6 +371,7 @@ class baseMetrics:
                 res[m[0]] = [acc, pre, rec, f1]
             except ZeroDivisionError:
                 pass
+                # print('zero division for method {}'.format(m[0]))
 
         return res
 
@@ -376,7 +379,7 @@ class baseMetrics:
         result = ""
         var_name = ""
 
-        thres = StaticValues.methods[sim_id - 1][1][custom_thres] if isinstance(custom_thres, basestring) else custom_thres
+        thres = StaticValues.methods[sim_id - 1][1][custom_thres] if isinstance(custom_thres, string_types) else custom_thres
         if real_val == 1.0:
             if pred_val >= thres:
                 var_name = 'num_true_predicted_true'
@@ -920,13 +923,13 @@ class testMetrics(baseMetrics):
 
     def _generic_evaluator(self, idx, algnm, str1, str2, is_a_match, custom_thres):
         start_time = time.time()
-        sim_val = StaticValues.algorithms[algnm](str1, str2, custom_thres)
+        sim_val = StaticValues.algorithms[algnm](str1, str2)
         res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
         self.timers[idx - 1] += (time.time() - start_time)
         self.predictedState[varnm][idx - 1] += 1.0
         return res
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres=0.75):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig'):
         tot_res = ""
         flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
 
