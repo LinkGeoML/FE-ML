@@ -565,7 +565,7 @@ def lsimilarity_terms(str1, str2, split_thres):
            jaro_winkler(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'')
 
 
-def lsimilarity(str1, str2, split_thres=0.55):
+def lsimilarity(str1, str2, split_thres=0.75):
     baseTerms_val, mismatchTerms_val, specialTerms_val = lsimilarity_terms(str1, str2, split_thres)
 
     thres = baseTerms_val * LSimilarityVars.lsimilarity_weights[0] + \

@@ -677,6 +677,7 @@ class calcCustomFEML(baseMetrics):
 
 class calcCustomFEMLExtended(baseMetrics):
     max_important_features_toshow = 20
+    fterm_feature_size = 20
 
     def __init__(self, njobs, accures):
         self.X1 = []
@@ -737,8 +738,8 @@ class calcCustomFEMLExtended(baseMetrics):
         feature5_1 = False if len(fterms_s1) == 0 else True
         feature5_2 = False if len(fterms_s2) == 0 else True
         feature6_1, feature6_2 = FEMLFeatures().containsInPos(row['s1'], row['s2'])
-        feature7_1 = [0] * (len(LSimilarityVars.freq_ngrams['tokens']) + len(LSimilarityVars.freq_ngrams['chars']))
-        feature7_2 = [0] * (len(LSimilarityVars.freq_ngrams['tokens']) + len(LSimilarityVars.freq_ngrams['chars']))
+        feature7_1 = [0] * (len(LSimilarityVars.freq_ngrams['tokens'][:self.fterm_feature_size+1]) + len(LSimilarityVars.freq_ngrams['chars'][:self.fterm_feature_size+1]))
+        feature7_2 = [0] * (len(LSimilarityVars.freq_ngrams['tokens'][:self.fterm_feature_size+1]) + len(LSimilarityVars.freq_ngrams['chars'][:self.fterm_feature_size+1]))
         for x in fterms_s1: feature7_1[x[0]] = 1
         for x in fterms_s2: feature7_2[x[0]] = 1
 
