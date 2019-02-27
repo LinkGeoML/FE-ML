@@ -85,7 +85,7 @@ def transform_str(str, stemming=False, canonical=False, delimiter=' '):
 
 
 class FEMLFeatures:
-    no_freq_terms = 250
+    no_freq_terms = 100
 
     def __init__(self):
         pass
@@ -99,7 +99,7 @@ class FEMLFeatures:
     @staticmethod
     def contains_freq_term(str, freqTerms=None):
         str, _ = normalize_str(str)
-        return True if freqTerms != None and str in freqTerms else False
+        return True if freqTerms is not None and str in freqTerms else False
 
     @staticmethod
     def is_matched(str):
@@ -159,7 +159,7 @@ class FEMLFeatures:
         specialTerms = dict(a=[], b=[])
         # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
         # specialTerms['b'] = filter(lambda x: x in b, freq_terms)
-        for idx, x in enumerate(LSimilarityVars.freq_terms):
+        for idx, x in enumerate(LSimilarityVars.freq_ngrams['tokens'] + LSimilarityVars.freq_ngrams['chars']):
             if x in str1: specialTerms['a'].append([idx, x])
             if x in str2: specialTerms['b'].append([idx, x])
 
@@ -205,6 +205,7 @@ class FEMLFeatures:
             print("Folder ./input/ does not exist")
         else:
             for f in glob.iglob('./input/*gram*.csv'):
+                gram_type = 'tokens' if 'token' in os.path.basename(os.path.normpath(f)) else 'chars'
                 with open(f) as csvfile:
                     print("Loading frequent terms from file {}...".format(f))
                     reader = csv.DictReader(csvfile, fieldnames=["term", "no"], delimiter='\t')
@@ -216,8 +217,8 @@ class FEMLFeatures:
                         if i > FEMLFeatures.no_freq_terms:
                             break
 
-                        LSimilarityVars.freq_terms.append(row['term'].decode('utf8'))
-            print 'Frequent terms loaded.'
+                        LSimilarityVars.freq_ngrams[gram_type].append(row['term'].decode('utf8'))
+            print('Frequent terms loaded.')
 
     def update_weights(self, w):
         if isinstance(w, tuple) and len(w) >= 3:
@@ -733,7 +734,8 @@ class calcCustomFEMLExtended(baseMetrics):
         feature5_1 = False if len(fterms_s1) == 0 else True
         feature5_2 = False if len(fterms_s2) == 0 else True
         feature6_1, feature6_2 = FEMLFeatures().containsInPos(row['s1'], row['s2'])
-        feature7_1, feature7_2 = [0] * len(LSimilarityVars.freq_terms), [0] * len(LSimilarityVars.freq_terms)
+        feature7_1 = [0] * (len(LSimilarityVars.freq_ngrams['tokens']) + len(LSimilarityVars.freq_ngrams['chars']))
+        feature7_2 = [0] * (len(LSimilarityVars.freq_ngrams['tokens']) + len(LSimilarityVars.freq_ngrams['chars']))
         for x in fterms_s1: feature7_1[x[0]] = 1
         for x in fterms_s2: feature7_2[x[0]] = 1
 

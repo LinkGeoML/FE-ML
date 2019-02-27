@@ -511,7 +511,7 @@ def l_jaro_winkler(s1, s2, long_tolerance=False):
 
 
 class LSimilarityVars:
-    freq_terms = []
+    freq_ngrams = {'tokens': [], 'chars': []}
     lsimilarity_weights = []
 
 
@@ -543,29 +543,30 @@ def _compareAndSplit_names(a, b, thres):
     return base, mis
 
 
-def lsimilarity_terms(a, b, split_thres):
+def lsimilarity_terms(str1, str2, split_thres):
     if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.4, 0.5, 0.1])
 
     specialTerms = dict(a=[], b=[])
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
     # specialTerms['b'] = filter(lambda x: x in b, freq_terms)
-    for x in LSimilarityVars.freq_terms:
-        if x in a: specialTerms['a'].append(x)
-        if x in b: specialTerms['b'].append(x)
+    for x in LSimilarityVars.freq_ngrams['tokens']:
+        if x in str1: specialTerms['a'].append(x)
+        if x in str2: specialTerms['b'].append(x)
 
-    a = re.sub("|".join(specialTerms['a']), ' ', a)
-    b = re.sub("|".join(specialTerms['b']), ' ', b)
+    if specialTerms['a']:  # check if list is empty
+        str1 = re.sub("|".join(specialTerms['a']), ' ', str1).strip()
+    if specialTerms['b']:
+        str2 = re.sub("|".join(specialTerms['b']), ' ', str2).strip()
 
-    baseTerms, mismatchTerms = _compareAndSplit_names(a, b, split_thres)
-    # baseTerms, mismatchTerms = {'a': [], 'b': []}, {'a': [], 'b': []}
+    baseTerms, mismatchTerms = _compareAndSplit_names(str1, str2, split_thres)
 
     return jaro_winkler(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u''), \
            jaro_winkler(' '.join(mismatchTerms['a']) + u'', ' '.join(mismatchTerms['b']) + u''), \
            jaro_winkler(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'')
 
 
-def lsimilarity(a, b, split_thres=0.75):
-    baseTerms_val, mismatchTerms_val, specialTerms_val = lsimilarity_terms(a, b, split_thres)
+def lsimilarity(str1, str2, split_thres=0.75):
+    baseTerms_val, mismatchTerms_val, specialTerms_val = lsimilarity_terms(str1, str2, split_thres)
 
     thres = baseTerms_val * LSimilarityVars.lsimilarity_weights[0] + \
             mismatchTerms_val * LSimilarityVars.lsimilarity_weights[1] + \
