@@ -499,7 +499,7 @@ class calcCustomFEML(baseMetrics):
             # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
             # QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
-            ExtraTreesClassifier(n_estimators=150, random_state=0, n_jobs=int(njobs), max_depth=50),
+            ExtraTreesClassifier(n_estimators=100, random_state=0, n_jobs=int(njobs), max_depth=50),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         self.scores = [[] for _ in range(len(self.classifiers))]
@@ -648,7 +648,7 @@ class calcCustomFEML(baseMetrics):
 
 class calcCustomFEMLExtended(baseMetrics):
     max_important_features_toshow = 20
-    fterm_feature_size = 20
+    fterm_feature_size = 10
 
     def __init__(self, njobs, accures):
         self.X1 = []
@@ -665,7 +665,7 @@ class calcCustomFEMLExtended(baseMetrics):
             # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
             # QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
-            ExtraTreesClassifier(n_estimators=150, random_state=0, n_jobs=int(njobs), max_depth=50),
+            ExtraTreesClassifier(n_estimators=100, random_state=0, n_jobs=int(njobs), max_depth=50),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         self.scores = [[] for _ in range(len(self.classifiers))]
