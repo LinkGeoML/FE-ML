@@ -345,52 +345,29 @@ class baseMetrics:
         if results:
             return exit_status, acc, pre, rec, f1, timer
 
+    def _print_stats(self, method, acc, pre, rec, f1, timer):
+        print("Metric = Supervised Classifier :", method)
+        print("Accuracy =", acc)
+        print("Precision =", pre)
+        print("Recall =", rec)
+        print("F1 =", f1)
+        print("Processing time per 50K records =", timer)
+        print("")
+        print("| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)")
+        print("||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(method, acc, pre, rec, f1, timer))
+        print("")
+        sys.stdout.flush()
+
     def print_stats(self):
         for idx, m in enumerate(StaticValues.methods):
-            try:
-                timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
-                acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
-                      (self.num_true + self.num_false)
-                pre = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx])
-                rec = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
-                f1 = 2.0 * ((pre * rec) / (pre + rec))
-
-                print("Metric = Supervised Classifier :", m[0])
-                print("Accuracy =", acc)
-                print("Precision =", pre)
-                print("Recall =", rec)
-                print("F1 =", f1)
-                print("Processing time per 50K records =", timer)
-                print("")
-                print("| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)")
-                print("||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(m[0], acc, pre, rec, f1, timer))
-                print("")
-                sys.stdout.flush()
-            except ZeroDivisionError:
-                pass
-                # print "{0} is divided by zero\n".format(StaticValues.methods[idx][0])
-
-        # if results:
-        #     return self.result
+            status, acc, pre, rec, f1, t = self._compute_stats(idx, True)
+            if status == 0: self._print_stats(m[0], acc, pre, rec, f1, t)
 
     def get_stats(self):
         res = {}
         for idx, m in enumerate(StaticValues.methods):
-            try:
-                acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
-                      (self.num_true + self.num_false)
-                pre = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx])
-                rec = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
-                f1 = 2.0 * ((pre * rec) / (pre + rec))
-
-                res[m[0]] = [acc, pre, rec, f1]
-            except ZeroDivisionError:
-                pass
-                # print('zero division for method {}'.format(m[0]))
+            status, acc, pre, rec, f1, _ = self._compute_stats(idx, True)
+            if status == 0: res[m[0]] = [acc, pre, rec, f1]
 
         return res
 
@@ -649,49 +626,24 @@ class calcCustomFEML(baseMetrics):
                 continue
 
             idx = StaticValues.classifiers_abbr[name]
-            try:
-                timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
-                acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
-                      (self.num_true + self.num_false)
-                pre = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx])
-                rec = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
-                f1 = 2.0 * ( ( pre * rec ) / ( pre + rec ) )
-
-                print "Metric = Supervised Classifier :" , StaticValues.classifiers[idx]
-                print "Score (X2, X1) = ", self.scores[idx][0], self.scores[idx][1]
-                print "Accuracy =", acc
-                print "Precision =", pre
-                print "Recall =", rec
-                print "F1 =", f1
-                print "Processing time per 50K records =", timer
-                print "Number of training instances =", min(len(self.Y1), len(self.Y2))
-                print ""
-                print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
-                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(StaticValues.classifiers[idx], acc, pre, rec, f1, timer)
-                print ""
-                sys.stdout.flush()
+            status, acc, pre, rec, f1, t = self._compute_stats(idx, True)
+            if status == 0:
+                self._print_stats(StaticValues.classifiers[idx], acc, pre, rec, f1, t)
 
                 importances = self.importances[idx] / 2.0
                 if isinstance(importances, float):
-                    print "The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
-                        name)
+                    print("The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
+                        name))
                 else:
                     indices = np.argsort(importances)[::-1]
                     for f in range(min(importances.shape[0], self.max_important_features_toshow)):
-                            print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+                        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
 
                 # if hasattr(clf, "feature_importances_"):
                 #         # if results:
                 #         #     result[indices[f]] = importances[indices[f]]
-                print ""
+                print("")
                 sys.stdout.flush()
-            except ZeroDivisionError:
-                pass
-
-        # if results:
-        #     return self.result
 
 
 class calcCustomFEMLExtended(baseMetrics):
@@ -884,34 +836,14 @@ class calcCustomFEMLExtended(baseMetrics):
                 continue
 
             idx = StaticValues.classifiers_abbr[name]
-            try:
-                timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
-                acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
-                      (self.num_true + self.num_false)
-                pre = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx])
-                rec = (self.num_true_predicted_true[idx]) / \
-                      (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
-                f1 = 2.0 * ( ( pre * rec ) / ( pre + rec ) )
-
-                print "Metric = Supervised Classifier :" , StaticValues.classifiers[idx]
-                print "Score (X2, X1) = ", self.scores[idx][0], self.scores[idx][1]
-                print "Accuracy =", acc
-                print "Precision =", pre
-                print "Recall =", rec
-                print "F1 =", f1
-                print "Processing time per 50K records =", timer
-                print "Number of training instances =", min(len(self.Y1), len(self.Y2))
-                print ""
-                print "| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)"
-                print "||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(StaticValues.classifiers[idx], acc, pre, rec, f1, timer)
-                print ""
-                sys.stdout.flush()
+            status, acc, pre, rec, f1, t = self._compute_stats(idx, True)
+            if status == 0:
+                self._print_stats(StaticValues.classifiers[idx], acc, pre, rec, f1, t)
 
                 importances = self.importances[idx] / 2.0
                 if isinstance(importances, float):
-                    print "The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
-                        name)
+                    print("The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
+                        name))
                 else:
                     indices = np.argsort(importances)[::-1]
                     for f in range(min(importances.shape[0], self.max_important_features_toshow)):
@@ -920,13 +852,8 @@ class calcCustomFEMLExtended(baseMetrics):
                 # if hasattr(clf, "feature_importances_"):
                 #         # if results:
                 #         #     result[indices[f]] = importances[indices[f]]
-                print ""
+                print("")
                 sys.stdout.flush()
-            except ZeroDivisionError:
-                pass
-
-        # if results:
-        #     return self.result
 
 
 class calcDLearning(baseMetrics):
