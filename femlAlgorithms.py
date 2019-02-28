@@ -730,7 +730,7 @@ class calcCustomFEMLExtended(baseMetrics):
             ])
             self.X1[-1].extend(map(lambda x: int(x == max(feature6_1)), feature6_1))
             self.X1[-1].extend(map(lambda x: int(x == max(feature6_2)), feature6_2))
-            self.X1[-1].extend(feature7_1[:self.fterm_feature_size] + feature7_2[:self.fterm_feature_size])
+            # self.X1[-1].extend(feature7_1[:self.fterm_feature_size] + feature7_2[:self.fterm_feature_size])
         else:
             if permuted:
                 self.X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
@@ -746,7 +746,7 @@ class calcCustomFEMLExtended(baseMetrics):
             ])
             self.X2[-1].extend(map(lambda x: int(x == max(feature6_1)), feature6_1))
             self.X2[-1].extend(map(lambda x: int(x == max(feature6_2)), feature6_2))
-            self.X2[-1].extend(feature7_1[:self.fterm_feature_size] + feature7_2[:self.fterm_feature_size])
+            # self.X2[-1].extend(feature7_1[:self.fterm_feature_size] + feature7_2[:self.fterm_feature_size])
 
         if self.file is None and self.accuracyresults:
             file_name = 'dataset-accuracyresults-sim-metrics'
