@@ -216,7 +216,7 @@ class FEMLFeatures:
                     next(reader)
 
                     for i, row in enumerate(reader):
-                        if i > FEMLFeatures.no_freq_terms:
+                        if i >= FEMLFeatures.no_freq_terms:
                             break
 
                         LSimilarityVars.freq_ngrams[gram_type].append(row['term'].decode('utf8'))
@@ -738,8 +738,8 @@ class calcCustomFEMLExtended(baseMetrics):
         feature5_1 = False if len(fterms_s1) == 0 else True
         feature5_2 = False if len(fterms_s2) == 0 else True
         feature6_1, feature6_2 = FEMLFeatures().containsInPos(row['s1'], row['s2'])
-        feature7_1 = [0] * (len(LSimilarityVars.freq_ngrams['tokens'][:self.fterm_feature_size+1]) + len(LSimilarityVars.freq_ngrams['chars'][:self.fterm_feature_size+1]))
-        feature7_2 = [0] * (len(LSimilarityVars.freq_ngrams['tokens'][:self.fterm_feature_size+1]) + len(LSimilarityVars.freq_ngrams['chars'][:self.fterm_feature_size+1]))
+        feature7_1 = [0] * (len(LSimilarityVars.freq_ngrams['tokens']) + len(LSimilarityVars.freq_ngrams['chars']))
+        feature7_2 = [0] * (len(LSimilarityVars.freq_ngrams['tokens']) + len(LSimilarityVars.freq_ngrams['chars']))
         for x in fterms_s1: feature7_1[x[0]] = 1
         for x in fterms_s2: feature7_2[x[0]] = 1
 
@@ -759,7 +759,7 @@ class calcCustomFEMLExtended(baseMetrics):
             ])
             self.X1[-1].extend(map(lambda x: int(x == max(feature6_1)), feature6_1))
             self.X1[-1].extend(map(lambda x: int(x == max(feature6_2)), feature6_2))
-            self.X1[-1].extend(feature7_1 + feature7_2)
+            self.X1[-1].extend(feature7_1[:self.fterm_feature_size] + feature7_2[:self.fterm_feature_size])
         else:
             if permuted:
                 self.X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
@@ -775,7 +775,7 @@ class calcCustomFEMLExtended(baseMetrics):
             ])
             self.X2[-1].extend(map(lambda x: int(x == max(feature6_1)), feature6_1))
             self.X2[-1].extend(map(lambda x: int(x == max(feature6_2)), feature6_2))
-            self.X2[-1].extend(feature7_1 + feature7_2)
+            self.X2[-1].extend(feature7_1[:self.fterm_feature_size] + feature7_2[:self.fterm_feature_size])
 
         if self.file is None and self.accuracyresults:
             file_name = 'dataset-accuracyresults-sim-metrics'
