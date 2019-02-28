@@ -326,6 +326,25 @@ class baseMetrics:
     def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig'):
         pass
 
+    def _compute_stats(self, idx, results=False):
+        exit_status, acc, pre, rec, f1, timer = 0, -1, -1, -1, -1, 0
+
+        try:
+            timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
+            acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
+                  (self.num_true + self.num_false)
+            pre = (self.num_true_predicted_true[idx]) / \
+                  (self.num_true_predicted_true[idx] + self.num_false_predicted_true[idx])
+            rec = (self.num_true_predicted_true[idx]) / \
+                  (self.num_true_predicted_true[idx] + self.num_true_predicted_false[idx])
+            f1 = 2.0 * ((pre * rec) / (pre + rec))
+        except ZeroDivisionError:
+            exit_status = 1
+            # print "{0} is divided by zero\n".format(StaticValues.methods[idx][0])
+
+        if results:
+            return exit_status, acc, pre, rec, f1, timer
+
     def print_stats(self):
         for idx, m in enumerate(StaticValues.methods):
             try:

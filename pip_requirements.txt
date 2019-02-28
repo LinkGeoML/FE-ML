@@ -16,7 +16,7 @@ numpy
 xgboost
 sklearn
 jellyfish
-pyxdameraulevenshtein
 alphabet_detector
 kitchen
 pandas
+pyxdameraulevenshtein
