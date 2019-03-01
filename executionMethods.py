@@ -78,65 +78,6 @@ class Evaluator:
             for row in reader:
                 self.evalClass.preprocessing(row)
 
-    def do_the_printing(self):
-        if not os.path.exists("output"):
-            os.makedirs("output")
-
-        print("Printing 10 most common single freq terms...")
-        print( "gram: {0}".format(self.termfrequencies['gram'].most_common(20)))
-
-        print("Printing 10 most common freq terms in bigrams...")
-        print("bi-gram pos 1: {0}".format(self.termfrequencies['2gram_1'].most_common(20)))
-        print("\t pos 2: {0}".format(self.termfrequencies['2gram_2'].most_common(20)))
-
-        print("Printing 10 most common freq terms in trigrams...")
-        print("tri-gram pos 1: {0}".format(self.termfrequencies['3gram_1'].most_common(20)))
-        print("\t pos 2: {0}".format(self.termfrequencies['3gram_2'].most_common(20)))
-        print("\t pos 3: {0}".format(self.termfrequencies['3gram_3'].most_common(20)))
-
-        print("Number of abbr found: {0}".format(len(filter(partial(is_not, '-'), self.abbr['A'])) +
-                                                 len(filter(partial(is_not, '-'), self.abbr['B']))))
-
-        with open("./output/freqTerms.csv", "w") as f:
-            f.write('gram\t')
-            f.write('bigram_pos_1\t')
-            f.write('bigram_pos_2\t')
-            f.write('trigram_pos_1\t')
-            f.write('trigram_pos_2\t')
-            f.write('trigram_pos_3')
-            f.write('\n')
-
-            sorted_freq_gram_terms = self.termfrequencies['gram'].most_common()
-            sorted_freq_bigram_terms_pos1 = self.termfrequencies['2gram_1'].most_common()
-            sorted_freq_bigram_terms_pos2 = self.termfrequencies['2gram_2'].most_common()
-            sorted_freq_trigram_terms_pos1 = self.termfrequencies['3gram_1'].most_common()
-            sorted_freq_trigram_terms_pos2 = self.termfrequencies['3gram_2'].most_common()
-            sorted_freq_trigram_terms_pos3 = self.termfrequencies['3gram_3'].most_common()
-
-            min_top = min(
-                len(sorted_freq_gram_terms),
-                len(sorted_freq_bigram_terms_pos1),
-                len(sorted_freq_bigram_terms_pos2),
-                len(sorted_freq_trigram_terms_pos1),
-                len(sorted_freq_trigram_terms_pos2),
-                len(sorted_freq_trigram_terms_pos3),
-            )
-
-            for i in range(min_top):
-                f.write("{},{}\t".format(sorted_freq_gram_terms[i][0], sorted_freq_gram_terms[i][1]))
-                f.write("{},{}\t".format(sorted_freq_bigram_terms_pos1[i][0], sorted_freq_bigram_terms_pos1[i][1]))
-                f.write("{},{}\t".format(sorted_freq_bigram_terms_pos2[i][0], sorted_freq_bigram_terms_pos2[i][1]))
-                f.write("{},{}\t".format(sorted_freq_trigram_terms_pos1[i][0], sorted_freq_trigram_terms_pos1[i][1]))
-                f.write("{},{}\t".format(sorted_freq_trigram_terms_pos2[i][0], sorted_freq_trigram_terms_pos2[i][1]))
-                f.write("{},{}\t".format(sorted_freq_trigram_terms_pos3[i][0], sorted_freq_trigram_terms_pos3[i][1]))
-                f.write('\n')
-
-        with open("./output/abbr.csv", "w") as f:
-            f.write('strA\tstrB\tline_pos\n')
-            for i in range(min(len(self.abbr['A']), len(self.abbr['B']))):
-                if self.abbr['A'][i] != '-' or self.abbr['B'][i] != '-':
-                    f.write("{}\t{}\t{}\n".format(self.abbr['A'][i], self.abbr['B'][i], i))
-
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
             print( "Reading dataset...")
@@ -171,7 +112,7 @@ class Evaluator:
 
                 all_res = {}
                 for m in StaticValues.methods: all_res[m[0]] = []
-                for i in range(5, 99, 5):
+                for i in range(30, 91, 5):
                     print('Computing stats for threshold {0}...'.format(float(i / 100.0)))
 
                     csvfile.seek(0)
