@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 # identifying str and unicode on Python 2, or str on Python 3
 from six import string_types
+
 import os, sys
 import time
 from abc import ABCMeta, abstractmethod
@@ -18,7 +20,7 @@ from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, ExtraTreesClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis, LinearDiscriminantAnalysis
+# from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis, LinearDiscriminantAnalysis
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler, MinMaxScaler
 from xgboost import XGBClassifier
 
@@ -87,7 +89,7 @@ def transform_str(str, stemming=False, canonical=False, delimiter=' '):
 
 
 class FEMLFeatures:
-    no_freq_terms = 100
+    no_freq_terms = 200
 
     def __init__(self):
         pass
@@ -494,7 +496,7 @@ class calcCustomFEML(baseMetrics):
             LinearSVC(random_state=0, C=1.0),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
             DecisionTreeClassifier(random_state=0, max_depth=50, max_features='auto'),
-            RandomForestClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=50),
+            RandomForestClassifier(n_estimators=250, random_state=0, n_jobs=int(njobs), max_depth=50),
             MLPClassifier(alpha=1, random_state=0),
             # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
@@ -660,7 +662,7 @@ class calcCustomFEMLExtended(baseMetrics):
             LinearSVC(random_state=0, C=1.0, max_iter=2000),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
             DecisionTreeClassifier(random_state=0, max_depth=50, max_features='auto'),
-            RandomForestClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=50),
+            RandomForestClassifier(n_estimators=250, random_state=0, n_jobs=int(njobs), max_depth=50),
             MLPClassifier(alpha=1, random_state=0),
             # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
@@ -699,7 +701,7 @@ class calcCustomFEMLExtended(baseMetrics):
         sim10 = StaticValues.algorithms['skipgram'](row['s1'], row['s2'])
         sim13 = StaticValues.algorithms['davies'](row['s1'], row['s2'])
 
-        feature1_1, feature1_2, feature1_3 = lsimilarity_terms(row['s1'], row['s2'], 0.7)
+        feature1_1, feature1_2, feature1_3 = lsimilarity_terms(row['s1'], row['s2'])
         feature2_1 = FEMLFeatures.contains(row['s1'], row['s2'])
         feature2_2 = FEMLFeatures.contains(row['s2'], row['s1'])
         feature3_1, feature3_2 = FEMLFeatures.no_of_words(row['s1'], row['s2'])
@@ -730,7 +732,10 @@ class calcCustomFEMLExtended(baseMetrics):
             ])
             self.X1[-1].extend(map(lambda x: int(x == max(feature6_1)), feature6_1))
             self.X1[-1].extend(map(lambda x: int(x == max(feature6_2)), feature6_2))
-            # self.X1[-1].extend(feature7_1[:self.fterm_feature_size] + feature7_2[:self.fterm_feature_size])
+            # self.X1[-1].extend(
+            #     feature7_1[:self.fterm_feature_size/2] + feature7_1[len(feature7_1)/2:self.fterm_feature_size/2] +
+            #     feature7_2[:self.fterm_feature_size/2] + feature7_2[len(feature7_2)/2:self.fterm_feature_size/2]
+            # )
         else:
             if permuted:
                 self.X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
@@ -746,7 +751,10 @@ class calcCustomFEMLExtended(baseMetrics):
             ])
             self.X2[-1].extend(map(lambda x: int(x == max(feature6_1)), feature6_1))
             self.X2[-1].extend(map(lambda x: int(x == max(feature6_2)), feature6_2))
-            # self.X2[-1].extend(feature7_1[:self.fterm_feature_size] + feature7_2[:self.fterm_feature_size])
+            # self.X2[-1].extend(
+            #     feature7_1[:self.fterm_feature_size / 2] + feature7_1[len(feature7_1) / 2:self.fterm_feature_size / 2] +
+            #     feature7_2[:self.fterm_feature_size / 2] + feature7_2[len(feature7_2) / 2:self.fterm_feature_size / 2]
+            # )
 
         if self.file is None and self.accuracyresults:
             file_name = 'dataset-accuracyresults-sim-metrics'
