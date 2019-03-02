@@ -513,7 +513,7 @@ def l_jaro_winkler(s1, s2, long_tolerance=False):
 class LSimilarityVars:
     freq_ngrams = {'tokens': [], 'chars': []}
     lsimilarity_weights = []
-    split_thres = 0.5
+    split_thres = 0.75
 
 
 def _compareAndSplit_names(a, b, thres):
@@ -524,7 +524,7 @@ def _compareAndSplit_names(a, b, thres):
     l1, l2 = a.split(), b.split()
     while idx_a < len(l1) and idx_b < len(l2):
         str1, str2 = l1.pop(0), l2.pop(0)
-        if jaro_winkler(str1, str2) > thres:
+        if jaro_winkler(str1[::-1], str2[::-1]) >= thres:
             base['a'].append(str1)
             base['b'].append(str2)
             idx_a += 1
@@ -561,13 +561,87 @@ def lsimilarity_terms(str1, str2):
 
     baseTerms, mismatchTerms = _compareAndSplit_names(str1, str2, LSimilarityVars.split_thres)
 
-    return jaro_winkler(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u''), \
-           jaro_winkler(' '.join(mismatchTerms['a']) + u'', ' '.join(mismatchTerms['b']) + u''), \
-           jaro_winkler(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'')
+    return baseTerms, mismatchTerms, specialTerms
 
 
-def lsimilarity(str1, str2):
-    baseTerms_val, mismatchTerms_val, specialTerms_val = lsimilarity_terms(str1, str2)
+def terms_weighted(baseTerms, mismatchTerms, specialTerms, method):
+    baseScore, misScore, specialScore = 0, 0, 0
+
+    if method == 'damerau_levenshtein':
+        if baseTerms['a'] or baseTerms['b']:
+            baseScore = damerau_levenshtein(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u'')
+        if mismatchTerms['a'] or mismatchTerms['b']:
+            misScore = damerau_levenshtein(' '.join(mismatchTerms['a']) + u'', ' '.join(mismatchTerms['b']) + u'')
+        if specialTerms['a'] or specialTerms['b']:
+            specialScore = damerau_levenshtein(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'')
+    elif method == 'davies':
+        baseScore, misScore, specialScore = davies(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u''), \
+                                            davies(' '.join(mismatchTerms['a']) + u'',
+                                                   ' '.join(mismatchTerms['b']) + u''), \
+                                            davies(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'')
+    elif method == 'skipgram':
+        baseScore, misScore, specialScore = skipgram(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u''), \
+                                            skipgram(' '.join(mismatchTerms['a']) + u'',
+                                                     ' '.join(mismatchTerms['b']) + u''), \
+                                            skipgram(' '.join(specialTerms['a']) + u'',
+                                                     ' '.join(specialTerms['b']) + u'')
+    elif method == 'soft_jaccard':
+        baseScore, misScore, specialScore = soft_jaccard(' '.join(baseTerms['a']) + u'',
+                                                         ' '.join(baseTerms['b']) + u''), \
+                                            soft_jaccard(' '.join(mismatchTerms['a']) + u'',
+                                                         ' '.join(mismatchTerms['b']) + u''), \
+                                            soft_jaccard(' '.join(specialTerms['a']) + u'',
+                                                         ' '.join(specialTerms['b']) + u'')
+    elif method == 'strike_a_match':
+        baseScore, misScore, specialScore = strike_a_match(' '.join(baseTerms['a']) + u'',
+                                                           ' '.join(baseTerms['b']) + u''), \
+                                            strike_a_match(' '.join(mismatchTerms['a']) + u'',
+                                                           ' '.join(mismatchTerms['b']) + u''), \
+                                            strike_a_match(' '.join(specialTerms['a']) + u'',
+                                                           ' '.join(specialTerms['b']) + u'')
+    elif method == 'cosine':
+        baseScore, misScore, specialScore = cosine(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u''), \
+                                            cosine(' '.join(mismatchTerms['a']) + u'',
+                                                   ' '.join(mismatchTerms['b']) + u''), \
+                                            cosine(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'')
+    elif method == 'monge_elkan':
+        baseScore, misScore, specialScore = monge_elkan(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u''), \
+                                            monge_elkan(' '.join(mismatchTerms['a']) + u'',
+                                                        ' '.join(mismatchTerms['b']) + u''), \
+                                            monge_elkan(' '.join(specialTerms['a']) + u'',
+                                                        ' '.join(specialTerms['b']) + u'')
+    elif method == 'jaro_winkler':
+        baseScore, misScore, specialScore = jaro_winkler(' '.join(baseTerms['a']) + u'',
+                                                         ' '.join(baseTerms['b']) + u''), \
+                                            jaro_winkler(' '.join(mismatchTerms['a']) + u'',
+                                                         ' '.join(mismatchTerms['b']) + u''), \
+                                            jaro_winkler(' '.join(specialTerms['a']) + u'',
+                                                         ' '.join(specialTerms['b']) + u'')
+    elif method == 'jaro':
+        baseScore, misScore, specialScore = jaro(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u''), \
+                                            jaro(' '.join(mismatchTerms['a']) + u'',
+                                                 ' '.join(mismatchTerms['b']) + u''), \
+                                            jaro(' '.join(specialTerms['a']) + u'', ' '.join(specialTerms['b']) + u'')
+    elif method == 'jaccard':
+        baseScore, misScore, specialScore = jaccard(' '.join(baseTerms['a']) + u'', ' '.join(baseTerms['b']) + u''), \
+                                            jaccard(' '.join(mismatchTerms['a']) + u'',
+                                                    ' '.join(mismatchTerms['b']) + u''), \
+                                            jaccard(' '.join(specialTerms['a']) + u'',
+                                                    ' '.join(specialTerms['b']) + u'')
+    elif method == 'l_jaro_winkler':
+        baseScore, misScore, specialScore = l_jaro_winkler(' '.join(baseTerms['a']) + u'',
+                                                           ' '.join(baseTerms['b']) + u''), \
+                                            l_jaro_winkler(' '.join(mismatchTerms['a']) + u'',
+                                                           ' '.join(mismatchTerms['b']) + u''), \
+                                            l_jaro_winkler(' '.join(specialTerms['a']) + u'',
+                                                           ' '.join(specialTerms['b']) + u'')
+
+    return baseScore, misScore, specialScore
+
+
+def lsimilarity(str1, str2, method='jaro_winkler'):
+    baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(str1, str2)
+    baseTerms_val, mismatchTerms_val, specialTerms_val = terms_weighted(baseTerms, mismatchTerms, specialTerms, method)
 
     thres = baseTerms_val * LSimilarityVars.lsimilarity_weights[0] + \
             mismatchTerms_val * LSimilarityVars.lsimilarity_weights[1] + \

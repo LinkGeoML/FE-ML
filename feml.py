@@ -61,8 +61,9 @@ def main(args):
 
     dataset_path = [x for x in args['-d'].split(',')]
 
-    evaluator = rc.Evaluator(args['--ml'], args['--sort'], args['--stemming'], args['--canonical'],
-                             args['--permuted'], args['--print'], args['--onlyLATIN'])
+    evaluator = rc.Evaluator(
+        args['--ml'], args['--sort'], args['--stemming'], args['--canonical'], args['--permuted'], args['--onlyLATIN']
+    )
 
     if args['--buildDataset']:
         evaluator.build_dataset()

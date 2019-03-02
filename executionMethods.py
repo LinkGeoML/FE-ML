@@ -5,7 +5,6 @@ from __future__ import print_function
 import os, sys
 from collections import Counter
 import json
-from operator import is_not
 from functools import partial
 # import unicodedata
 import pandas as pd
@@ -28,14 +27,12 @@ class Evaluator:
         'customFEMLExtended': calcCustomFEMLExtended,
     }
 
-    def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, do_printing=False,
-                 only_latin=False):
+    def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, only_latin=False):
         self.ml_algs = [x for x in ml_algs.split(',')]
         self.permuted = permuted
         self.stemming = stemming
         self.canonical = canonical
         self.sorting = sorting
-        self.only_printing = do_printing
         self.latin = only_latin
 
         self.termfrequencies = {
@@ -365,6 +362,9 @@ class Evaluator:
 
                             separator = ''
                             start_time = time.time()
+
+                            tmp_res = {}
+                            for m in StaticValues.methods: tmp_res[m[0]] = []
                             for i in range(30, 91, 5):
                                 print('{0} {1}'.format(separator, float(i / 100.0)), end='')
                                 separator = ','
@@ -372,27 +372,39 @@ class Evaluator:
                                 sys.stdout.flush()
 
                                 csvfile.seek(0)
+                                line_count = 0
                                 for row in reader:
+                                    line_count += 1
+                                    if line_count > 1000: break
+
                                     self.evalClass.evaluate(
                                         row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies,
                                         float(i / 100.0)
                                     )
                                 if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
-                                tmp_res = self.evalClass.get_stats()
+                                res = self.evalClass.get_stats()
 
-                                for key, val in tmp_res.items():
-                                    all_res[key].append([float(i / 100.0), val])
+                                for key, val in res.items():
+                                    tmp_res[key].append([float(i / 100.0), val, list(w)])
 
                                 self.evalClass.reset_vars()
 
                             print('\nThe process for weight ({0}) took {1:.2f} sec'.format(','.join(map(str, w)), time.time() - start_time))
-                            for k, val in all_res.items():
+                            for k, val in tmp_res.items():
                                 if len(val) == 0:
                                     continue
 
+                                all_res[k].extend(val)
                                 print(k, max(val, key=lambda x: x[1][0]))
 
-                            for m in StaticValues.methods: all_res[m[0]][:] = []
+                            # for m in StaticValues.methods: all_res[m[0]][:] = []
+
+                    print("\nTotal results")
+                    for k, val in all_res.items():
+                        if len(val) == 0:
+                            continue
+
+                        print(k, max(val, key=lambda x: x[1][0]))
         else:
             print("Test #{} does not exist!!! Please choose a valid test to execute.".format(test_case))
 

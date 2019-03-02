@@ -24,7 +24,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler, MinMaxScaler
 from xgboost import XGBClassifier
 
-from external.datasetcreator import strip_accents, LSimilarityVars, lsimilarity_terms
+from external.datasetcreator import strip_accents, LSimilarityVars, lsimilarity_terms, terms_weighted, lsimilarity
 from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
@@ -495,13 +495,13 @@ class calcCustomFEML(baseMetrics):
         self.classifiers = [
             LinearSVC(random_state=0, C=1.0),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
-            DecisionTreeClassifier(random_state=0, max_depth=50, max_features='auto'),
-            RandomForestClassifier(n_estimators=250, random_state=0, n_jobs=int(njobs), max_depth=50),
+            DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
+            RandomForestClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=100),
             MLPClassifier(alpha=1, random_state=0),
             # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
             # QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
-            ExtraTreesClassifier(n_estimators=100, random_state=0, n_jobs=int(njobs), max_depth=50),
+            ExtraTreesClassifier(n_estimators=150, random_state=0, n_jobs=int(njobs), max_depth=100),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         self.scores = [[] for _ in range(len(self.classifiers))]
@@ -876,34 +876,54 @@ class testMetrics(baseMetrics):
     def __init__(self, njobs, accures):
         super(testMetrics, self).__init__(len(StaticValues.methods), njobs, accures)
 
-    def _generic_evaluator(self, idx, algnm, str1, str2, is_a_match, custom_thres):
+    def _generic_evaluator(self, idx, sim_metric, baseTerms, mismatchTerms, specialTerms, is_a_match, custom_thres):
         start_time = time.time()
-        sim_val = StaticValues.algorithms[algnm](str1, str2)
+
+        # LSimilarityVars.split_thres = StaticValues.methods[idx - 1][1]
+        baseTerms_val, mismatchTerms_val, specialTerms_val = terms_weighted(baseTerms, mismatchTerms, specialTerms, sim_metric)
+        sim_val = baseTerms_val * LSimilarityVars.lsimilarity_weights[0] + \
+            mismatchTerms_val * LSimilarityVars.lsimilarity_weights[1] + \
+            specialTerms_val * LSimilarityVars.lsimilarity_weights[2]
         res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
         self.timers[idx - 1] += (time.time() - start_time)
         self.predictedState[varnm][idx - 1] += 1.0
         return res
+
+    # def _generic_evaluator(self, idx, sim_metric, a, b, is_a_match, custom_thres):
+    #     start_time = time.time()
+    #
+    #     # LSimilarityVars.split_thres = StaticValues.methods[idx - 1][1]['sorted'] - 0.05
+    #     sim_val = lsimilarity(a, b, sim_metric)
+    #     res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
+    #     self.timers[idx - 1] += (time.time() - start_time)
+    #     self.predictedState[varnm][idx - 1] += 1.0
+    #     return res
 
     def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig'):
         tot_res = ""
         flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
 
         a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
-        tot_res += self._generic_evaluator(16, 'lsimilarity', a, b, flag_true_match, custom_thres)
 
-        if self.accuracyresults:
-            if self.file is None:
-                file_name = 'dataset-accuracyresults-sim-metrics'
-                if canonical:
-                    file_name += '_canonical'
-                if sorting:
-                    file_name += '_sorted'
-                self.file = open(file_name + '.csv', 'w+')
+        baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(a, b)
+        rbaseTerms = {'a': [x[::-1] for x in baseTerms['a']], 'b': [x[::-1] for x in baseTerms['b']]}
+        rmismatchTerms = {'a': [x[::-1] for x in mismatchTerms['a']], 'b': [x[::-1] for x in mismatchTerms['b']]}
+        rspecialTerms = {'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']]}
 
-            if flag_true_match == 1.0:
-                self.file.write("TRUE{0}\t{1}\t{2}\n".format(tot_res, a.encode('utf8'), b.encode('utf8')))
-            else:
-                self.file.write("FALSE{0}\t{1}\t{2}\n".format(tot_res, a.encode('utf8'), b.encode('utf8')))
+        tot_res += self._generic_evaluator(1, 'damerau_levenshtein', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(8, 'jaccard', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(2, 'jaro', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(3, 'jaro_winkler', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(4, 'jaro_winkler', rbaseTerms, rmismatchTerms, rspecialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(11, 'monge_elkan', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(7, 'cosine', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(9, 'strike_a_match', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(12, 'soft_jaccard', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(5, 'sorted_winkler', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(10, 'skipgram', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(13, 'davies', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(14, 'l_jaro_winkler', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(15, 'l_jaro_winkler', rbaseTerms, rmismatchTerms, rspecialTerms, flag_true_match, custom_thres)
 
 
 """
