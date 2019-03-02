@@ -372,11 +372,7 @@ class Evaluator:
                                 sys.stdout.flush()
 
                                 csvfile.seek(0)
-                                line_count = 0
                                 for row in reader:
-                                    line_count += 1
-                                    if line_count > 1000: break
-
                                     self.evalClass.evaluate(
                                         row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies,
                                         float(i / 100.0)
