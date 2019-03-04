@@ -393,8 +393,6 @@ class Evaluator:
                                 all_res[k].extend(val)
                                 print(k, max(val, key=lambda x: x[1][0]))
 
-                            # for m in StaticValues.methods: all_res[m[0]][:] = []
-
                     print("\nTotal results")
                     for k, val in all_res.items():
                         if len(val) == 0:

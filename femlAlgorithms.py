@@ -518,34 +518,43 @@ class calcCustomFEML(baseMetrics):
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(0.0)
             else: self.Y2.append(0.0)
 
-        row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
+        tmp_X1, tmp_X2 = [], []
+        for flag in list({False, sorting}):
+            a, b = transform(row['s1'], row['s2'], sorting=flag, stemming=stemming, canonical=flag)
 
-        start_time = time.time()
-        sim1 = StaticValues.algorithms['damerau_levenshtein'](row['s1'], row['s2'])
-        sim8 = StaticValues.algorithms['jaccard'](row['s1'], row['s2'])
-        sim2 = StaticValues.algorithms['jaro'](row['s1'], row['s2'])
-        sim3 = StaticValues.algorithms['jaro_winkler'](row['s1'], row['s2'])
-        sim4 = StaticValues.algorithms['jaro_winkler'](row['s1'][::-1], row['s2'][::-1])
-        sim11 = StaticValues.algorithms['monge_elkan'](row['s1'], row['s2'])
-        sim7 = StaticValues.algorithms['cosine'](row['s1'], row['s2'])
-        sim9 = StaticValues.algorithms['strike_a_match'](row['s1'], row['s2'])
-        sim12 = StaticValues.algorithms['soft_jaccard'](row['s1'], row['s2'])
-        sim5 = StaticValues.algorithms['sorted_winkler'](row['s1'], row['s2'])
-        if permuted: sim6 = StaticValues.algorithms['permuted_winkler'](row['s1'], row['s2'])
-        sim10 = StaticValues.algorithms['skipgram'](row['s1'], row['s2'])
-        sim13 = StaticValues.algorithms['davies'](row['s1'], row['s2'])
-        self.timer += (time.time() - start_time)
+            start_time = time.time()
+
+            sim1 = StaticValues.algorithms['damerau_levenshtein'](a, b)
+            sim8 = StaticValues.algorithms['jaccard'](a, b)
+            sim2 = StaticValues.algorithms['jaro'](a, b)
+            sim3 = StaticValues.algorithms['jaro_winkler'](a, b)
+            sim4 = StaticValues.algorithms['jaro_winkler'](a[::-1], b[::-1])
+            sim11 = StaticValues.algorithms['monge_elkan'](a, b)
+            sim7 = StaticValues.algorithms['cosine'](a, b)
+            sim9 = StaticValues.algorithms['strike_a_match'](a, b)
+            sim12 = StaticValues.algorithms['soft_jaccard'](a, b)
+            sim5 = StaticValues.algorithms['sorted_winkler'](a, b)
+            if permuted: sim6 = StaticValues.algorithms['permuted_winkler'](a, b)
+            sim10 = StaticValues.algorithms['skipgram'](a, b)
+            sim13 = StaticValues.algorithms['davies'](a, b)
+
+            self.timer += (time.time() - start_time)
+
+            if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
+                if permuted:
+                    tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                else:
+                    tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+            else:
+                if permuted:
+                    tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                else:
+                    tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
 
         if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
-            if permuted:
-                self.X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-            else:
-                self.X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+            self.X1.append(list(itertools.chain.from_iterable(tmp_X1)))
         else:
-            if permuted:
-                self.X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-            else:
-                self.X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+            self.X2.append(list(itertools.chain.from_iterable(tmp_X2)))
 
         if self.file is None and self.accuracyresults:
             file_name = 'dataset-accuracyresults-sim-metrics'
@@ -661,13 +670,13 @@ class calcCustomFEMLExtended(baseMetrics):
         self.classifiers = [
             LinearSVC(random_state=0, C=1.0, max_iter=2000),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
-            DecisionTreeClassifier(random_state=0, max_depth=50, max_features='auto'),
-            RandomForestClassifier(n_estimators=250, random_state=0, n_jobs=int(njobs), max_depth=50),
+            DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
+            RandomForestClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=100),
             MLPClassifier(alpha=1, random_state=0),
             # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
             # QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
-            ExtraTreesClassifier(n_estimators=100, random_state=0, n_jobs=int(njobs), max_depth=50),
+            ExtraTreesClassifier(n_estimators=150, random_state=0, n_jobs=int(njobs), max_depth=100),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         self.scores = [[] for _ in range(len(self.classifiers))]
@@ -684,24 +693,50 @@ class calcCustomFEMLExtended(baseMetrics):
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(0.0)
             else: self.Y2.append(0.0)
 
+        tmp_X1, tmp_X2 = [], []
+        for flag in list({False, sorting}):
+            a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
+
+            start_time = time.time()
+
+            sim1 = StaticValues.algorithms['damerau_levenshtein'](a, b)
+            sim8 = StaticValues.algorithms['jaccard'](a, b)
+            sim2 = StaticValues.algorithms['jaro'](a, b)
+            sim3 = StaticValues.algorithms['jaro_winkler'](a, b)
+            sim4 = StaticValues.algorithms['jaro_winkler'](a[::-1], b[::-1])
+            sim11 = StaticValues.algorithms['monge_elkan'](a, b)
+            sim7 = StaticValues.algorithms['cosine'](a, b)
+            sim9 = StaticValues.algorithms['strike_a_match'](a, b)
+            sim12 = StaticValues.algorithms['soft_jaccard'](a, b)
+            sim5 = StaticValues.algorithms['sorted_winkler'](a, b)
+            if permuted: sim6 = StaticValues.algorithms['permuted_winkler'](a, b)
+            sim10 = StaticValues.algorithms['skipgram'](a, b)
+            sim13 = StaticValues.algorithms['davies'](a, b)
+
+            self.timer += (time.time() - start_time)
+
+            if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
+                if permuted:
+                    tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                else:
+                    tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+            else:
+                if permuted:
+                    tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                else:
+                    tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+
         row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
         start_time = time.time()
-        sim1 = StaticValues.algorithms['damerau_levenshtein'](row['s1'], row['s2'])
-        sim8 = StaticValues.algorithms['jaccard'](row['s1'], row['s2'])
-        sim2 = StaticValues.algorithms['jaro'](row['s1'], row['s2'])
-        sim3 = StaticValues.algorithms['jaro_winkler'](row['s1'], row['s2'])
-        sim4 = StaticValues.algorithms['jaro_winkler'](row['s1'][::-1], row['s2'][::-1])
-        sim11 = StaticValues.algorithms['monge_elkan'](row['s1'], row['s2'])
-        sim7 = StaticValues.algorithms['cosine'](row['s1'], row['s2'])
-        sim9 = StaticValues.algorithms['strike_a_match'](row['s1'], row['s2'])
-        sim12 = StaticValues.algorithms['soft_jaccard'](row['s1'], row['s2'])
-        sim5 = StaticValues.algorithms['sorted_winkler'](row['s1'], row['s2'])
-        if permuted: sim6 = StaticValues.algorithms['permuted_winkler'](row['s1'], row['s2'])
-        sim10 = StaticValues.algorithms['skipgram'](row['s1'], row['s2'])
-        sim13 = StaticValues.algorithms['davies'](row['s1'], row['s2'])
 
-        feature1_1, feature1_2, feature1_3 = lsimilarity_terms(row['s1'], row['s2'])
+        baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(row['s1'], row['s2'])
+        feature1_1, feature1_2, feature1_3 = terms_weighted(
+            {'a': [x[::-1] for x in baseTerms['a']], 'b': [x[::-1] for x in baseTerms['b']]},
+            {'a': [x[::-1] for x in mismatchTerms['a']], 'b': [x[::-1] for x in mismatchTerms['b']]},
+            {'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']]},
+            'jaro_winkler'
+        )
         feature2_1 = FEMLFeatures.contains(row['s1'], row['s2'])
         feature2_2 = FEMLFeatures.contains(row['s2'], row['s1'])
         feature3_1, feature3_2 = FEMLFeatures.no_of_words(row['s1'], row['s2'])
@@ -717,44 +752,35 @@ class calcCustomFEMLExtended(baseMetrics):
         for x in fterms_s2: feature7_2[x[0]] = 1
 
         self.timer += (time.time() - start_time)
-        if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
-            if permuted:
-                self.X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-            else:
-                self.X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
 
-            self.X1[-1].extend([
+        if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
+            tmp_X1.append([
                 feature1_1, feature1_2, feature1_3,
                 int(feature2_1), int(feature2_2),
                 feature3_1, feature3_2,
                 int(feature4_1), int(feature4_2),
                 int(feature5_1), int(feature5_2)
             ])
-            self.X1[-1].extend(map(lambda x: int(x == max(feature6_1)), feature6_1))
-            self.X1[-1].extend(map(lambda x: int(x == max(feature6_2)), feature6_2))
+            tmp_X1.append(map(lambda x: int(x == max(feature6_1)), feature6_1))
+            tmp_X1.append(map(lambda x: int(x == max(feature6_2)), feature6_2))
             # self.X1[-1].extend(
             #     feature7_1[:self.fterm_feature_size/2] + feature7_1[len(feature7_1)/2:self.fterm_feature_size/2] +
             #     feature7_2[:self.fterm_feature_size/2] + feature7_2[len(feature7_2)/2:self.fterm_feature_size/2]
             # )
-        else:
-            if permuted:
-                self.X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-            else:
-                self.X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
 
-            self.X2[-1].extend([
+            self.X1.append(list(itertools.chain.from_iterable(tmp_X1)))
+        else:
+            tmp_X2.append([
                 feature1_1, feature1_2, feature1_3,
                 int(feature2_1), int(feature2_2),
                 feature3_1, feature3_2,
                 int(feature4_1), int(feature4_2),
                 int(feature5_1), int(feature5_2)
             ])
-            self.X2[-1].extend(map(lambda x: int(x == max(feature6_1)), feature6_1))
-            self.X2[-1].extend(map(lambda x: int(x == max(feature6_2)), feature6_2))
-            # self.X2[-1].extend(
-            #     feature7_1[:self.fterm_feature_size / 2] + feature7_1[len(feature7_1) / 2:self.fterm_feature_size / 2] +
-            #     feature7_2[:self.fterm_feature_size / 2] + feature7_2[len(feature7_2) / 2:self.fterm_feature_size / 2]
-            # )
+            tmp_X2.append(map(lambda x: int(x == max(feature6_1)), feature6_1))
+            tmp_X2.append(map(lambda x: int(x == max(feature6_2)), feature6_2))
+
+            self.X2.append(list(itertools.chain.from_iterable(tmp_X2)))
 
         if self.file is None and self.accuracyresults:
             file_name = 'dataset-accuracyresults-sim-metrics'
