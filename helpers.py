@@ -147,7 +147,7 @@ class StaticValues:
         ["Davis and De Salles", {'orig': 0.65, 'sorted': 0.7}],
         ["LinkGeoML Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85}],
         ["LinkGeoML Jaro-Winkler reversed", {'orig': 0.75, 'sorted': 0.75}],
-        ["LinkGeoML Similarity", {'orig': 0.3, 'sorted': 0.3}],
+        ["LinkGeoML Similarity", {'orig': 0.3, 'sorted': 0.35}],
     ]
 
     nameIDs = {
