@@ -898,6 +898,7 @@ class calcCustomFEMLExtended(baseMetrics):
         df = pd.DataFrame(np.array(self.X1).reshape(-1, len(StaticValues.featureColumns)), columns=StaticValues.featureColumns)
         with pd.option_context('display.max_columns', None):
             print("Existence of null values: {}".format(df.isnull().values.any()))
+            print("Highest freq values per column\n{}".format(df.mode(axis=0, dropna=False).transpose()))
             print(df.describe().transpose())
 
 
