@@ -20,3 +20,4 @@ alphabet_detector
 kitchen
 pandas
 pyxdameraulevenshtein
+tabulate
