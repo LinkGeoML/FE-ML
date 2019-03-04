@@ -13,6 +13,7 @@ import glob
 import csv
 
 import numpy as np
+import pandas as pd
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 # from sklearn.gaussian_process import GaussianProcessClassifier
@@ -23,6 +24,9 @@ from sklearn.naive_bayes import GaussianNB
 # from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis, LinearDiscriminantAnalysis
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler, MinMaxScaler
 from xgboost import XGBClassifier
+
+# We'll use this library to make the display pretty
+from tabulate import tabulate
 
 from external.datasetcreator import strip_accents, LSimilarityVars, lsimilarity_terms, terms_weighted, lsimilarity
 from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
@@ -695,7 +699,7 @@ class calcCustomFEMLExtended(baseMetrics):
 
         tmp_X1, tmp_X2 = [], []
         for flag in list({False, sorting}):
-            a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
+            a, b = transform(row['s1'], row['s2'], sorting=flag, stemming=stemming, canonical=flag)
 
             start_time = time.time()
 
@@ -879,15 +883,22 @@ class calcCustomFEMLExtended(baseMetrics):
                     print("The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
                         name))
                 else:
-                    indices = np.argsort(importances)[::-1]
-                    for f in range(min(importances.shape[0], self.max_important_features_toshow)):
-                            print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+                    indices = np.argsort(importances)[::-1][:min(importances.shape[0], self.max_important_features_toshow)]
+                    headers = ["name", "score"]
+                    print(tabulate(zip(np.array(StaticValues.featureColumns)[indices], importances[indices]),
+                                   headers, tablefmt="simple"))
 
                 # if hasattr(clf, "feature_importances_"):
                 #         # if results:
                 #         #     result[indices[f]] = importances[indices[f]]
                 print("")
                 sys.stdout.flush()
+
+    def debug_stats(self):
+        df = pd.DataFrame(np.array(self.X1).reshape(-1, len(StaticValues.featureColumns)), columns=StaticValues.featureColumns)
+        with pd.option_context('display.max_columns', None):
+            print("Existence of null values: {}".format(df.isnull().values.any()))
+            print(df.describe().transpose())
 
 
 class calcDLearning(baseMetrics):

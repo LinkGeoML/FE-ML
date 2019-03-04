@@ -399,6 +399,22 @@ class Evaluator:
                             continue
 
                         print(k, max(val, key=lambda x: x[1][0]))
+        elif test_case - 1 == 3:
+            if self.evalClass is not None:
+                print("Reading dataset...")
+                relpath = getRelativePathtoWorking(dataset)
+                self.evalClass.freq_terms_list()
+
+                with open(relpath) as csvfile:
+                    reader = csv.DictReader(csvfile,
+                                            fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
+                                            delimiter='\t')
+                    for row in reader:
+                        self.evalClass.evaluate(
+                            row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, 'sorted'
+                        )
+                    self.evalClass.debug_stats()
+
         else:
             print("Test #{} does not exist!!! Please choose a valid test to execute.".format(test_case))
 
