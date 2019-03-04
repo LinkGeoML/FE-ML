@@ -60,9 +60,9 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         if StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) <= thres:
             a = " ".join(sorted_nicely(a.split(delimiter)))
             b = " ".join(sorted_nicely(b.split(delimiter)))
-        elif StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) > StaticValues.algorithms['damerau_levenshtein'](a, b):
-            a = tmp_a
-            b = tmp_b
+        # elif StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) > StaticValues.algorithms['damerau_levenshtein'](a, b):
+        #     a = tmp_a
+        #     b = tmp_b
     elif only_sorting:
         a = " ".join(sorted_nicely(a.split(delimiter)))
         b = " ".join(sorted_nicely(b.split(delimiter)))
@@ -225,7 +225,7 @@ class FEMLFeatures:
                         if i >= FEMLFeatures.no_freq_terms:
                             break
 
-                        LSimilarityVars.freq_ngrams[gram_type].append(row['term'].decode('utf8'))
+                        LSimilarityVars.freq_ngrams[gram_type].add(row['term'].decode('utf8'))
             print('Frequent terms loaded.')
 
     def update_weights(self, w):

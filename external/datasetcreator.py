@@ -511,7 +511,7 @@ def l_jaro_winkler(s1, s2, long_tolerance=False):
 
 
 class LSimilarityVars:
-    freq_ngrams = {'tokens': [], 'chars': []}
+    freq_ngrams = {'tokens': set(), 'chars': set()}
     lsimilarity_weights = []
     split_thres = 0.75
 
@@ -519,25 +519,24 @@ class LSimilarityVars:
 def _compareAndSplit_names(a, b, thres):
     mis = {'a': [], 'b': []}
     base = {'a': [], 'b': []}
-    idx_a, idx_b = 0, 0
 
     l1, l2 = a.split(), b.split()
-    while idx_a < len(l1) and idx_b < len(l2):
-        str1, str2 = l1.pop(0), l2.pop(0)
+    while l1 and l2:
+        str1, str2 = l1[0], l2[0]
         if jaro_winkler(str1[::-1], str2[::-1]) >= thres:
             base['a'].append(str1)
+            l1.pop(0)
+
             base['b'].append(str2)
-            idx_a += 1
-            idx_b += 1
+            l2.pop(0)
         else:
             if str1 < str2:
                 mis['b'].append(str2)
-                idx_b += 1
+                l2.pop(0)
             else:
                 mis['a'].append(str1)
-                idx_a += 1
+                l1.pop(0)
 
-    # if idx_a < len(l1):
     mis['a'].extend(l1)
     mis['b'].extend(l2)
 
@@ -550,9 +549,12 @@ def lsimilarity_terms(str1, str2):
     specialTerms = dict(a=[], b=[])
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
     # specialTerms['b'] = filter(lambda x: x in b, freq_terms)
-    for x in LSimilarityVars.freq_ngrams['tokens']:
-        if x in str1: specialTerms['a'].append(x)
-        if x in str2: specialTerms['b'].append(x)
+    # for x in LSimilarityVars.freq_ngrams['tokens']:
+    #     if len(x) > 1:
+    #         if x in str1: specialTerms['a'].append(x)
+    #         if x in str2: specialTerms['b'].append(x)
+    specialTerms['a'] = list(set(str1.split()) & LSimilarityVars.freq_ngrams['tokens'])
+    specialTerms['b'] = list(set(str2.split()) & LSimilarityVars.freq_ngrams['tokens'])
 
     if specialTerms['a']:  # check if list is empty
         str1 = re.sub("|".join(specialTerms['a']), ' ', str1).strip()
