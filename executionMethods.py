@@ -88,6 +88,8 @@ class Evaluator:
                 thres = 'orig'
                 if self.sorting:
                     thres = 'sorted'
+                if self.latin:
+                    thres += '_onlylatin'
 
                 for row in reader:
                     self.evalClass.evaluate(
