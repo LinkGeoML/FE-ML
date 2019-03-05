@@ -520,31 +520,31 @@ def _compareAndSplit_names(a, b, thres):
     mis = {'a': [], 'b': []}
     base = {'a': [], 'b': []}
 
-    l1, l2 = a.split(), b.split()
-    while l1 and l2:
-        str1, str2 = l1[0], l2[0]
+    ls1, ls2 = a.split(), b.split()
+    while ls1 and ls2:
+        str1, str2 = ls1[0], ls2[0]
         if jaro_winkler(str1[::-1], str2[::-1]) >= thres:
             base['a'].append(str1)
-            l1.pop(0)
+            ls1.pop(0)
 
             base['b'].append(str2)
-            l2.pop(0)
+            ls2.pop(0)
         else:
             if str1 < str2:
-                mis['b'].append(str2)
-                l2.pop(0)
-            else:
                 mis['a'].append(str1)
-                l1.pop(0)
+                ls1.pop(0)
+            else:
+                mis['b'].append(str2)
+                ls2.pop(0)
 
-    mis['a'].extend(l1)
-    mis['b'].extend(l2)
+    mis['a'].extend(ls1)
+    mis['b'].extend(ls2)
 
     return base, mis
 
 
 def lsimilarity_terms(str1, str2):
-    if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.4, 0.1])
+    if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.1, 0.4])
 
     specialTerms = dict(a=[], b=[])
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)

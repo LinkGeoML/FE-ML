@@ -57,7 +57,7 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         tmp_a = a.replace(' ', '')
         tmp_b = b.replace(' ', '')
 
-        if StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) <= thres:
+        if StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) < thres:
             a = " ".join(sorted_nicely(a.split(delimiter)))
             b = " ".join(sorted_nicely(b.split(delimiter)))
         # elif StaticValues.algorithms['damerau_levenshtein'](tmp_a, tmp_b) > StaticValues.algorithms['damerau_levenshtein'](a, b):
