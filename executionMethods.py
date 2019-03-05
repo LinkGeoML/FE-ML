@@ -107,10 +107,14 @@ class Evaluator:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
+                separator = ''
+                print('Computing stats for threshold', end='')
+
                 all_res = {}
                 for m in StaticValues.methods: all_res[m[0]] = []
                 for i in range(30, 91, 5):
-                    print('Computing stats for threshold {0}...'.format(float(i / 100.0)))
+                    print('{0} {1}'.format(separator, float(i / 100.0)), end='')
+                    separator = ','
 
                     csvfile.seek(0)
                     for row in reader:
@@ -144,10 +148,14 @@ class Evaluator:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
+                separator = ''
+                print('Computing stats for threshold', end='')
+
                 all_res = {}
                 for m in StaticValues.methods: all_res[m[0]] = []
                 for i in range(55, 86, 5):
-                    print('Computing stats for threshold {0}...'.format(float(i / 100.0)))
+                    print('{0} {1}'.format(separator, float(i / 100.0)), end='')
+                    separator = ','
 
                     csvfile.seek(0)
                     for row in reader:
