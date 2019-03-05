@@ -167,7 +167,7 @@ class FEMLFeatures:
         specialTerms = dict(a=[], b=[])
         # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
         # specialTerms['b'] = filter(lambda x: x in b, freq_terms)
-        for idx, x in enumerate(LSimilarityVars.freq_ngrams['tokens'] + LSimilarityVars.freq_ngrams['chars']):
+        for idx, x in enumerate(LSimilarityVars.freq_ngrams['tokens'] | LSimilarityVars.freq_ngrams['chars']):
             if x in str1: specialTerms['a'].append([idx, x])
             if x in str2: specialTerms['b'].append([idx, x])
 
@@ -650,9 +650,14 @@ class calcCustomFEML(baseMetrics):
                     print("The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
                         name))
                 else:
-                    indices = np.argsort(importances)[::-1]
-                    for f in range(min(importances.shape[0], self.max_important_features_toshow)):
-                        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+                    # indices = np.argsort(importances)[::-1]
+                    # for f in range(min(importances.shape[0], self.max_important_features_toshow)):
+                    #     print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+                    indices = np.argsort(importances)[::-1][
+                              :min(importances.shape[0], self.max_important_features_toshow)]
+                    headers = ["name", "score"]
+                    print(tabulate(zip(np.array(StaticValues.featureColumns)[indices], importances[indices]),
+                                   headers, tablefmt="simple"))
 
                 # if hasattr(clf, "feature_importances_"):
                 #         # if results:
@@ -750,8 +755,8 @@ class calcCustomFEMLExtended(baseMetrics):
         feature5_1 = False if len(fterms_s1) == 0 else True
         feature5_2 = False if len(fterms_s2) == 0 else True
         feature6_1, feature6_2 = FEMLFeatures().containsInPos(row['s1'], row['s2'])
-        feature7_1 = [0] * (len(LSimilarityVars.freq_ngrams['tokens']) + len(LSimilarityVars.freq_ngrams['chars']))
-        feature7_2 = [0] * (len(LSimilarityVars.freq_ngrams['tokens']) + len(LSimilarityVars.freq_ngrams['chars']))
+        feature7_1 = [0] * (len(LSimilarityVars.freq_ngrams['tokens']) | len(LSimilarityVars.freq_ngrams['chars']))
+        feature7_2 = [0] * (len(LSimilarityVars.freq_ngrams['tokens']) | len(LSimilarityVars.freq_ngrams['chars']))
         for x in fterms_s1: feature7_1[x[0]] = 1
         for x in fterms_s2: feature7_2[x[0]] = 1
 
