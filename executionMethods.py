@@ -132,7 +132,7 @@ class Evaluator:
 
                     self.evalClass.reset_vars()
 
-            print('The process took {0:.2f} sec'.format(time.time() - start_time))
+            print('\nThe process took {0:.2f} sec'.format(time.time() - start_time))
             for k, val in all_res.items():
                 if len(val) == 0:
                     print('{0} is empty'.format(k))
@@ -172,7 +172,7 @@ class Evaluator:
 
                     self.evalClass.reset_vars()
 
-            print('The process took {0:.2f} sec'.format(time.time() - start_time))
+            print('\nThe process took {0:.2f} sec'.format(time.time() - start_time))
             for k, val in all_res.items():
                 if len(val) == 0:
                     print('{0} is empty'.format(k))
