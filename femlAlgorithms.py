@@ -352,13 +352,13 @@ class baseMetrics:
             return exit_status, acc, pre, rec, f1, timer
 
     def _print_stats(self, method, acc, pre, rec, f1, timer):
-        print("Metric = Supervised Classifier :", method)
-        print("Accuracy =", acc)
-        print("Precision =", pre)
-        print("Recall =", rec)
-        print("F1 =", f1)
-        print("Processing time per 50K records =", timer)
-        print("")
+        # print("Metric = Supervised Classifier :", method)
+        # print("Accuracy =", acc)
+        # print("Precision =", pre)
+        # print("Recall =", rec)
+        # print("F1 =", f1)
+        # print("Processing time per 50K records =", timer)
+        # print("")
         print("| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)")
         print("||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(method, acc, pre, rec, f1, timer))
         print("")
