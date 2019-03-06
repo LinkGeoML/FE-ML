@@ -900,11 +900,27 @@ class calcCustomFEMLExtended(baseMetrics):
                 sys.stdout.flush()
 
     def debug_stats(self):
+        print('')
+
         df = pd.DataFrame(np.array(self.X1).reshape(-1, len(StaticValues.featureColumns)), columns=StaticValues.featureColumns)
-        with pd.option_context('display.max_columns', None):
-            print("Existence of null values: {}".format(df.isnull().values.any()))
-            print("Highest freq values per column\n{}".format(df.mode(axis=0, dropna=False).transpose()))
-            print(df.describe().transpose())
+        # with pd.option_context('display.max_columns', None):
+        output_f = './output/X1_train_stats.csv'
+        df.describe().T.to_csv(output_f)
+        with open(output_f, 'a') as f:
+            print("Existence of null values in X1_train: {}".format(df.isnull().values.any()))
+            f.write("\nExistence of null values in X1_train: {}\n".format(df.isnull().values.any()))
+            f.write("Highest freq values per column in X1_train\n")
+            df.mode(axis=0, dropna=False).transpose().to_csv(f)
+
+        df = pd.DataFrame(np.array(self.X2).reshape(-1, len(StaticValues.featureColumns)),
+                          columns=StaticValues.featureColumns)
+        output_f = './output/X2_train_stats.csv'
+        df.describe().T.to_csv(output_f)
+        with open(output_f, 'a') as f:
+            print("Existence of null values in X2_train: {}".format(df.isnull().values.any()))
+            f.write("\nExistence of null values in X2_train: {}\n".format(df.isnull().values.any()))
+            f.write("\nHighest freq values per column in X2_train\n")
+            df.mode(axis=0, dropna=False).transpose().to_csv(f)
 
 
 class calcDLearning(baseMetrics):
