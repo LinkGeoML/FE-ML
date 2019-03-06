@@ -439,7 +439,8 @@ class Evaluator:
                 for row in reader:
                     a, b = transform(row['s1'], row['s2'], sorting=True, canonical=True)
                     baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(a, b)
-                    output_f.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+                    output_f.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+                        row['res'],
                         row['s1'], ','.join(baseTerms['a']).encode('utf8'),
                         ','.join(mismatchTerms['a']).encode('utf8'),
                         ','.join(specialTerms['a']).encode('utf8'),
