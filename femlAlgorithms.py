@@ -912,8 +912,8 @@ class calcCustomFEMLExtended(baseMetrics):
         with open(output_f, 'a') as f:
             print("Existence of null values in X1_train: {}".format(df.isnull().values.any()))
             f.write("\nExistence of null values in X1_train: {}\n".format(df.isnull().values.any()))
-            f.write("Highest freq values per column in X1_train\n")
             print(df.mode(axis=0, dropna=False).T)
+            # f.write("Highest freq values per column in X1_train\n")
             # df.mode(axis=0, dropna=False).T.to_csv(f, header=False)
 
         df = pd.DataFrame(np.array(self.X2).reshape(-1, len(StaticValues.featureColumns)),
@@ -923,8 +923,8 @@ class calcCustomFEMLExtended(baseMetrics):
         with open(output_f, 'a') as f:
             print("Existence of null values in X2_train: {}".format(df.isnull().values.any()))
             f.write("\nExistence of null values in X2_train: {}\n".format(df.isnull().values.any()))
-            f.write("\nHighest freq values per column in X2_train\n")
             print(df.mode(axis=0, dropna=False).transpose())
+            # f.write("\nHighest freq values per column in X2_train\n")
             # df.mode(axis=0, dropna=False).transpose().to_csv(f, header=False)
 
 
