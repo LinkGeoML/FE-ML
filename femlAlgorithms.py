@@ -28,7 +28,7 @@ from xgboost import XGBClassifier
 # We'll use this library to make the display pretty
 from tabulate import tabulate
 
-from external.datasetcreator import strip_accents, LSimilarityVars, lsimilarity_terms, terms_weighted, lsimilarity
+from external.datasetcreator import strip_accents, LSimilarityVars, lsimilarity_terms, terms_weighted, calibrate_weights
 from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
@@ -945,9 +945,8 @@ class testMetrics(baseMetrics):
 
         # LSimilarityVars.split_thres = StaticValues.methods[idx - 1][1]
         baseTerms_val, mismatchTerms_val, specialTerms_val = terms_weighted(baseTerms, mismatchTerms, specialTerms, sim_metric)
-        sim_val = baseTerms_val * LSimilarityVars.lsimilarity_weights[0] + \
-            mismatchTerms_val * LSimilarityVars.lsimilarity_weights[1] + \
-            specialTerms_val * LSimilarityVars.lsimilarity_weights[2]
+        lweights = calibrate_weights(baseTerms, mismatchTerms, specialTerms)
+        sim_val = baseTerms_val * lweights[0] + mismatchTerms_val * lweights[1] + specialTerms_val * lweights[2]
         res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
         self.timers[idx - 1] += (time.time() - start_time)
         self.predictedState[varnm][idx - 1] += 1.0
@@ -970,9 +969,9 @@ class testMetrics(baseMetrics):
         a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
         baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(a, b)
-        rbaseTerms = {'a': [x[::-1] for x in baseTerms['a']], 'b': [x[::-1] for x in baseTerms['b']]}
-        rmismatchTerms = {'a': [x[::-1] for x in mismatchTerms['a']], 'b': [x[::-1] for x in mismatchTerms['b']]}
-        rspecialTerms = {'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']]}
+        rbaseTerms = {'a': [x[::-1] for x in baseTerms['a']], 'b': [x[::-1] for x in baseTerms['b']], 'len': baseTerms['len']}
+        rmismatchTerms = {'a': [x[::-1] for x in mismatchTerms['a']], 'b': [x[::-1] for x in mismatchTerms['b']], 'len': mismatchTerms['len']}
+        rspecialTerms = {'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']], 'len': specialTerms['len']}
 
         tot_res += self._generic_evaluator(1, 'damerau_levenshtein', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(8, 'jaccard', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
