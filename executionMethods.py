@@ -430,7 +430,7 @@ class Evaluator:
             self.evalClass.freq_terms_list()
 
             output_f = open("./output/lsimilarity_terms.csv", "w+")
-            output_f.write("str1\tbase_s1\tmismatch_s1\tspecial_s1\tstr2\tbase_s2\tmismatch_s2\tspecial_s2\n")
+            output_f.write("res\tstr1\tbase_s1\tmismatch_s1\tspecial_s1\tstr2\tbase_s2\tmismatch_s2\tspecial_s2\n")
             with open(relpath) as csvfile:
                 reader = csv.DictReader(csvfile,
                                         fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
