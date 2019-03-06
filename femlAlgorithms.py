@@ -336,7 +336,7 @@ class baseMetrics:
         exit_status, acc, pre, rec, f1, timer = 0, -1, -1, -1, -1, 0
 
         try:
-            timer = (self.timers[idx] / float(int(self.num_true + self.num_false))) * 50000.0
+            timer = (self.timers[idx])  # / float(int(self.num_true + self.num_false))) * 50000.0
             acc = (self.num_true_predicted_true[idx] + self.num_false_predicted_false[idx]) / \
                   (self.num_true + self.num_false)
             pre = (self.num_true_predicted_true[idx]) / \
@@ -359,7 +359,7 @@ class baseMetrics:
         # print("F1 =", f1)
         # print("Processing time per 50K records =", timer)
         # print("")
-        print("| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (50K Pairs)")
+        print("| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (sec)")  # (50K Pairs)")
         print("||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(method, acc, pre, rec, f1, timer))
         print("")
         sys.stdout.flush()
