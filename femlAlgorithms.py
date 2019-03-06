@@ -900,6 +900,9 @@ class calcCustomFEMLExtended(baseMetrics):
                 sys.stdout.flush()
 
     def debug_stats(self):
+        if not os.path.exists("output"):
+            os.makedirs("output")
+
         print('')
 
         df = pd.DataFrame(np.array(self.X1).reshape(-1, len(StaticValues.featureColumns)), columns=StaticValues.featureColumns)
