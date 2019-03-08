@@ -33,26 +33,26 @@ from external.datasetcreator import strip_accents, LSimilarityVars, lsimilarity_
 from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
+punctuation_regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.-]')
+
+
+def ascii_transliteration_and_punctuation_strip(s):
+    # NFKD: first applies a canonical decomposition, i.e., translates each character into its decomposed form.
+    # and afterwards apply the compatibility decomposition, i.e. replace all compatibility characters with their
+    # equivalents.
+
+    s = unidecode(strip_accents(s.lower()))
+    s = punctuation_regex.sub('', s)
+    return s
+
+
 def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' ', thres=0.6, only_sorting=False):
     a = strA.decode('utf8') #.lower()
     b = strB.decode('utf8') #.lower()
 
     if canonical:
-        # NFKD: first applies a canonical decomposition, i.e., translates each character into its decomposed form.
-        # and afterwards apply the compatibility decomposition, i.e. replace all compatibility characters with their
-        # equivalents.
-
-        # a = unicodedata.normalize('NFKD', a.decode('utf8')) # .encode('ASCII', 'ignore')
-        a = unidecode(strip_accents(a.lower()))
-        b = unidecode(strip_accents(b.lower()))
-
-        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.-]')
-        a = regex.sub('', a)
-        b = regex.sub('', b)
-
-        # replace dashes with space
-        # a = a.replace('-', ' ')
-        # b = b.replace('-', ' ')
+        a = ascii_transliteration_and_punctuation_strip(a)
+        b = ascii_transliteration_and_punctuation_strip(b)
 
     if sorting:
         tmp_a = a.replace(' ', '')
@@ -75,17 +75,11 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
     return a, b
 
 
-def transform_str(str, stemming=False, canonical=False, delimiter=' '):
-    a = str.decode('utf8')
+def transform_str(s, stemming=False, canonical=False, delimiter=' '):
+    a = s.decode('utf8')
 
     if canonical:
-        # NFKD: first applies a canonical decomposition, i.e., translates each character into its decomposed form.
-        # and afterwards apply the compatibility decomposition, i.e. replace all compatibility characters with their
-        # equivalents.
-        a = strip_accents(a.lower())
-
-        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.-~]')
-        a = regex.sub('', a)
+        a = ascii_transliteration_and_punctuation_strip(a)
 
     if stemming:
         a = perform_stemming(a)

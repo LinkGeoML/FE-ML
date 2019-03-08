@@ -13,6 +13,7 @@ import itertools
 import unicodedata
 from alphabet_detector import AlphabetDetector
 import re
+import pycountry_convert
 
 
 fields = ["geonameid",
@@ -73,10 +74,10 @@ def build_dataset_from_geonames(output='dataset-unfiltered.txt', only_latin=Fals
 
     for input in datasets:
         if not os.path.isfile(input):
-            print "File {0} does not exist".format(input)
+            print("File {0} does not exist".format(input))
             continue
 
-        print "Working on dataset {}...".format(input)
+        print("Working on dataset {}...".format(input))
         with open(input) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=fields, delimiter='\t')
             for row in reader:
@@ -167,7 +168,7 @@ def build_dataset_from_geonames(output='dataset-unfiltered.txt', only_latin=Fals
                     curr_attempt += 1
                     if curr_attempt > max_no_attempts: break
                 if curr_attempt > max_no_attempts:
-                    print "Failed to find alternative names..."
+                    print("Failed to find alternative names...")
                     lastid = id
                     lastname2 = randomname2
                     firstcountry = country
@@ -201,7 +202,7 @@ def filter_dataset(input='dataset-unfiltered.txt', num_instances=2500000):
     pos = []
     neg = []
     file = open("dataset-string-similarity.txt", "w+")
-    print "Filtering for {0}...".format(num_instances * 2)
+    print("Filtering for {0}...".format(num_instances * 2))
     for line in open(input):
         splitted = line.split('\t')
         if not (splitted[2] == "TRUE" or splitted[2] == "FALSE") or \
@@ -221,7 +222,7 @@ def filter_dataset(input='dataset-unfiltered.txt', num_instances=2500000):
     for i in range(min(num_instances, len(pos), len(neg))):
         file.write(pos[i])
         file.write(neg[i])
-    print "Filtering ended with {0}.".format(min(num_instances * 2, len(pos) + len(neg)))
+    print("Filtering ended with {0}.".format(min(num_instances * 2, len(pos) + len(neg))))
     file.close()
 
 
