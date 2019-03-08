@@ -5,14 +5,13 @@ from __future__ import print_function
 import os, sys
 from collections import Counter
 import json
-from functools import partial
+# from functools import partial
 # import unicodedata
-import pandas as pd
 
 from nltk.corpus import stopwords
 
 from femlAlgorithms import *
-from helpers import perform_stemming, normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
+from helpers import normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
 from external.datasetcreator import detect_alphabet, strip_accents, filter_dataset, build_dataset_from_geonames
 from helpers import StaticValues
 
