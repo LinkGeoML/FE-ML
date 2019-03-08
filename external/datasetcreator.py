@@ -547,7 +547,7 @@ def _compareAndSplit_names(a, b, thres):
 
 
 def lsimilarity_terms(str1, str2):
-    if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.1, 0.4])
+    if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.4, 0.1])
 
     specialTerms = dict(a=[], b=[], len=0)
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
@@ -668,7 +668,6 @@ def lsimilarity(str1, str2, method='damerau_levenshtein'):
     baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(str1, str2)
     baseTerms_val, mismatchTerms_val, specialTerms_val = terms_weighted(baseTerms, mismatchTerms, specialTerms, method)
     lweights = calibrate_weights(baseTerms, mismatchTerms, specialTerms)
-    # print (lweights, baseTerms, specialTerms)
 
     thres = baseTerms_val * lweights[0] + mismatchTerms_val * lweights[1] + specialTerms_val * lweights[2]
 
