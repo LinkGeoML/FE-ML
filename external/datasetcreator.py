@@ -89,6 +89,9 @@ def build_dataset_from_geonames(output='dataset-unfiltered.txt', only_latin=Fals
                 if only_latin:
                     for n in list(names):
                         if not check_alphabet(n, 'LATIN'): names.remove(n)
+                        elif pycountry_convert.country_alpha2_to_continent_code(row['country_code']) not in \
+                                ['EU', 'NA'] or row['country_code'] in ['RU']:
+                            names.remove(n)
 
                 if len(names) < 5: continue
                 lastid = row['geonameid']
@@ -109,6 +112,9 @@ def build_dataset_from_geonames(output='dataset-unfiltered.txt', only_latin=Fals
                 if only_latin:
                     for n in list(names):
                         if not check_alphabet(n, 'LATIN'): names.remove(n)
+                        elif pycountry_convert.country_alpha2_to_continent_code(row['country_code']) not in \
+                                ['EU', 'NA'] or row['country_code'] in ['RU']:
+                            names.remove(n)
 
                 if len(names) < 3: continue
                 id = row['geonameid']
