@@ -21,3 +21,5 @@ kitchen
 pandas
 pyxdameraulevenshtein
 tabulate
+pycountry-convert  # could be replaced by countryinfo in python3.5
+text-unicode

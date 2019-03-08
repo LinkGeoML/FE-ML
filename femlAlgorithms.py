@@ -11,6 +11,7 @@ import re
 import itertools
 import glob
 import csv
+from text_unidecode import unidecode
 
 import numpy as np
 import pandas as pd
@@ -42,8 +43,8 @@ def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimi
         # equivalents.
 
         # a = unicodedata.normalize('NFKD', a.decode('utf8')) # .encode('ASCII', 'ignore')
-        a = strip_accents(a.lower())
-        b = strip_accents(b.lower())
+        a = unidecode(strip_accents(a.lower()))
+        b = unidecode(strip_accents(b.lower()))
 
         regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.-]')
         a = regex.sub('', a)
@@ -83,7 +84,7 @@ def transform_str(str, stemming=False, canonical=False, delimiter=' '):
         # equivalents.
         a = strip_accents(a.lower())
 
-        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.-]')
+        regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.-~]')
         a = regex.sub('', a)
 
     if stemming:
