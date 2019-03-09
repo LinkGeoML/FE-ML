@@ -434,7 +434,7 @@ class calcSotAMetrics(baseMetrics):
 
 
 class calcCustomFEML(baseMetrics):
-    max_important_features_toshow = 10
+    max_important_features_toshow = 50
 
     def __init__(self, njobs, accures):
         self.X1 = []
@@ -541,7 +541,6 @@ class calcCustomFEML(baseMetrics):
                 model.fit(np.array(train_X), np.array(train_Y))
                 train_time += (time.time() - start_time)
 
-                start_time = time.time()
                 predictedL += list(model.predict(np.array(pred_X)))
                 self.timers[i] += (time.time() - start_time)
 
@@ -549,9 +548,9 @@ class calcCustomFEML(baseMetrics):
                     self.importances[i] += model.feature_importances_
                 elif hasattr(model, "coef_"):
                     self.importances[i] += model.coef_.ravel()
-                self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
+                # self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
 
-            print("Training took {:.3f} min".format(train_time / (2 * 60.0)))
+            print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
             self.timers[i] += self.timer
 
             print("Matching records...")
@@ -613,7 +612,7 @@ class calcCustomFEML(baseMetrics):
 
 
 class calcCustomFEMLExtended(baseMetrics):
-    max_important_features_toshow = 20
+    max_important_features_toshow = 50
     fterm_feature_size = 10
 
     def __init__(self, njobs, accures):
@@ -701,10 +700,10 @@ class calcCustomFEMLExtended(baseMetrics):
         feature5_1 = False if len(fterms_s1) == 0 else True
         feature5_2 = False if len(fterms_s2) == 0 else True
         feature6_1, feature6_2 = FEMLFeatures().containsInPos(row['s1'], row['s2'])
-        feature7_1 = [0] * (len(LSimilarityVars.freq_ngrams['tokens'] | LSimilarityVars.freq_ngrams['chars']))
-        feature7_2 = [0] * (len(LSimilarityVars.freq_ngrams['tokens'] | LSimilarityVars.freq_ngrams['chars']))
-        for x in fterms_s1: feature7_1[x[0]] = 1
-        for x in fterms_s2: feature7_2[x[0]] = 1
+        # feature7_1 = [0] * (len(LSimilarityVars.freq_ngrams['tokens'] | LSimilarityVars.freq_ngrams['chars']))
+        # feature7_2 = [0] * (len(LSimilarityVars.freq_ngrams['tokens'] | LSimilarityVars.freq_ngrams['chars']))
+        # for x in fterms_s1: feature7_1[x[0]] = 1
+        # for x in fterms_s2: feature7_2[x[0]] = 1
 
         self.timer += (time.time() - start_time)
 
@@ -779,7 +778,6 @@ class calcCustomFEMLExtended(baseMetrics):
                 model.fit(np.array(train_X), np.array(train_Y))
                 train_time += (time.time() - start_time)
 
-                start_time = time.time()
                 predictedL += list(model.predict(np.array(pred_X)))
                 self.timers[i] += (time.time() - start_time)
 
@@ -787,9 +785,9 @@ class calcCustomFEMLExtended(baseMetrics):
                     self.importances[i] += model.feature_importances_
                 elif hasattr(model, "coef_"):
                     self.importances[i] += model.coef_.ravel()
-                self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
+                # self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
 
-            print("Training took {:.3f} min".format(train_time / (2 * 60.0)))
+            print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
             self.timers[i] += self.timer
 
             print("Matching records...")
