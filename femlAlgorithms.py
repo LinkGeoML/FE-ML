@@ -228,55 +228,6 @@ class FEMLFeatures:
             del LSimilarityVars.lsimilarity_weights[:]
             LSimilarityVars.lsimilarity_weights.extend(w[:3])
 
-    def _generic_metric_cmp(self, funcnm, a, b, sorting, stemming, canonical, invert=False):
-        res = None
-
-        tmp_a, tmp_b = transform(a, b)
-        if invert:
-            tmp_a = tmp_a[::-1]
-            tmp_b = tmp_b[::-1]
-        sim = StaticValues.algorithms[funcnm](tmp_a, tmp_b)
-
-        if sorting:
-            tmp_a, tmp_b = transform(a, b, sorting, stemming, canonical)
-            if invert:
-                tmp_a = tmp_a[::-1]
-                tmp_b = tmp_b[::-1]
-            if (sim - StaticValues.algorithms[funcnm](tmp_a, tmp_b)) > 0.05:
-                    # and sim >= StaticValues.methods[StaticValues.nameIDs[funcnm]][1]:
-                res = False
-            else: res = True
-        return res
-
-    def cmp_score_after_transformation(self, row, sorting=False, stemming=False, canonical=False):
-        sims_correlation = []
-
-        res = self._generic_metric_cmp('damerau_levenshtein', row['s1'], row['s2'], sorting, stemming, canonical)
-        if res is not None: sims_correlation.append(res)
-        res = self._generic_metric_cmp('jaccard', row['s1'], row['s2'], sorting, stemming, canonical)
-        if res is not None: sims_correlation.append(res)
-        res = self._generic_metric_cmp('jaro', row['s1'], row['s2'], sorting, stemming, canonical)
-        if res is not None: sims_correlation.append(res)
-        res = self._generic_metric_cmp('jaro_winkler', row['s1'], row['s2'], sorting, stemming, canonical)
-        if res is not None: sims_correlation.append(res)
-        res = self._generic_metric_cmp('jaro_winkler', row['s1'], row['s2'], sorting, stemming, canonical, invert=True)
-        if res is not None: sims_correlation.append(res)
-        res = self._generic_metric_cmp('monge_elkan', row['s1'], row['s2'], sorting, stemming, canonical)
-        if res is not None: sims_correlation.append(res)
-        res = self._generic_metric_cmp('cosine', row['s1'], row['s2'], sorting, stemming, canonical)
-        if res is not None: sims_correlation.append(res)
-        res = self._generic_metric_cmp('strike_a_match', row['s1'], row['s2'], sorting, stemming, canonical)
-        if res is not None: sims_correlation.append(res)
-        res = self._generic_metric_cmp('soft_jaccard', row['s1'], row['s2'], sorting, stemming, canonical)
-        if res is not None: sims_correlation.append(res)
-        res = self._generic_metric_cmp('skipgram', row['s1'], row['s2'], sorting, stemming, canonical)
-        if res is not None: sims_correlation.append(res)
-        res = self._generic_metric_cmp('davies', row['s1'], row['s2'], sorting, stemming, canonical)
-        if res is not None: sims_correlation.append(res)
-
-        if sum(sims_correlation) > (len(sims_correlation) / 2.0): return True
-        else: return False
-
 
 class baseMetrics:
     __metaclass__ = ABCMeta
