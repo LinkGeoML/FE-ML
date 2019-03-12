@@ -237,6 +237,7 @@ class StaticValues:
         "Davis and De Salles Sorted",
         # "LinkGeoML Jaro-Winkler Sorted",
         # "LinkGeoML Jaro-Winkler reversed Sorted",
+        "LSimilarity",
         "lSimilarity_baseScore",
         "lSimilarity_mismatchScore",
         "lSimilarity_specialScore",
