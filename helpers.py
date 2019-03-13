@@ -135,7 +135,7 @@ class StaticValues:
         ["Damerau-Levenshtein", {'orig': 0.55, 'sorted': 0.60, 'orig_onlylatin': 0.4, 'sorted_onlylatin': 0.55,
                                  'orig_latin_EU/NA': 0.45, 'sorted_latin_EU/NA': 0.55}],
         ["Jaro", {'orig': 0.75, 'sorted': 0.8, 'orig_onlylatin': 0.7, 'sorted_onlylatin': 0.75,
-                  'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75}],
+                  'orig_latin_EU/NA': 0.7, 'sorted_latin_EU/NA': 0.75}],
         ["Jaro-Winkler", {'orig': 0.7, 'sorted': 0.85, 'orig_onlylatin': 0.7, 'sorted_onlylatin': 0.7,
                           'orig_latin_EU/NA': 0.7, 'sorted_latin_EU/NA': 0.7}],
         ["Jaro-Winkler reversed", {'orig': 0.75, 'sorted': 0.75, 'orig_onlylatin': 0.7, 'sorted_onlylatin': 0.75,
