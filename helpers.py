@@ -271,4 +271,13 @@ class StaticValues:
         "posOfHigherSim_str2_start",
         "posOfHigherSim_str2_middle",
         "posOfHigherSim_str2_end",
+        "LSimilarity_davies",
+        "LSimilarity_skipgram",
+        "LSimilarity_soft_jaccard",
+        "LSimilarity_strike_a_match",
+        "LSimilarity_cosine",
+        "LSimilarity_monge_elkan",
+        "LSimilarity_jaro_winkler",
+        "LSimilarity_jaro",
+        "LSimilarity_jaro_winkler_reversed",
     ]

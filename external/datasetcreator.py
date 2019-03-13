@@ -532,6 +532,22 @@ class LSimilarityVars:
     lsimilarity_weights = []
     split_thres = 0.75
 
+    per_metric_weights = {
+        'damerau_levenshtein': [0.45, [0.6, 0.2, 0.2]],
+        'davies': [0.6, [0.6, 0.3, 0.1]],
+        'skipgram': [0.5, [0.7, 0.2, 0.1]],
+        'permuted_winkler': [],
+        'sorted_winkler': [],
+        'soft_jaccard': [0.65, [0.7, 0.2, 0.1]],
+        'strike_a_match': [0.55, [0.7, 0.1, 0.2]],
+        'cosine': [0.55, [0.7, 0.1, 0.2]],
+        'monge_elkan': [0.5, [0.6, 0.3, 0.1]],
+        'jaro_winkler': [0.65, [0.7, 0.2, 0.1]],
+        'jaro': [0.65, [0.7, 0.2, 0.1]],
+        'jaccard': [0.35, [0.7, 0.2, 0.1]],
+        'l_jaro_winkler': [0.7, [0.7, 0.2, 0.1]],
+    }
+
 
 def _compareAndSplit_names(a, b, thres):
     base = {'a': [], 'b': [], 'len': 0}
@@ -564,9 +580,6 @@ def _compareAndSplit_names(a, b, thres):
 
 
 def lsimilarity_terms(str1, str2):
-    # if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.4, 0.1])
-    if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.6, 0.2, 0.2])
-
     specialTerms = dict(a=[], b=[], len=0)
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
     # specialTerms['b'] = filter(lambda x: x in b, freq_terms)
@@ -588,7 +601,13 @@ def lsimilarity_terms(str1, str2):
     return baseTerms, mismatchTerms, specialTerms
 
 
-def terms_weighted(baseTerms, mismatchTerms, specialTerms, method):
+def score_per_term(baseTerms, mismatchTerms, specialTerms, method):
+    # if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.4, 0.1])
+    # if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.6, 0.2, 0.2])
+    # if len(LSimilarityVars.lsimilarity_weights) != 0:
+    #     del LSimilarityVars.lsimilarity_weights[:]
+    # LSimilarityVars.lsimilarity_weights.extend(LSimilarityVars.per_metric_weights[method][1])
+
     baseScore, misScore, specialScore = 0, 0, 0
 
     if method == 'damerau_levenshtein':
@@ -663,8 +682,9 @@ def terms_weighted(baseTerms, mismatchTerms, specialTerms, method):
     return baseScore, misScore, specialScore
 
 
-def calibrate_weights(baseTerms, mismatchTerms, specialTerms):
-    weights = LSimilarityVars.lsimilarity_weights[:]
+def calibrate_weights(baseTerms, mismatchTerms, specialTerms, method):
+    # weights = LSimilarityVars.lsimilarity_weights[:]
+    weights = LSimilarityVars.per_metric_weights[method][1][:]
 
     if baseTerms['len'] == 0:
         weights[1] += weights[0] * (float(mismatchTerms['len']) / (mismatchTerms['len'] + specialTerms['len']))
@@ -682,11 +702,15 @@ def calibrate_weights(baseTerms, mismatchTerms, specialTerms):
     return weights
 
 
+def weighted_terms(baseTerms, mismatchTerms, specialTerms, method):
+    baseTerms_val, mismatchTerms_val, specialTerms_val = score_per_term(baseTerms, mismatchTerms, specialTerms, method)
+    lweights = calibrate_weights(baseTerms, mismatchTerms, specialTerms, method)
+
+    return baseTerms_val * lweights[0] + mismatchTerms_val * lweights[1] + specialTerms_val * lweights[2]
+
+
 def lsimilarity(str1, str2, method='damerau_levenshtein'):
     baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(str1, str2)
-    baseTerms_val, mismatchTerms_val, specialTerms_val = terms_weighted(baseTerms, mismatchTerms, specialTerms, method)
-    lweights = calibrate_weights(baseTerms, mismatchTerms, specialTerms)
-
-    thres = baseTerms_val * lweights[0] + mismatchTerms_val * lweights[1] + specialTerms_val * lweights[2]
+    thres = weighted_terms(baseTerms, mismatchTerms, specialTerms, method)
 
     return thres
