@@ -84,15 +84,16 @@ class Evaluator:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
-                thres = 'orig'
+                thres_type = 'orig'
                 if self.sorting:
-                    thres = 'sorted'
+                    thres_type = 'sorted'
                 if self.latin:
-                    thres += '_onlylatin'
+                    # thres_type += '_onlylatin'
+                    thres_type += '_latin_EU/NA'
 
                 for row in reader:
                     self.evalClass.evaluate(
-                        row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, thres
+                        row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, thres_type
                     )
                 if hasattr(self.evalClass, "train_classifiers"):
                     self.evalClass.train_classifiers(self.ml_algs, polynomial=False, standardize=True)
@@ -115,6 +116,7 @@ class Evaluator:
                 for m in StaticValues.methods: all_res[m[0]] = []
                 for i in range(30, 91, 5):
                     print('{0} {1}'.format(separator, float(i / 100.0)), end='')
+                    sys.stdout.flush()
                     separator = ','
 
                     csvfile.seek(0)
@@ -152,17 +154,25 @@ class Evaluator:
                 separator = ''
                 print('Computing stats for threshold', end='')
 
+                thres_type = 'orig'
+                if self.sorting:
+                    thres_type = 'sorted'
+                if self.latin:
+                    # thres_type += '_onlylatin'
+                    thres_type += '_latin_EU/NA'
+
                 all_res = {}
                 for m in StaticValues.methods: all_res[m[0]] = []
                 for i in range(55, 86, 5):
                     print('{0} {1}'.format(separator, float(i / 100.0)), end='')
+                    sys.stdout.flush()
                     separator = ','
 
                     csvfile.seek(0)
                     for row in reader:
                         if self.latin and (row['a1'] != 'LATIN' or row['a2'] != 'LATIN'): continue
 
-                        self.evalClass.evaluate_sorting(row, float(i / 100.0), self.stemming, self.permuted)
+                        self.evalClass.evaluate_sorting(row, float(i / 100.0), thres_type, self.stemming, self.permuted)
                     if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                     tmp_res = self.evalClass.get_stats()
 

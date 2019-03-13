@@ -398,25 +398,27 @@ class calcSotAMetrics(baseMetrics):
             else:
                 self.file.write("FALSE{0}\t{1}\t{2}\n".format(tot_res, a.encode('utf8'), b.encode('utf8')))
 
-    def evaluate_sorting(self, row, custom_thres, stemming=False, permuted=False):
+    def evaluate_sorting(self, row, custom_thres, data_format, stemming=False, permuted=False):
         tot_res = ""
         flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
 
         row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=True, stemming=stemming, canonical=True, thres=custom_thres)
 
-        tot_res += self._generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(8, 'jaccard', row['s1'], row['s2'], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(2, 'jaro', row['s1'], row['s2'], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(3, 'jaro_winkler', row['s1'], row['s2'], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(4, 'jaro_winkler', row['s1'][::-1], row['s2'][::-1], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(11, 'monge_elkan', row['s1'], row['s2'], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(7, 'cosine', row['s1'], row['s2'], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(9, 'strike_a_match', row['s1'], row['s2'], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(12, 'soft_jaccard', row['s1'], row['s2'], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(5, 'sorted_winkler', row['s1'], row['s2'], flag_true_match, 'sorted')
-        if permuted: tot_res += self._generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(10, 'skipgram', row['s1'], row['s2'], flag_true_match, 'sorted')
-        tot_res += self._generic_evaluator(13, 'davies', row['s1'], row['s2'], flag_true_match, 'sorted')
+        tot_res += self._generic_evaluator(1, 'damerau_levenshtein', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(8, 'jaccard', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(2, 'jaro', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(3, 'jaro_winkler', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(4, 'jaro_winkler', row['s1'][::-1], row['s2'][::-1], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(11, 'monge_elkan', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(7, 'cosine', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(9, 'strike_a_match', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(12, 'soft_jaccard', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(5, 'sorted_winkler', row['s1'], row['s2'], flag_true_match, data_format)
+        if permuted: tot_res += self._generic_evaluator(6, 'permuted_winkler', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(10, 'skipgram', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(13, 'davies', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(14, 'l_jaro_winkler', row['s1'], row['s2'], flag_true_match, data_format)
+        tot_res += self._generic_evaluator(15, 'l_jaro_winkler', row['s1'][::-1], row['s2'][::-1], flag_true_match, data_format)
 
         if self.accuracyresults:
             if self.file is None:
