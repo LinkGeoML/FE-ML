@@ -489,7 +489,6 @@ class calcCustomFEML(baseMetrics):
             if permuted: sim6 = StaticValues.algorithms['permuted_winkler'](a, b)
             sim10 = StaticValues.algorithms['skipgram'](a, b)
             sim13 = StaticValues.algorithms['davies'](a, b)
-            if flag: sim14 = StaticValues.algorithms['lsimilarity'](a, b)
 
             self.timer += (time.time() - start_time)
 
@@ -498,13 +497,11 @@ class calcCustomFEML(baseMetrics):
                     tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 else:
                     tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-                if flag: tmp_X1.append([sim14])
             else:
                 if permuted:
                     tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 else:
                     tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-                if flag: tmp_X2.append([sim14])
 
         if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
             self.X1.append(list(itertools.chain.from_iterable(tmp_X1)))
