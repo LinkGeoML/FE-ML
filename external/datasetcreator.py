@@ -564,7 +564,8 @@ def _compareAndSplit_names(a, b, thres):
 
 
 def lsimilarity_terms(str1, str2):
-    if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.4, 0.1])
+    # if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.4, 0.1])
+    if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.6, 0.2, 0.2])
 
     specialTerms = dict(a=[], b=[], len=0)
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
