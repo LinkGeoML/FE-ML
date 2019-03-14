@@ -448,7 +448,9 @@ class calcCustomFEML(baseMetrics):
             LinearSVC(random_state=0, C=1.0),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
             DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
-            RandomForestClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=100),
+            RandomForestClassifier(
+                n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=100, oob_score=True, bootstrap=True
+            ),
             MLPClassifier(alpha=1, random_state=0),
             # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
@@ -627,7 +629,9 @@ class calcCustomFEMLExtended(baseMetrics):
             LinearSVC(random_state=0, C=1.0, max_iter=2000),
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
             DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
-            RandomForestClassifier(n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=100),
+            RandomForestClassifier(
+                n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=100, oob_score=True, bootstrap=True
+            ),
             MLPClassifier(alpha=1, random_state=0),
             # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
