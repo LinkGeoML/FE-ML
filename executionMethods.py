@@ -287,25 +287,34 @@ class Evaluator:
 
                             tmp_res = {}
                             for m in StaticValues.methods: tmp_res[m[0]] = []
-                            for i in range(30, 91, 5):
+                            for i in range(35, 81, 5):
                                 print('{0} {1}'.format(separator, float(i / 100.0)), end='')
                                 separator = ','
                                 #  required for python before 3.3
                                 sys.stdout.flush()
 
-                                csvfile.seek(0)
-                                for row in reader:
-                                    self.evalClass.evaluate(
-                                        row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies,
-                                        float(i / 100.0)
-                                    )
-                                if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
-                                res = self.evalClass.get_stats()
+                                internal_separator = ' ['
+                                for k in range(60, 81, 5):
+                                    print('{0}{1}'.format(internal_separator, float(k / 100.0)), end='')
+                                    internal_separator = ', '
+                                    #  required for python before 3.3
+                                    sys.stdout.flush()
 
-                                for key, val in res.items():
-                                    tmp_res[key].append([float(i / 100.0), val, list(w)])
+                                    csvfile.seek(0)
+                                    for row in reader:
+                                        self.evalClass.evaluate(
+                                            row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies,
+                                            float(i / 100.0), float(k / 100.0)
+                                        )
+                                    if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
+                                    res = self.evalClass.get_stats()
 
-                                self.evalClass.reset_vars()
+                                    for key, val in res.items():
+                                        tmp_res[key].append([float(i / 100.0), val, list(w), float(k / 100.0)])
+
+                                    self.evalClass.reset_vars()
+
+                                print(']', end='')
 
                             print('\nThe process for weight ({0}) took {1:.2f} sec'.format(','.join(map(str, w)), time.time() - start_time))
                             for k, val in tmp_res.items():

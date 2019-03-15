@@ -581,7 +581,7 @@ def termsim_split(a, b, thres):
     return base, mis
 
 
-def lsimilarity_terms(str1, str2):
+def lsimilarity_terms(str1, str2, term_split_thres=LSimilarityVars.split_thres):
     specialTerms = dict(a=[], b=[], len=0)
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
     # specialTerms['b'] = filter(lambda x: x in b, freq_terms)
@@ -599,7 +599,7 @@ def lsimilarity_terms(str1, str2):
     if specialTerms['b']:
         str2 = re.sub("|".join(specialTerms['b']), ' ', str2).strip()
 
-    baseTerms, mismatchTerms = termsim_split(str1, str2, LSimilarityVars.split_thres)
+    baseTerms, mismatchTerms = termsim_split(str1, str2, term_split_thres)
 
     return baseTerms, mismatchTerms, specialTerms
 
