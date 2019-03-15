@@ -574,9 +574,9 @@ def termsim_split(a, b, thres):
     mis['b'].extend(ls2)
 
     base['len'] = len(base['a']) + len(base['b'])
-    base['char_len'] = len(' '.join(base['a'])) + len(' '.join(base['b']))
+    base['char_len'] = sum(len(s) for s in base['a']) + sum(len(s) for s in base['b'])
     mis['len'] = len(mis['a']) + len(mis['b'])
-    mis['char_len'] = len(' '.join(mis['a'])) + len(' '.join(mis['b']))
+    mis['char_len'] = sum(len(s) for s in mis['a']) + sum(len(s) for s in mis['b'])
 
     return base, mis
 
@@ -592,7 +592,7 @@ def lsimilarity_terms(str1, str2):
     specialTerms['a'] = list(set(str1.split()) & LSimilarityVars.freq_ngrams['tokens'])
     specialTerms['b'] = list(set(str2.split()) & LSimilarityVars.freq_ngrams['tokens'])
     specialTerms['len'] = len(specialTerms['a']) + len(specialTerms['b'])
-    specialTerms['char_len'] = len(' '.join(specialTerms['a'])) + len(' '.join(specialTerms['b']))
+    specialTerms['char_len'] = sum(len(s) for s in specialTerms['a']) + sum(len(s) for s in specialTerms['b'])
 
     if specialTerms['a']:  # check if list is empty
         str1 = re.sub("|".join(specialTerms['a']), ' ', str1).strip()
@@ -681,26 +681,28 @@ def score_per_term(baseTerms, mismatchTerms, specialTerms, method):
 
 def calibrate_weights(baseTerms, mismatchTerms, specialTerms, method, averaged=False, tmode=False):
     weights = LSimilarityVars.lsimilarity_weights[:] if tmode else LSimilarityVars.per_metric_weights[method][1][:]
-    denominator = 1.0
-    if averaged:
-        weights[0] = weights[0] * baseTerms['char_len']/2
-        weights[1] = weights[1] * mismatchTerms['char_len']/2
-        weights[2] = weights[2] * specialTerms['char_len']/2
-        denominator = weights[0]*baseTerms['char_len']/2 + weights[1]*mismatchTerms['char_len']/2 + weights[2]*specialTerms['char_len']/2
 
     if baseTerms['len'] == 0:
         weights[1] += weights[0] * (float(mismatchTerms['len']) / (mismatchTerms['len'] + specialTerms['len']))
         weights[2] += weights[0] * (1 - float(mismatchTerms['len']) / (mismatchTerms['len'] + specialTerms['len']))
         weights[0] = 0
-    elif mismatchTerms['len'] == 0:
+    if mismatchTerms['len'] == 0:
         weights[0] += weights[1] * (float(baseTerms['len']) / (baseTerms['len'] + specialTerms['len']))
         weights[2] += weights[1] * (1 - float(baseTerms['len']) / (baseTerms['len'] + specialTerms['len']))
         weights[1] = 0
-    elif specialTerms['len'] == 0:
+    if specialTerms['len'] == 0:
         weights[0] += weights[2] * (float(baseTerms['len']) / (baseTerms['len'] + mismatchTerms['len']))
         weights[1] += weights[2] * (1 - float(baseTerms['len']) / (baseTerms['len'] + mismatchTerms['len']))
         weights[2] = 0
 
+    if averaged:
+        weights[0] = weights[0] * baseTerms['char_len'] / 2
+        weights[1] = weights[1] * mismatchTerms['char_len'] / 2
+        weights[2] = weights[2] * specialTerms['char_len'] / 2
+    denominator = weights[0] + weights[1] + weights[2]
+    # if averaged: print("after: ", weights, denominator, ' '.join(baseTerms['a']) + ' ' + ' '.join(mismatchTerms['a']) + ' ' + ' '.join(specialTerms['a']),
+    # ' '.join(baseTerms['b']) + ' ' + ' '.join(mismatchTerms['b']) + ' ' + ' '.join(specialTerms['b']))
+    # sys.stdout.flush()
     return [w / denominator for w in weights]
 
 
@@ -714,5 +716,12 @@ def weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged, tes
 def lsimilarity(str1, str2, method='damerau_levenshtein', averaged=False):
     baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(str1, str2)
     thres = weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged)
+
+    return thres
+
+
+def avg_lsimilarity(str1, str2, method='damerau_levenshtein'):
+    baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(str1, str2)
+    thres = weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged=True)
 
     return thres

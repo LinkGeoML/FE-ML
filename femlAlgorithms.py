@@ -383,6 +383,7 @@ class calcSotAMetrics(baseMetrics):
         tot_res += self._generic_evaluator(14, 'l_jaro_winkler', a, b, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(15, 'l_jaro_winkler', a[::-1], b[::-1], flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(16, 'lsimilarity', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(17, 'avg_lsimilarity', a, b, flag_true_match, custom_thres)
 
         if self.accuracyresults:
             if self.file is None:
