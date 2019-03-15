@@ -948,10 +948,7 @@ class testMetrics(baseMetrics):
     def _generic_evaluator(self, idx, sim_metric, baseTerms, mismatchTerms, specialTerms, is_a_match, custom_thres):
         start_time = time.time()
 
-        # LSimilarityVars.split_thres = StaticValues.methods[idx - 1][1]
-        baseTerms_val, mismatchTerms_val, specialTerms_val = score_per_term(baseTerms, mismatchTerms, specialTerms, sim_metric)
-        lweights = calibrate_weights(baseTerms, mismatchTerms, specialTerms)
-        sim_val = baseTerms_val * lweights[0] + mismatchTerms_val * lweights[1] + specialTerms_val * lweights[2]
+        sim_val = weighted_terms(baseTerms, mismatchTerms, specialTerms, sim_metric, averaged=False, tmode=True)
         res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
         self.timers[idx - 1] += (time.time() - start_time)
         self.predictedState[varnm][idx - 1] += 1.0

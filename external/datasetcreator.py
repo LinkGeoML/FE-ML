@@ -605,12 +605,6 @@ def lsimilarity_terms(str1, str2):
 
 
 def score_per_term(baseTerms, mismatchTerms, specialTerms, method):
-    # if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.5, 0.4, 0.1])
-    # if len(LSimilarityVars.lsimilarity_weights) == 0: LSimilarityVars.lsimilarity_weights.extend([0.6, 0.2, 0.2])
-    # if len(LSimilarityVars.lsimilarity_weights) != 0:
-    #     del LSimilarityVars.lsimilarity_weights[:]
-    # LSimilarityVars.lsimilarity_weights.extend(LSimilarityVars.per_metric_weights[method][1])
-
     baseScore, misScore, specialScore = 0, 0, 0
 
     if method == 'damerau_levenshtein':
@@ -685,9 +679,8 @@ def score_per_term(baseTerms, mismatchTerms, specialTerms, method):
     return baseScore, misScore, specialScore
 
 
-def calibrate_weights(baseTerms, mismatchTerms, specialTerms, method, averaged=False):
-    # weights = LSimilarityVars.lsimilarity_weights[:]
-    weights = LSimilarityVars.per_metric_weights[method][1][:]
+def calibrate_weights(baseTerms, mismatchTerms, specialTerms, method, averaged=False, tmode=False):
+    weights = LSimilarityVars.lsimilarity_weights[:] if tmode else LSimilarityVars.per_metric_weights[method][1][:]
     denominator = 1.0
     if averaged:
         weights[0] = weights[0] * baseTerms['char_len']/2
@@ -711,9 +704,9 @@ def calibrate_weights(baseTerms, mismatchTerms, specialTerms, method, averaged=F
     return [w / denominator for w in weights]
 
 
-def weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged):
+def weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged, test_mode=False):
     baseTerms_val, mismatchTerms_val, specialTerms_val = score_per_term(baseTerms, mismatchTerms, specialTerms, method)
-    lweights = calibrate_weights(baseTerms, mismatchTerms, specialTerms, method, averaged)
+    lweights = calibrate_weights(baseTerms, mismatchTerms, specialTerms, method, averaged, tmode=test_mode)
 
     return baseTerms_val * lweights[0] + mismatchTerms_val * lweights[1] + specialTerms_val * lweights[2]
 

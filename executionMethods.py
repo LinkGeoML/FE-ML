@@ -274,9 +274,9 @@ class Evaluator:
                     for m in StaticValues.methods: all_res[m[0]] = []
                     feml = FEMLFeatures()
                     for n in [3.34] + list(range(4, 8)):
-                        combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.product([1, 2, 3, 4, 5, 2.5, 3.33], repeat=2) if sum(seq) == (10 - n)]
+                        weight_combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.product([1, 2, 3, 4, 5, 2.5, 3.33], repeat=2) if sum(seq) == (10 - n)]
 
-                        for w in combs:
+                        for w in weight_combs:
                             w = (float(n/10.0), ) + w
                             feml.update_weights(w)
                             print('Computing stats for weights ({})'.format(','.join(map(str, w))))
