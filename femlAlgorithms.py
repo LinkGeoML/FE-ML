@@ -672,7 +672,9 @@ class calcCustomFEMLExtended(baseMetrics):
             if permuted: sim6 = StaticValues.algorithms['permuted_winkler'](a, b)
             sim10 = StaticValues.algorithms['skipgram'](a, b)
             sim13 = StaticValues.algorithms['davies'](a, b)
-            if flag: sim14 = StaticValues.algorithms['lsimilarity'](a, b)
+            if flag:
+                sim14 = StaticValues.algorithms['lsimilarity'](a, b)
+                sim15 = StaticValues.algorithms['lsimilarity'](a, b, averaged=True)
 
             self.timer += (time.time() - start_time)
 
@@ -681,13 +683,13 @@ class calcCustomFEMLExtended(baseMetrics):
                     tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 else:
                     tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-                if flag: tmp_X1.append([sim14])
+                if flag: tmp_X1.append([sim14, sim15])
             else:
                 if permuted:
                     tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 else:
                     tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-                if flag: tmp_X2.append([sim14])
+                if flag: tmp_X2.append([sim14, sim15])
 
         row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
@@ -695,15 +697,15 @@ class calcCustomFEMLExtended(baseMetrics):
 
         baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(row['s1'], row['s2'])
         feature1_1, feature1_2, feature1_3 = score_per_term(baseTerms, mismatchTerms, specialTerms, 'damerau_levenshtein')
-        feature2_1 = FEMLFeatures.contains(row['s1'], row['s2'])
-        feature2_2 = FEMLFeatures.contains(row['s2'], row['s1'])
-        feature3_1, feature3_2 = FEMLFeatures.no_of_words(row['s1'], row['s2'])
-        feature4_1 = FEMLFeatures.containsDashConnected_words(row['s1'])
-        feature4_2 = FEMLFeatures.containsDashConnected_words(row['s2'])
-        fterms_s1, fterms_s2 = FEMLFeatures.containsFreqTerms(row['s1'], row['s2'])
-        feature5_1 = False if len(fterms_s1) == 0 else True
-        feature5_2 = False if len(fterms_s2) == 0 else True
-        feature6_1, feature6_2 = FEMLFeatures().containsInPos(row['s1'], row['s2'])
+        # feature2_1 = FEMLFeatures.contains(row['s1'], row['s2'])
+        # feature2_2 = FEMLFeatures.contains(row['s2'], row['s1'])
+        # feature3_1, feature3_2 = FEMLFeatures.no_of_words(row['s1'], row['s2'])
+        # feature4_1 = FEMLFeatures.containsDashConnected_words(row['s1'])
+        # feature4_2 = FEMLFeatures.containsDashConnected_words(row['s2'])
+        # fterms_s1, fterms_s2 = FEMLFeatures.containsFreqTerms(row['s1'], row['s2'])
+        # feature5_1 = False if len(fterms_s1) == 0 else True
+        # feature5_2 = False if len(fterms_s2) == 0 else True
+        # feature6_1, feature6_2 = FEMLFeatures().containsInPos(row['s1'], row['s2'])
         # feature7_1 = [0] * (len(LSimilarityVars.freq_ngrams['tokens'] | LSimilarityVars.freq_ngrams['chars']))
         # feature7_2 = [0] * (len(LSimilarityVars.freq_ngrams['tokens'] | LSimilarityVars.freq_ngrams['chars']))
         # for x in fterms_s1: feature7_1[x[0]] = 1
@@ -723,19 +725,19 @@ class calcCustomFEMLExtended(baseMetrics):
         #     {'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']]},
         #     'jaro_winkler'
         # )
-        feature17 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'davies')
-        feature18 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'skipgram')
-        feature19 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'soft_jaccard')
-        feature20 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'strike_a_match')
-        feature21 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'cosine')
-        feature22 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'monge_elkan')
-        feature23 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'jaro_winkler')
-        feature24 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'jaro')
+        feature17 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'davies', False)
+        feature18 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'skipgram', False)
+        feature19 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'soft_jaccard', False)
+        feature20 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'strike_a_match', False)
+        feature21 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'cosine', False)
+        feature22 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'monge_elkan', False)
+        feature23 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'jaro_winkler', False)
+        feature24 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'jaro', False)
         feature25 = weighted_terms(
             {'a': [x[::-1] for x in baseTerms['a']], 'b': [x[::-1] for x in baseTerms['b']], 'len': baseTerms['len']},
             {'a': [x[::-1] for x in mismatchTerms['a']], 'b': [x[::-1] for x in mismatchTerms['b']], 'len': mismatchTerms['len']},
             {'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']], 'len': specialTerms['len']},
-            'jaro_winkler'
+            'jaro_winkler', False
         )
 
         self.timer += (time.time() - start_time)
@@ -753,13 +755,13 @@ class calcCustomFEMLExtended(baseMetrics):
                 # feature15_1, feature15_2, feature15_3,
                 # feature16_1, feature16_2, feature16_3,
                 feature17, feature18, feature19, feature20, feature21, feature22, feature23, feature24, feature25,
-                int(feature2_1), int(feature2_2),
-                feature3_1, feature3_2,
-                int(feature4_1), int(feature4_2),
-                int(feature5_1), int(feature5_2)
+                # int(feature2_1), int(feature2_2),
+                # feature3_1, feature3_2,
+                # int(feature4_1), int(feature4_2),
+                # int(feature5_1), int(feature5_2)
             ])
-            tmp_X1.append(map(lambda x: int(x == max(feature6_1)), feature6_1))
-            tmp_X1.append(map(lambda x: int(x == max(feature6_2)), feature6_2))
+            # tmp_X1.append(map(lambda x: int(x == max(feature6_1)), feature6_1))
+            # tmp_X1.append(map(lambda x: int(x == max(feature6_2)), feature6_2))
             # self.X1[-1].extend(
             #     feature7_1[:self.fterm_feature_size/2] + feature7_1[len(feature7_1)/2:self.fterm_feature_size/2] +
             #     feature7_2[:self.fterm_feature_size/2] + feature7_2[len(feature7_2)/2:self.fterm_feature_size/2]
@@ -779,13 +781,13 @@ class calcCustomFEMLExtended(baseMetrics):
                 # feature15_1, feature15_2, feature15_3,
                 # feature16_1, feature16_2, feature16_3,
                 feature17, feature18, feature19, feature20, feature21, feature22, feature23, feature24, feature25,
-                int(feature2_1), int(feature2_2),
-                feature3_1, feature3_2,
-                int(feature4_1), int(feature4_2),
-                int(feature5_1), int(feature5_2)
+                # int(feature2_1), int(feature2_2),
+                # feature3_1, feature3_2,
+                # int(feature4_1), int(feature4_2),
+                # int(feature5_1), int(feature5_2)
             ])
-            tmp_X2.append(map(lambda x: int(x == max(feature6_1)), feature6_1))
-            tmp_X2.append(map(lambda x: int(x == max(feature6_2)), feature6_2))
+            # tmp_X2.append(map(lambda x: int(x == max(feature6_1)), feature6_1))
+            # tmp_X2.append(map(lambda x: int(x == max(feature6_2)), feature6_2))
 
             self.X2.append(list(itertools.chain.from_iterable(tmp_X2)))
 
@@ -839,6 +841,12 @@ class calcCustomFEMLExtended(baseMetrics):
                 elif hasattr(model, "coef_"):
                     self.importances[i] += model.coef_.ravel()
                 # self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
+                if name in ['rf']:
+                    print('R^2 Training Score: {:.2f} \nOOB Score: {:.2f} \nR^2 Validation Score: {:.2f}'.format(
+                        model.score(train_X, train_Y),
+                        model.oob_score_,
+                        model.score(pred_X, pred_Y))
+                    )
 
             print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
             self.timers[i] += self.timer
