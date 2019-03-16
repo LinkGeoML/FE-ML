@@ -949,7 +949,7 @@ class testMetrics(baseMetrics):
     def _generic_evaluator(self, idx, sim_metric, baseTerms, mismatchTerms, specialTerms, is_a_match, custom_thres):
         start_time = time.time()
 
-        sim_val = weighted_terms(baseTerms, mismatchTerms, specialTerms, sim_metric, averaged=False, test_mode=True)
+        sim_val = weighted_terms(baseTerms, mismatchTerms, specialTerms, sim_metric, averaged=True, test_mode=True)
         res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
         self.timers[idx - 1] += (time.time() - start_time)
         self.predictedState[varnm][idx - 1] += 1.0
@@ -972,9 +972,18 @@ class testMetrics(baseMetrics):
         a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
         baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(a, b, term_split_thres)
-        rbaseTerms = {'a': [x[::-1] for x in baseTerms['a']], 'b': [x[::-1] for x in baseTerms['b']], 'len': baseTerms['len']}
-        rmismatchTerms = {'a': [x[::-1] for x in mismatchTerms['a']], 'b': [x[::-1] for x in mismatchTerms['b']], 'len': mismatchTerms['len']}
-        rspecialTerms = {'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']], 'len': specialTerms['len']}
+        rbaseTerms = {
+            'a': [x[::-1] for x in baseTerms['a']], 'b': [x[::-1] for x in baseTerms['b']],
+            'len': baseTerms['len'], 'char_len': baseTerms['char_len']
+        }
+        rmismatchTerms = {
+            'a': [x[::-1] for x in mismatchTerms['a']], 'b': [x[::-1] for x in mismatchTerms['b']],
+            'len': mismatchTerms['len'], 'char_len': mismatchTerms['char_len']
+        }
+        rspecialTerms = {
+            'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']],
+            'len': specialTerms['len'], 'char_len': specialTerms['char_len']
+        }
 
         tot_res += self._generic_evaluator(1, 'damerau_levenshtein', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(8, 'jaccard', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
