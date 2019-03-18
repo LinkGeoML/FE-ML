@@ -165,9 +165,9 @@ class StaticValues:
         ["LinkGeoML Jaro-Winkler reversed", {'orig': 0.75, 'sorted': 0.75, 'orig_onlylatin': 0.75, 'sorted_onlylatin': 0.75,
                                              'orig_latin_EU/NA': 0.75, 'sorted_latin_EU/NA': 0.8}],
         ["LinkGeoML Similarity", {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-                                  'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.45}],
+                                  'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.55}],
         ["Avg LinkGeoML Similarity", {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-                                      'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.45}],
+                                      'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.55}],
     ]
 
     nameIDs = {
