@@ -260,9 +260,6 @@ class StaticValues:
         # "LinkGeoML Jaro-Winkler reversed Sorted",
         "LSimilarity",
         "LSimilarity_wavg",
-        "LSimilarity_baseScore",
-        "LSimilarity_mismatchScore",
-        "LSimilarity_specialScore",
         # "contains_str1",
         # "contains_str2",
         # "WordsNo_str1",
@@ -295,4 +292,7 @@ class StaticValues:
         "LSimilarity_jaro_winkler_wavg",
         "LSimilarity_jaro_wavg",
         "LSimilarity_jaro_winkler_reversed_wavg",
+        "LSimilarity_baseScore",
+        "LSimilarity_mismatchScore",
+        "LSimilarity_specialScore",
     ]
