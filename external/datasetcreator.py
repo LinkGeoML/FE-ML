@@ -533,19 +533,20 @@ class LSimilarityVars:
     split_thres = 0.75
 
     per_metric_weights = {
-        'damerau_levenshtein': [0.45, [0.6, 0.2, 0.2]],
-        'davies': [0.6, [0.6, 0.3, 0.1]],
-        'skipgram': [0.5, [0.7, 0.2, 0.1]],
+        'damerau_levenshtein': {'simple': [0.6, [0.7, 0.1, 0.2]], 'avg': [0.8, [0.5, 0.1, 0.4]]},
+        'jaro': {'simple': [0.6, [0.7, 0.1, 0.2]], 'avg': [0.8, [0.7, 0.1, 0.2]]},
+        'jaro_winkler': {'simple': [0.8, [0.7, 0.1, 0.2]], 'avg': [0.8, [0.6, 0.1, 0.3]]},
+        'jaro_winkler_r': {'simple': [0.6, [0.7, 0.1, 0.2]], 'avg': [0.8, [0.7, 0.1, 0.2]]},
         'permuted_winkler': [],
         'sorted_winkler': [],
-        'soft_jaccard': [0.65, [0.7, 0.2, 0.1]],
-        'strike_a_match': [0.55, [0.7, 0.1, 0.2]],
-        'cosine': [0.55, [0.7, 0.1, 0.2]],
-        'monge_elkan': [0.5, [0.6, 0.3, 0.1]],
-        'jaro_winkler': [0.65, [0.7, 0.2, 0.1]],
-        'jaro': [0.65, [0.7, 0.2, 0.1]],
-        'jaccard': [0.35, [0.7, 0.2, 0.1]],
-        'l_jaro_winkler': [0.7, [0.7, 0.2, 0.1]],
+        'cosine': {'simple': [0.6, [0.6, 0.2, 0.2]], 'avg': [0.8, [0.4, 0.2, 0.4]]},
+        'jaccard': {'simple': [0.6, [0.6, 0.1, 0.3]], 'avg': [0.8, [0.334, 0.333, 0.333]]},
+        'strike_a_match': {'simple': [0.6, [0.6, 0.1, 0.3]], 'avg': [0.8, [0.4, 0.2, 0.4]]},
+        'skipgram': {'simple': [0.6, [0.6, 0.2, 0.2]], 'avg': [0.8, [0.334, 0.333, 0.333]]},
+        'monge_elkan': {'simple': [0.6, [0.7, 0.2, 0.1]], 'avg': [0.8, [0.6, 0.1, 0.3]]},
+        'soft_jaccard': {'simple': [0.8, [0.6, 0.1, 0.3]], 'avg': [0.8, [0.5, 0.1, 0.4]]},
+        'davies': {'simple': [0.8, [0.7, 0.1, 0.2]], 'avg': [0.8, [0.6, 0.1, 0.3]]},
+        'l_jaro_winkler': {'simple': [0.8, [0.7, 0.1, 0.2]], 'avg': [0.8, [0.6, 0.1, 0.3]]},
     }
 
 
@@ -680,7 +681,8 @@ def score_per_term(baseTerms, mismatchTerms, specialTerms, method):
 
 
 def calibrate_weights(baseTerms, mismatchTerms, specialTerms, method, averaged=False, tmode=False):
-    weights = LSimilarityVars.lsimilarity_weights[:] if tmode else LSimilarityVars.per_metric_weights[method][1][:]
+    lsim_variance = 'avg' if averaged else 'simple'
+    weights = LSimilarityVars.lsimilarity_weights[:] if tmode else LSimilarityVars.per_metric_weights[method][lsim_variance][1][:]
 
     if baseTerms['len'] == 0:
         weights[1] += weights[0] * (float(mismatchTerms['len']) / (mismatchTerms['len'] + specialTerms['len']))
@@ -714,6 +716,9 @@ def weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged, tes
 
 
 def lsimilarity(str1, str2, method='damerau_levenshtein', averaged=False):
+    lsim_variance = 'avg' if averaged else 'simple'
+    LSimilarityVars.split_thres = LSimilarityVars.per_metric_weights[method][lsim_variance][0]
+
     baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(str1, str2)
     thres = weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged)
 
@@ -721,6 +726,7 @@ def lsimilarity(str1, str2, method='damerau_levenshtein', averaged=False):
 
 
 def avg_lsimilarity(str1, str2, method='damerau_levenshtein'):
+    LSimilarityVars.split_thres = LSimilarityVars.per_metric_weights[method]['avg'][0]
     baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(str1, str2)
     thres = weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged=True)
 

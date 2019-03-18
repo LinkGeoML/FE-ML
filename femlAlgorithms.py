@@ -740,6 +740,22 @@ class calcCustomFEMLExtended(baseMetrics):
             {'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']], 'len': specialTerms['len']},
             'jaro_winkler', False
         )
+        feature26 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'davies', True)
+        feature27 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'skipgram', True)
+        feature28 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'soft_jaccard', True)
+        feature29 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'strike_a_match', True)
+        feature30 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'cosine', True)
+        feature31 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'monge_elkan', True)
+        feature32 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'jaro_winkler', True)
+        feature33 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'jaro', True)
+        feature34 = weighted_terms(
+            {'a': [x[::-1] for x in baseTerms['a']], 'b': [x[::-1] for x in baseTerms['b']], 'len': baseTerms['len']},
+            {'a': [x[::-1] for x in mismatchTerms['a']], 'b': [x[::-1] for x in mismatchTerms['b']],
+             'len': mismatchTerms['len']},
+            {'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']],
+             'len': specialTerms['len']},
+            'jaro_winkler', True
+        )
 
         self.timer += (time.time() - start_time)
 
@@ -756,6 +772,7 @@ class calcCustomFEMLExtended(baseMetrics):
                 # feature15_1, feature15_2, feature15_3,
                 # feature16_1, feature16_2, feature16_3,
                 feature17, feature18, feature19, feature20, feature21, feature22, feature23, feature24, feature25,
+                feature26, feature27, feature28, feature29, feature30, feature31, feature32, feature33, feature34,
                 # int(feature2_1), int(feature2_2),
                 # feature3_1, feature3_2,
                 # int(feature4_1), int(feature4_2),
@@ -782,6 +799,7 @@ class calcCustomFEMLExtended(baseMetrics):
                 # feature15_1, feature15_2, feature15_3,
                 # feature16_1, feature16_2, feature16_3,
                 feature17, feature18, feature19, feature20, feature21, feature22, feature23, feature24, feature25,
+                feature26, feature27, feature28, feature29, feature30, feature31, feature32, feature33, feature34,
                 # int(feature2_1), int(feature2_2),
                 # feature3_1, feature3_2,
                 # int(feature4_1), int(feature4_2),
@@ -949,7 +967,7 @@ class testMetrics(baseMetrics):
     def _generic_evaluator(self, idx, sim_metric, baseTerms, mismatchTerms, specialTerms, is_a_match, custom_thres):
         start_time = time.time()
 
-        sim_val = weighted_terms(baseTerms, mismatchTerms, specialTerms, sim_metric, averaged=True, test_mode=True)
+        sim_val = weighted_terms(baseTerms, mismatchTerms, specialTerms, sim_metric, averaged=False, test_mode=True)
         res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
         self.timers[idx - 1] += (time.time() - start_time)
         self.predictedState[varnm][idx - 1] += 1.0
