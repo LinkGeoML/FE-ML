@@ -530,9 +530,9 @@ def l_jaro_winkler(s1, s2, long_tolerance=False):
 class LSimilarityVars:
     freq_ngrams = {'tokens': set(), 'chars': set()}
     lsimilarity_weights = []
-    split_thres = 0.75
+    split_thres = 0.8
 
-    per_metric_weights = {
+    per_metric_optimal_values = {
         'damerau_levenshtein': {'simple': [0.6, [0.7, 0.1, 0.2]], 'avg': [0.8, [0.5, 0.1, 0.4]]},
         'jaro': {'simple': [0.6, [0.7, 0.1, 0.2]], 'avg': [0.8, [0.7, 0.1, 0.2]]},
         'jaro_winkler': {'simple': [0.8, [0.7, 0.1, 0.2]], 'avg': [0.8, [0.6, 0.1, 0.3]]},
@@ -681,8 +681,8 @@ def score_per_term(baseTerms, mismatchTerms, specialTerms, method):
 
 
 def calibrate_weights(baseTerms, mismatchTerms, specialTerms, method, averaged=False, tmode=False):
-    lsim_variance = 'avg' if averaged else 'simple'
-    weights = LSimilarityVars.lsimilarity_weights[:] if tmode else LSimilarityVars.per_metric_weights[method][lsim_variance][1][:]
+    lsim_baseThres = 'avg' if averaged else 'simple'
+    weights = LSimilarityVars.lsimilarity_weights[:] if tmode else LSimilarityVars.per_metric_optimal_values[method][lsim_baseThres][1][:]
 
     if baseTerms['len'] == 0:
         weights[1] += weights[0] * (float(mismatchTerms['len']) / (mismatchTerms['len'] + specialTerms['len']))
@@ -717,17 +717,13 @@ def weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged, tes
 
 def lsimilarity(str1, str2, method='damerau_levenshtein', averaged=False):
     lsim_variance = 'avg' if averaged else 'simple'
-    LSimilarityVars.split_thres = LSimilarityVars.per_metric_weights[method][lsim_variance][0]
+    split_thres = LSimilarityVars.per_metric_optimal_values[method][lsim_variance][0]
 
-    baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(str1, str2)
+    baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(str1, str2, split_thres)
     thres = weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged)
 
     return thres
 
 
 def avg_lsimilarity(str1, str2, method='damerau_levenshtein'):
-    LSimilarityVars.split_thres = LSimilarityVars.per_metric_weights[method]['avg'][0]
-    baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(str1, str2)
-    thres = weighted_terms(baseTerms, mismatchTerms, specialTerms, method, averaged=True)
-
-    return thres
+    return lsimilarity(str1, str2, method, True)
