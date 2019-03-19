@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import os, sys
 from collections import Counter
 import json
 # from functools import partial
@@ -11,8 +10,8 @@ import json
 from nltk.corpus import stopwords
 
 from femlAlgorithms import *
-from helpers import normalize_str, sorted_nicely, getRelativePathtoWorking, getTMabsPath
-from external.datasetcreator import detect_alphabet, strip_accents, filter_dataset, build_dataset_from_geonames
+from helpers import normalize_str, getRelativePathtoWorking, getTMabsPath
+from external.datasetcreator import filter_dataset, build_dataset_from_geonames
 from helpers import StaticValues
 
 
@@ -359,7 +358,7 @@ class Evaluator:
 
                 for row in reader:
                     a, b = transform(row['s1'], row['s2'], sorting=True, canonical=True)
-                    baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(a, b)
+                    baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(a, b, 0.7)
                     output_f.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
                         row['res'],
                         row['s1'], ','.join(baseTerms['a']).encode('utf8'),

@@ -530,7 +530,6 @@ def l_jaro_winkler(s1, s2, long_tolerance=False):
 class LSimilarityVars:
     freq_ngrams = {'tokens': set(), 'chars': set()}
     lsimilarity_weights = []
-    split_thres = 0.8
 
     per_metric_optimal_values = {
         'damerau_levenshtein': {'simple': [0.6, [0.7, 0.1, 0.2]], 'avg': [0.8, [0.5, 0.1, 0.4]]},
@@ -582,7 +581,7 @@ def termsim_split(a, b, thres):
     return base, mis
 
 
-def lsimilarity_terms(str1, str2, term_split_thres=LSimilarityVars.split_thres):
+def lsimilarity_terms(str1, str2, term_split_thres):
     specialTerms = dict(a=[], b=[], len=0)
     # specialTerms['a'] = filter(lambda x: x in a, freq_terms)
     # specialTerms['b'] = filter(lambda x: x in b, freq_terms)
