@@ -328,6 +328,7 @@ class baseMetrics:
         var_name = ""
 
         thres = StaticValues.methods[sim_id - 1][1][custom_thres] if isinstance(custom_thres, string_types) else custom_thres
+
         if real_val == 1.0:
             if pred_val >= thres:
                 var_name = 'num_true_predicted_true'
@@ -1034,7 +1035,7 @@ class testMetrics(baseMetrics):
         tot_res += self._generic_evaluator(7, 'cosine', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(9, 'strike_a_match', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(12, 'soft_jaccard', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(5, 'sorted_winkler', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
+        # tot_res += self._generic_evaluator(5, 'sorted_winkler', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(10, 'skipgram', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(13, 'davies', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(14, 'l_jaro_winkler', baseTerms, mismatchTerms, specialTerms, flag_true_match, custom_thres)

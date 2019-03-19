@@ -324,7 +324,7 @@ class Evaluator:
                                 all_res[k].extend(val)
                                 print(k, max(val, key=lambda x: x[1][0]))
 
-                    print("\nTotal results")
+                    print("\nFinal Results")
                     for k, val in all_res.items():
                         if len(val) == 0:
                             continue
