@@ -753,8 +753,13 @@ class calcCustomFEMLExtended(baseMetrics):
 
         start_time = time.time()
 
-        baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(row['s1'], row['s2'])
-        feature1_1, feature1_2, feature1_3 = score_per_term(baseTerms, mismatchTerms, specialTerms, 'damerau_levenshtein')
+        method_nm = 'damerau_levenshtein'
+        baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(row['s1'], row['s2'], LSimilarityVars.per_metric_optimal_values[method_nm]['simple'][0])
+        feature1_1, feature1_2, feature1_3 = score_per_term(baseTerms, mismatchTerms, specialTerms, method_nm)
+        baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(
+            row['s1'], row['s2'], LSimilarityVars.per_metric_optimal_values[method_nm]['simple'][0]
+        )
+        feature1_11, feature1_12, feature1_13 = score_per_term(baseTerms, mismatchTerms, specialTerms, method_nm)
         # feature2_1 = FEMLFeatures.contains(row['s1'], row['s2'])
         # feature2_2 = FEMLFeatures.contains(row['s2'], row['s1'])
         # feature3_1, feature3_2 = FEMLFeatures.no_of_words(row['s1'], row['s2'])
@@ -789,6 +794,7 @@ class calcCustomFEMLExtended(baseMetrics):
         if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
             tmp_X1.append([
                 feature1_1, feature1_2, feature1_3,
+                feature1_11, feature1_12, feature1_13,
                 # feature8_1, feature8_2, feature8_3,
                 # feature9_1, feature9_2, feature9_3,
                 # feature10_1, feature10_2, feature10_3,
@@ -814,6 +820,7 @@ class calcCustomFEMLExtended(baseMetrics):
         else:
             tmp_X2.append([
                 feature1_1, feature1_2, feature1_3,
+                feature1_11, feature1_12, feature1_13,
                 # feature8_1, feature8_2, feature8_3,
                 # feature9_1, feature9_2, feature9_3,
                 # feature10_1, feature10_2, feature10_3,

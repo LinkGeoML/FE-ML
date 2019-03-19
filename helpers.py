@@ -295,4 +295,7 @@ class StaticValues:
         "LSimilarity_baseScore",
         "LSimilarity_mismatchScore",
         "LSimilarity_specialScore",
+        "Avg LSimilarity_baseScore",
+        "Avg LSimilarity_mismatchScore",
+        "Avg LSimilarity_specialScore",
     ]
