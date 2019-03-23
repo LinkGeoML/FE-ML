@@ -676,7 +676,7 @@ class calcCustomFEMLExtended(baseMetrics):
             sim13 = StaticValues.algorithms['davies'](a, b)
             if flag:
                 sim14 = StaticValues.algorithms['lsimilarity'](a, b)
-                sim15 = StaticValues.algorithms['lsimilarity'](a, b, averaged=True)
+                sim15 = StaticValues.algorithms['avg_lsimilarity'](a, b)
 
             self.timer += (time.time() - start_time)
 

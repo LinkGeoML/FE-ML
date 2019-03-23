@@ -192,6 +192,9 @@ class Evaluator:
         if test_case - 1 == 0:
             print("Not implemented yet!!!")
         elif test_case - 1 == 1:
+            if not os.path.exists("output"):
+                os.makedirs("output")
+
             ngram_stats = {
                 '2gram': Counter(), '3gram': Counter(), '4gram': Counter(),
                 'gram_token': Counter(), '2gram_token': Counter(), '3gram_token': Counter()
