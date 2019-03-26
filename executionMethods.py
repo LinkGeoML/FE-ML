@@ -210,7 +210,7 @@ class Evaluator:
 
                 feml = FEMLFeatures()
                 for row in reader:
-                    # row['s1'], row['s2'] = femlAlgs.transform(row['s1'], row['s2'], canonical=True)
+                    row['s1'], row['s2'] = transform(row['s1'], row['s2'], canonical=True)
 
                     for sstr in ['s1', 's2']:
                         # calc the number of abbr that exist
