@@ -23,6 +23,7 @@ class Evaluator:
         'DLearning': calcDLearning,
         'TestMetrics': testMetrics,
         'customFEMLExtended': calcCustomFEMLExtended,
+        'lSimilarityMetrics': calcLSimilarities,
     }
 
     def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, only_latin=False):

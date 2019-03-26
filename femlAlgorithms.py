@@ -990,6 +990,58 @@ class calcSotAML(baseMetrics):
     pass
 
 
+class calcLSimilarities(baseMetrics):
+    def __init__(self, njobs, accures):
+        super(calcLSimilarities, self).__init__(len(StaticValues.methods), njobs, accures)
+
+    def _generic_evaluator(self, idx, sim_metric_used, str1, str2, is_a_match, custom_thres):
+        tot_res = ""
+
+        for alg_info in [[0, 'lsimilarity'], [1, 'avg_lsimilarity']]:
+            start_time = time.time()
+            sim_val = StaticValues.algorithms[alg_info[1]](str1, str2, method=sim_metric_used)
+            res, varnm = self.prediction(idx + alg_info[0], sim_val, is_a_match, custom_thres)
+            self.timers[idx + alg_info[0] - 1] += (time.time() - start_time)
+            self.predictedState[varnm][idx + alg_info[0] - 1] += 1.0
+            tot_res += res
+
+        return tot_res
+
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig'):
+        tot_res = ""
+        flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
+
+        a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
+
+        tot_res += self._generic_evaluator(16, 'damerau_levenshtein', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(26, 'jaccard', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(18, 'jaro', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(20, 'jaro_winkler', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(22, 'jaro_winkler', a[::-1], b[::-1], flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(32, 'monge_elkan', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(24, 'cosine', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(28, 'strike_a_match', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(34, 'soft_jaccard', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(30, 'skipgram', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(36, 'davies', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(38, 'l_jaro_winkler', a, b, flag_true_match, custom_thres)
+        tot_res += self._generic_evaluator(40, 'l_jaro_winkler', a[::-1], b[::-1], flag_true_match, custom_thres)
+
+        if self.accuracyresults:
+            if self.file is None:
+                file_name = 'dataset-accuracyresults-sim-metrics'
+                if canonical:
+                    file_name += '_canonical'
+                if sorting:
+                    file_name += '_sorted'
+                self.file = open(file_name + '.csv', 'w+')
+
+            if flag_true_match == 1.0:
+                self.file.write("TRUE{0}\t{1}\t{2}\n".format(tot_res, a.encode('utf8'), b.encode('utf8')))
+            else:
+                self.file.write("FALSE{0}\t{1}\t{2}\n".format(tot_res, a.encode('utf8'), b.encode('utf8')))
+
+
 class testMetrics(baseMetrics):
     def __init__(self, njobs, accures):
         super(testMetrics, self).__init__(len(StaticValues.methods), njobs, accures)
