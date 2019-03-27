@@ -649,7 +649,7 @@ class calcCustomFEML(baseMetrics):
             if status == 0:
                 self._print_stats(StaticValues.classifiers[idx], acc, pre, rec, f1, t)
 
-                if not isinstance(self.importances[idx], np.ndarray):
+                if idx not in self.importances or not isinstance(self.importances[idx], np.ndarray):
                     print("The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
                         name))
                 else:
@@ -1007,7 +1007,7 @@ class calcCustomFEMLExtended(baseMetrics):
             if status == 0:
                 self._print_stats(StaticValues.classifiers[idx], acc, pre, rec, f1, t)
 
-                if not isinstance(self.importances[idx], np.ndarray):
+                if idx not in self.importances or not isinstance(self.importances[idx], np.ndarray):
                     print("The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
                         name))
                 else:
