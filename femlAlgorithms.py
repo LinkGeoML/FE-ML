@@ -362,7 +362,7 @@ class baseMetrics:
             X_t = rfe.transform(X_test)
             fsupported = rfe.support_
 
-            print("{} features selected using Recursive Feature Elimination (RFE).".format(X_train.shape[1]))
+            print("{} features selected using Recursive Feature Elimination (RFE).".format(X.shape[1]))
         else:  # default is SelectFromModel module
             # We use the base estimator LassoCV since the L1 norm promotes sparsity of features.
             # clf = LassoCV(cv=5, max_iter=2000, n_jobs=2)
@@ -384,7 +384,7 @@ class baseMetrics:
             fsupported = sfm.get_support()
 
             print("{} features selected using SelectFromModel with threshold {:.2f}.".format(
-                X_train.shape[1], sfm.threshold)
+                X.shape[1], sfm.threshold)
             )
 
         return X, X_t, fsupported
@@ -603,7 +603,10 @@ class calcCustomFEML(baseMetrics):
                     for idx, val in zip([i for i, x in enumerate(features_supported) if x], model.feature_importances_):
                         self.importances[clf_abbr][idx] += val
                 elif hasattr(model, "coef_"):
-                    self.importances[clf_abbr] += model.coef_.ravel()
+                    if clf_abbr in self.importances:
+                        self.importances[clf_abbr] += model.coef_.ravel()
+                    else:
+                        self.importances[clf_abbr] = model.coef_.ravel()
                 # self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
 
             print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
@@ -694,7 +697,7 @@ class calcCustomFEMLExtended(baseMetrics):
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         self.scores = [[] for _ in range(len(self.classifiers))]
-        self.importances = [0.0 for _ in range(len(self.classifiers))]
+        self.importances = dict()
         self.mlalgs_to_run = StaticValues.classifiers_abbr.keys()
 
         super(calcCustomFEMLExtended, self).__init__(len(self.classifiers), njobs, accures)
@@ -949,10 +952,13 @@ class calcCustomFEMLExtended(baseMetrics):
                     if clf_abbr not in self.importances:
                         self.importances[clf_abbr] = np.zeros(len(StaticValues.featureColumns), dtype=float)
 
-                    for idx, val in zip([clf_abbr for clf_abbr, x in enumerate(features_supported) if x], model.feature_importances_):
+                    for idx, val in zip([i for i, x in enumerate(features_supported) if x], model.feature_importances_):
                         self.importances[clf_abbr][idx] += val
                 elif hasattr(model, "coef_"):
-                    self.importances[clf_abbr] += model.coef_.ravel()
+                    if clf_abbr in self.importances:
+                        self.importances[clf_abbr] += model.coef_.ravel()
+                    else:
+                        self.importances[clf_abbr] = model.coef_.ravel()
                 # self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
                 if name in ['rf']:
                     print('R^2 Training Score: {:.2f} \nOOB Score: {:.2f} \nR^2 Validation Score: {:.2f}'.format(
@@ -1001,15 +1007,20 @@ class calcCustomFEMLExtended(baseMetrics):
             if status == 0:
                 self._print_stats(StaticValues.classifiers[idx], acc, pre, rec, f1, t)
 
-                importances = self.importances[idx] / 2.0
-                if isinstance(importances, float):
+                if not isinstance(self.importances[idx], np.ndarray):
                     print("The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
                         name))
                 else:
-                    indices = np.argsort(importances)[::-1][:min(importances.shape[0], self.max_important_features_toshow)]
+                    importances = self.importances[idx] / 2.0
+                    importances = np.ma.masked_equal(importances, 0.0)
+
+                    indices = np.argsort(importances.compressed())[::-1][
+                              :min(importances.compressed().shape[0], self.max_important_features_toshow)]
                     headers = ["name", "score"]
-                    print(tabulate(zip(np.array(StaticValues.featureColumns)[indices], importances[indices]),
-                                   headers, tablefmt="simple"))
+                    print(tabulate(
+                        zip(np.array(StaticValues.featureColumns)[indices], importances.compressed()[indices]),
+                        headers, tablefmt="simple")
+                    )
 
                 # if hasattr(clf, "feature_importances_"):
                 #         # if results:
