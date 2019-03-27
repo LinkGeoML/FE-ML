@@ -26,7 +26,7 @@ Options:
   --optimalThres                Find best threshold for metrics.
   --optimalSortingThres         Find best threshold for metric used to decide whether to apply sorting or not.
   --buildDataset                Build the dataset for evaluation.
-  --fs <FeatureSelection>       Method to use for feature selection. [default: sfm]
+  --fs <FeatureSelection>       Method to use for feature selection. [default: None]
 
 Arguments:
   evaluator_type            'SotAMetrics' (default)
@@ -45,7 +45,7 @@ Arguments:
                             'nb' (Naive Bayes)
                             'dt' (Decision Tree)
                             'lsvm' (Linear SVM)
-  FeatureSelection          'sfm' (default)
+  FeatureSelection          'sfm'
                             'rfe'
 """
 

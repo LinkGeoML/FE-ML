@@ -587,7 +587,7 @@ class calcCustomFEML(baseMetrics):
                 start_time = time.time()
 
                 features_supported = [True] * len(StaticValues.featureColumns)
-                if fs_method is not None and set(self.mlalgs_to_run) & {'rf', 'et', 'xgboost'}:
+                if fs_method is not None and set(name) & {'rf', 'et', 'xgboost'}:
                     X_train, X_pred, features_supported = self._perform_feature_selection(X_train, y_train, X_pred, fs_method, model)
 
                 model.fit(X_train, y_train)
@@ -936,7 +936,7 @@ class calcCustomFEMLExtended(baseMetrics):
                 start_time = time.time()
 
                 features_supported = [True] * len(StaticValues.featureColumns)
-                if fs_method is not None and set(self.mlalgs_to_run) & {'rf', 'et', 'xgboost'}:
+                if fs_method is not None and set(name) & {'rf', 'et', 'xgboost'}:
                     X_train, X_pred, features_supported = self._perform_feature_selection(
                         X_train, y_train, X_pred, fs_method, model
                     )
