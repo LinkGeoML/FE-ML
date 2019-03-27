@@ -363,7 +363,7 @@ class baseMetrics:
             fsupported = rfe.support_
 
             print("{} features selected using Recursive Feature Elimination (RFE).".format(X.shape[1]))
-        else:  # default is SelectFromModel module
+        else:  # default is SelectFromModel ('sfm') module
             # We use the base estimator LassoCV since the L1 norm promotes sparsity of features.
             # clf = LassoCV(cv=5, max_iter=2000, n_jobs=2)
 
@@ -587,7 +587,7 @@ class calcCustomFEML(baseMetrics):
                 start_time = time.time()
 
                 features_supported = [True] * len(StaticValues.featureColumns)
-                if fs_method is not None and set(name) & {'rf', 'et', 'xgboost'}:
+                if fs_method is not None and {'rf', 'et', 'xgboost'}.intersection({name}):
                     X_train, X_pred, features_supported = self._perform_feature_selection(X_train, y_train, X_pred, fs_method, model)
 
                 model.fit(X_train, y_train)
@@ -936,7 +936,7 @@ class calcCustomFEMLExtended(baseMetrics):
                 start_time = time.time()
 
                 features_supported = [True] * len(StaticValues.featureColumns)
-                if fs_method is not None and set(name) & {'rf', 'et', 'xgboost'}:
+                if fs_method is not None and set([name]) & {'rf', 'et', 'xgboost'}:
                     X_train, X_pred, features_supported = self._perform_feature_selection(
                         X_train, y_train, X_pred, fs_method, model
                     )
