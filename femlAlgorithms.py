@@ -17,6 +17,8 @@ import numpy as np
 import pandas as pd
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
+# from sklearn.linear_model import LassoCV
+from sklearn.feature_selection import SelectFromModel, RFE
 # from sklearn.gaussian_process import GaussianProcessClassifier
 # from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
@@ -349,6 +351,44 @@ class baseMetrics:
     def freq_terms_list(self):
         self.feml_features.get_freqterms()
 
+    def _perform_feature_selection(self, X_train, y_train, X_test, method, model):
+        fsupported = None
+        no_features_keep = 12
+
+        if method == 'rfe':
+            rfe = RFE(model, no_features_keep)
+            rfe = rfe.fit(X_train, y_train)
+            X = rfe.transform(X_train)
+            X_t = rfe.transform(X_test)
+            fsupported = rfe.support_
+
+            print("{} features selected using Recursive Feature Elimination (RFE).".format(X_train.shape[1]))
+        else:  # default is SelectFromModel module
+            # We use the base estimator LassoCV since the L1 norm promotes sparsity of features.
+            # clf = LassoCV(cv=5, max_iter=2000, n_jobs=2)
+
+            sfm = SelectFromModel(model, threshold=0.02)
+            X = sfm.fit_transform(X_train, y_train)
+            # X_train_sfm = sfm.transform(X_train)
+            n_features = X.shape[1]
+
+            # Reset the threshold till the number of features equals.
+            # Note that the attribute can be set directly instead of repeatedly
+            # fitting the metatransformer.
+            while n_features > no_features_keep:
+                sfm.threshold += 0.005
+                X = sfm.transform(X_train)
+                n_features = X.shape[1]
+
+            X_t = sfm.transform(X_test)
+            fsupported = sfm.get_support()
+
+            print("{} features selected using SelectFromModel with threshold {:.2f}.".format(
+                X_train.shape[1], sfm.threshold)
+            )
+
+        return X, X_t, fsupported
+
 
 class calcSotAMetrics(baseMetrics):
     def __init__(self, njobs, accures):
@@ -461,7 +501,7 @@ class calcCustomFEML(baseMetrics):
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         self.scores = [[] for _ in range(len(self.classifiers))]
-        self.importances = [0.0 for _ in range(len(self.classifiers))]
+        self.importances = dict()
         self.mlalgs_to_run = StaticValues.classifiers_abbr.keys()
 
         super(calcCustomFEML, self).__init__(len(self.classifiers), njobs, accures)
@@ -520,7 +560,7 @@ class calcCustomFEML(baseMetrics):
                 file_name += '_sorted'
             self.file = open(file_name + '.csv', 'w+')
 
-    def train_classifiers(self, ml_algs, polynomial=False, standardize=False):
+    def train_classifiers(self, ml_algs, polynomial=False, standardize=False, fs_method=None):
         if polynomial:
             self.X1 = PolynomialFeatures().fit_transform(self.X1)
             self.X2 = PolynomialFeatures().fit_transform(self.X2)
@@ -528,56 +568,66 @@ class calcCustomFEML(baseMetrics):
         # iterate over classifiers
         if set(ml_algs) != {'all'}: self.mlalgs_to_run = ml_algs
         # for i, (name, clf) in enumerate(zip(self.names, self.classifiers)):
+
         for name in self.mlalgs_to_run:
             if name not in StaticValues.classifiers_abbr.keys():
                 print('{} is not a valid ML algorithm'.format(name))
                 continue
 
-            i = StaticValues.classifiers_abbr[name]
-            model = self.classifiers[i]
+            clf_abbr = StaticValues.classifiers_abbr[name]
+            model = self.classifiers[clf_abbr]
 
             train_time = 0
             predictedL = list()
-            print("Training {}...".format(StaticValues.classifiers[i]))
-            for train_X, train_Y, pred_X, pred_Y in zip(
-                    [row for row in [self.X1, self.X2]], [row for row in [self.Y1, self.Y2]],
-                    [row for row in [self.X2, self.X1]], [row for row in [self.Y2, self.Y1]]
+            print("Training {}...".format(StaticValues.classifiers[clf_abbr]))
+            for X_train, y_train, X_pred, y_pred in zip(
+                    np.array([row for row in [self.X1, self.X2]]), np.array([row for row in [self.Y1, self.Y2]]),
+                    np.array([row for row in [self.X2, self.X1]]), np.array([row for row in [self.Y2, self.Y1]])
             ):
                 start_time = time.time()
-                model.fit(np.array(train_X), np.array(train_Y))
+
+                features_supported = [True] * len(StaticValues.featureColumns)
+                if fs_method is not None and set(self.mlalgs_to_run) & {'rf', 'et', 'xgboost'}:
+                    X_train, X_pred, features_supported = self._perform_feature_selection(X_train, y_train, X_pred, fs_method, model)
+
+                model.fit(X_train, y_train)
                 train_time += (time.time() - start_time)
 
-                predictedL += list(model.predict(np.array(pred_X)))
-                self.timers[i] += (time.time() - start_time)
+                predictedL += list(model.predict(X_pred))
+                self.timers[clf_abbr] += (time.time() - start_time)
 
                 if hasattr(model, "feature_importances_"):
-                    self.importances[i] += model.feature_importances_
+                    if clf_abbr not in self.importances:
+                        self.importances[clf_abbr] = np.zeros(len(StaticValues.featureColumns), dtype=float)
+
+                    for idx, val in zip([i for i, x in enumerate(features_supported) if x], model.feature_importances_):
+                        self.importances[clf_abbr][idx] += val
                 elif hasattr(model, "coef_"):
-                    self.importances[i] += model.coef_.ravel()
+                    self.importances[clf_abbr] += model.coef_.ravel()
                 # self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
 
             print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
-            self.timers[i] += self.timer
+            self.timers[clf_abbr] += self.timer
 
             print("Matching records...")
             real = self.Y2 + self.Y1
             for pos in range(len(real)):
                 if real[pos] == 1.0:
                     if predictedL[pos] == 1.0:
-                        self.num_true_predicted_true[i] += 1.0
+                        self.num_true_predicted_true[clf_abbr] += 1.0
                         if self.accuracyresults:
                             self.file.write("TRUE\tTRUE\n")
                     else:
-                        self.num_true_predicted_false[i] += 1.0
+                        self.num_true_predicted_false[clf_abbr] += 1.0
                         if self.accuracyresults:
                             self.file.write("TRUE\tFALSE\n")
                 else:
                     if predictedL[pos] == 1.0:
-                        self.num_false_predicted_true[i] += 1.0
+                        self.num_false_predicted_true[clf_abbr] += 1.0
                         if self.accuracyresults:
                             self.file.write("FALSE\tTRUE\n")
                     else:
-                        self.num_false_predicted_false[i] += 1.0
+                        self.num_false_predicted_false[clf_abbr] += 1.0
                         if self.accuracyresults:
                             self.file.write("FALSE\tFALSE\n")
 
@@ -596,18 +646,20 @@ class calcCustomFEML(baseMetrics):
             if status == 0:
                 self._print_stats(StaticValues.classifiers[idx], acc, pre, rec, f1, t)
 
-                importances = self.importances[idx] / 2.0
-                if isinstance(importances, float):
+                if not isinstance(self.importances[idx], np.ndarray):
                     print("The classifier {} does not expose \"coef_\" or \"feature_importances_\" attributes".format(
                         name))
                 else:
+                    importances = self.importances[idx] / 2.0
+                    importances = np.ma.masked_equal(importances, 0.0)
+
                     # indices = np.argsort(importances)[::-1]
                     # for f in range(min(importances.shape[0], self.max_important_features_toshow)):
                     #     print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
-                    indices = np.argsort(importances)[::-1][
-                              :min(importances.shape[0], self.max_important_features_toshow)]
+                    indices = np.argsort(importances.compressed())[::-1][
+                              :min(importances.compressed().shape[0], self.max_important_features_toshow)]
                     headers = ["name", "score"]
-                    print(tabulate(zip(np.array(StaticValues.featureColumns)[indices], importances[indices]),
+                    print(tabulate(zip(np.array(StaticValues.featureColumns)[indices], importances.compressed()[indices]),
                                    headers, tablefmt="simple"))
 
                 # if hasattr(clf, "feature_importances_"):
@@ -848,7 +900,7 @@ class calcCustomFEMLExtended(baseMetrics):
                 file_name += '_sorted'
             self.file = open(file_name + '.csv', 'w+')
 
-    def train_classifiers(self, ml_algs, polynomial=False, standardize=False):
+    def train_classifiers(self, ml_algs, polynomial=False, standardize=False, fs_method=None):
         if polynomial:
             self.X1 = PolynomialFeatures().fit_transform(self.X1)
             self.X2 = PolynomialFeatures().fit_transform(self.X2)
@@ -868,57 +920,69 @@ class calcCustomFEMLExtended(baseMetrics):
                 print('{} is not a valid ML algorithm'.format(name))
                 continue
 
-            i = StaticValues.classifiers_abbr[name]
-            model = self.classifiers[i]
+            clf_abbr = StaticValues.classifiers_abbr[name]
+            model = self.classifiers[clf_abbr]
 
             train_time = 0
             predictedL = list()
-            print("Training {}...".format(StaticValues.classifiers[i]))
-            for train_X, train_Y, pred_X, pred_Y in zip(
-                    [row for row in [self.X1, self.X2]], [row for row in [self.Y1, self.Y2]],
-                    [row for row in [self.X2, self.X1]], [row for row in [self.Y2, self.Y1]]
+            print("Training {}...".format(StaticValues.classifiers[clf_abbr]))
+            for X_train, y_train, X_pred, y_pred in zip(
+                    np.array([row for row in [self.X1, self.X2]]), np.array([row for row in [self.Y1, self.Y2]]),
+                    np.array([row for row in [self.X2, self.X1]]), np.array([row for row in [self.Y2, self.Y1]])
             ):
                 start_time = time.time()
-                model.fit(np.array(train_X), np.array(train_Y))
+
+                features_supported = [True] * len(StaticValues.featureColumns)
+                if fs_method is not None and set(self.mlalgs_to_run) & {'rf', 'et', 'xgboost'}:
+                    X_train, X_pred, features_supported = self._perform_feature_selection(
+                        X_train, y_train, X_pred, fs_method, model
+                    )
+
+                model.fit(X_train, y_train)
                 train_time += (time.time() - start_time)
 
-                predictedL += list(model.predict(np.array(pred_X)))
-                self.timers[i] += (time.time() - start_time)
+                predictedL += list(model.predict(X_pred))
+                self.timers[clf_abbr] += (time.time() - start_time)
 
                 if hasattr(model, "feature_importances_"):
-                    self.importances[i] += model.feature_importances_
+                    # self.importances[i] += model.feature_importances_
+                    if clf_abbr not in self.importances:
+                        self.importances[clf_abbr] = np.zeros(len(StaticValues.featureColumns), dtype=float)
+
+                    for idx, val in zip([clf_abbr for clf_abbr, x in enumerate(features_supported) if x], model.feature_importances_):
+                        self.importances[clf_abbr][idx] += val
                 elif hasattr(model, "coef_"):
-                    self.importances[i] += model.coef_.ravel()
+                    self.importances[clf_abbr] += model.coef_.ravel()
                 # self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
                 if name in ['rf']:
                     print('R^2 Training Score: {:.2f} \nOOB Score: {:.2f} \nR^2 Validation Score: {:.2f}'.format(
-                        model.score(train_X, train_Y),
+                        model.score(X_train, y_train),
                         model.oob_score_,
-                        model.score(pred_X, pred_Y))
+                        model.score(X_pred, y_pred))
                     )
 
             print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
-            self.timers[i] += self.timer
+            self.timers[clf_abbr] += self.timer
 
             print("Matching records...")
             real = self.Y2 + self.Y1
             for pos in range(len(real)):
                 if real[pos] == 1.0:
                     if predictedL[pos] == 1.0:
-                        self.num_true_predicted_true[i] += 1.0
+                        self.num_true_predicted_true[clf_abbr] += 1.0
                         if self.accuracyresults:
                             self.file.write("TRUE\tTRUE\n")
                     else:
-                        self.num_true_predicted_false[i] += 1.0
+                        self.num_true_predicted_false[clf_abbr] += 1.0
                         if self.accuracyresults:
                             self.file.write("TRUE\tFALSE\n")
                 else:
                     if predictedL[pos] == 1.0:
-                        self.num_false_predicted_true[i] += 1.0
+                        self.num_false_predicted_true[clf_abbr] += 1.0
                         if self.accuracyresults:
                             self.file.write("FALSE\tTRUE\n")
                     else:
-                        self.num_false_predicted_false[i] += 1.0
+                        self.num_false_predicted_false[clf_abbr] += 1.0
                         if self.accuracyresults:
                             self.file.write("FALSE\tFALSE\n")
 
