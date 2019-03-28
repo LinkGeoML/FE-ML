@@ -377,7 +377,7 @@ class baseMetrics:
 
             sfm = SelectFromModel(model, threshold=-np.inf, max_features=no_features_keep)
             sfm.fit(X_train, y_train)
-            X = sfm.fit_transform(X_train)
+            X = sfm.transform(X_train)
             X_t = sfm.transform(X_test)
             fsupported = sfm.get_support()
 
@@ -606,7 +606,7 @@ class calcCustomFEML(baseMetrics):
                         self.importances[clf_abbr] += model.coef_.ravel()
                     else:
                         self.importances[clf_abbr] = model.coef_.ravel()
-                print(model.score(X_pred, y_pred))
+                # print(model.score(X_pred, y_pred))
 
             print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
             self.timers[clf_abbr] += self.timer
@@ -929,8 +929,10 @@ class calcCustomFEMLExtended(baseMetrics):
             predictedL = list()
             print("Training {}...".format(StaticValues.classifiers[clf_abbr]))
             for X_train, y_train, X_pred, y_pred in zip(
-                    np.array([row for row in [self.X1, self.X2]]), np.array([row for row in [self.Y1, self.Y2]]),
-                    np.array([row for row in [self.X2, self.X1]]), np.array([row for row in [self.Y2, self.Y1]])
+                    (np.asarray(row, float) for row in [self.X1, self.X2]),
+                    (np.asarray(row, float) for row in [self.Y1, self.Y2]),
+                    (np.asarray(row, float) for row in [self.X2, self.X1]),
+                    (row for row in [self.Y2, self.Y1])
             ):
                 start_time = time.time()
 

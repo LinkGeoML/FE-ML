@@ -95,9 +95,9 @@ class Evaluator:
                     self.evalClass.evaluate(
                         row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, thres_type
                     )
-                if hasattr(self.evalClass, "train_classifiers"):
-                    self.evalClass.train_classifiers(self.ml_algs, polynomial=False, standardize=True, fs_method=feature_selection)
-                self.evalClass.print_stats()
+            if hasattr(self.evalClass, "train_classifiers"):
+                self.evalClass.train_classifiers(self.ml_algs, polynomial=False, standardize=True, fs_method=feature_selection)
+            self.evalClass.print_stats()
 
     def evaluate_metrics_with_various_thres(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
