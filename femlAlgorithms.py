@@ -18,7 +18,7 @@ import pandas as pd
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 # from sklearn.linear_model import LassoCV
-from sklearn.feature_selection import SelectFromModel, RFE
+from sklearn.feature_selection import SelectFromModel, RFE, RFECV
 # from sklearn.gaussian_process import GaussianProcessClassifier
 # from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
@@ -353,39 +353,34 @@ class baseMetrics:
 
     def _perform_feature_selection(self, X_train, y_train, X_test, method, model):
         fsupported = None
-        no_features_keep = 12
+        no_features_keep = 21
 
         if method == 'rfe':
-            rfe = RFE(model, no_features_keep)
-            rfe = rfe.fit(X_train, y_train)
+            rfe = RFE(model, n_features_to_select=no_features_keep, step=2)
+            rfe.fit(X_train, y_train)
             X = rfe.transform(X_train)
             X_t = rfe.transform(X_test)
             fsupported = rfe.support_
 
             print("{} features selected using Recursive Feature Elimination (RFE).".format(X.shape[1]))
+        elif method == 'rfecv':
+            rfe = RFECV(model, min_features_to_select=no_features_keep, step=2, cv=5)
+            rfe.fit(X_train, y_train)
+            X = rfe.transform(X_train)
+            X_t = rfe.transform(X_test)
+            fsupported = rfe.support_
+
+            print("{} feature ranking withRecursive Feature Elimination (RFE) and Cross-Validation (CV).".format(X.shape[1]))
         else:  # default is SelectFromModel ('sfm') module
             # We use the base estimator LassoCV since the L1 norm promotes sparsity of features.
             # clf = LassoCV(cv=5, max_iter=2000, n_jobs=2)
 
-            sfm = SelectFromModel(model, threshold=0.02)
+            sfm = SelectFromModel(model, threshold=-np.inf, max_features=no_features_keep)
             X = sfm.fit_transform(X_train, y_train)
-            # X_train_sfm = sfm.transform(X_train)
-            n_features = X.shape[1]
-
-            # Reset the threshold till the number of features equals.
-            # Note that the attribute can be set directly instead of repeatedly
-            # fitting the metatransformer.
-            while n_features > no_features_keep:
-                sfm.threshold += 0.005
-                X = sfm.transform(X_train)
-                n_features = X.shape[1]
-
             X_t = sfm.transform(X_test)
             fsupported = sfm.get_support()
 
-            print("{} features selected using SelectFromModel with threshold {:.2f}.".format(
-                X.shape[1], sfm.threshold)
-            )
+            print("{} features selected using SelectFromModel.".format(X.shape[1]))
 
         return X, X_t, fsupported
 
@@ -500,7 +495,7 @@ class calcCustomFEML(baseMetrics):
             ExtraTreesClassifier(n_estimators=150, random_state=0, n_jobs=int(njobs), max_depth=100),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
-        self.scores = [[] for _ in range(len(self.classifiers))]
+        # self.scores = [[] for _ in range(len(self.classifiers))]
         self.importances = dict()
         self.mlalgs_to_run = StaticValues.classifiers_abbr.keys()
 
@@ -591,6 +586,7 @@ class calcCustomFEML(baseMetrics):
                     X_train, X_pred, features_supported = self._perform_feature_selection(X_train, y_train, X_pred, fs_method, model)
 
                 model.fit(X_train, y_train)
+
                 train_time += (time.time() - start_time)
 
                 predictedL += list(model.predict(X_pred))
@@ -607,7 +603,7 @@ class calcCustomFEML(baseMetrics):
                         self.importances[clf_abbr] += model.coef_.ravel()
                     else:
                         self.importances[clf_abbr] = model.coef_.ravel()
-                # self.scores[i].append(model.score(np.array(pred_X), np.array(pred_Y)))
+                print(model.score(X_pred, y_pred))
 
             print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
             self.timers[clf_abbr] += self.timer
