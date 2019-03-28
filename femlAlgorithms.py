@@ -577,8 +577,10 @@ class calcCustomFEML(baseMetrics):
             predictedL = list()
             print("Training {}...".format(StaticValues.classifiers[clf_abbr]))
             for X_train, y_train, X_pred, y_pred in zip(
-                    np.array([row for row in [self.X1, self.X2]]), np.array([row for row in [self.Y1, self.Y2]]),
-                    np.array([row for row in [self.X2, self.X1]]), np.array([row for row in [self.Y2, self.Y1]])
+                    (np.asarray(row, float) for row in [self.X1, self.X2]),
+                    (np.asarray(row, float) for row in [self.Y1, self.Y2]),
+                    (np.asarray(row, float) for row in [self.X2, self.X1]),
+                    ((row for row in [self.Y2, self.Y1]))
             ):
                 start_time = time.time()
 
