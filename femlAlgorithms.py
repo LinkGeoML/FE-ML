@@ -356,7 +356,7 @@ class baseMetrics:
         no_features_keep = 11
 
         if method == 'rfe':
-            rfe = RFE(model, n_features_to_select=no_features_keep, step=2)
+            rfe = RFE(model, n_features_to_select=no_features_keep, step=1)
             rfe.fit(X_train, y_train)
             X = rfe.transform(X_train)
             X_t = rfe.transform(X_test)
@@ -375,7 +375,7 @@ class baseMetrics:
             # We use the base estimator LassoCV since the L1 norm promotes sparsity of features.
             # clf = LassoCV(cv=5, max_iter=2000, n_jobs=2)
 
-            sfm = SelectFromModel(model, threshold=-np.inf, max_features=no_features_keep)
+            sfm = SelectFromModel(model, threshold=-np.inf, max_features=no_features_keep, prefit=False)
             sfm.fit(X_train, y_train)
             X = sfm.transform(X_train)
             X_t = sfm.transform(X_test)
@@ -586,7 +586,9 @@ class calcCustomFEML(baseMetrics):
 
                 features_supported = [True] * len(StaticValues.featureColumns)
                 if fs_method is not None and {'rf', 'et', 'xgboost'}.intersection({name}):
-                    X_train, X_pred, features_supported = self._perform_feature_selection(X_train, y_train, X_pred, fs_method, model)
+                    X_train, X_pred, features_supported = self._perform_feature_selection(
+                        X_train, y_train, X_pred, fs_method, model
+                    )
 
                 model.fit(X_train, y_train)
 
@@ -659,10 +661,12 @@ class calcCustomFEML(baseMetrics):
                     # for f in range(min(importances.shape[0], self.max_important_features_toshow)):
                     #     print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
                     indices = np.argsort(importances.compressed())[::-1][
-                              :min(importances.compressed().shape[0], self.max_important_features_toshow)]
+                              :min(importances.shape[0], self.max_important_features_toshow)]
                     headers = ["name", "score"]
-                    print(tabulate(zip(np.array(StaticValues.featureColumns)[indices], importances.compressed()[indices]),
-                                   headers, tablefmt="simple"))
+                    print(tabulate(zip(
+                        np.asarray(StaticValues.featureColumns, object)[~importances.mask][indices],
+                        importances.compressed()[indices]
+                    ), headers, tablefmt="simple"))
 
                 # if hasattr(clf, "feature_importances_"):
                 #         # if results:
@@ -943,6 +947,7 @@ class calcCustomFEMLExtended(baseMetrics):
                     )
 
                 model.fit(X_train, y_train)
+
                 train_time += (time.time() - start_time)
 
                 predictedL += list(model.predict(X_pred))
@@ -1018,10 +1023,10 @@ class calcCustomFEMLExtended(baseMetrics):
                     indices = np.argsort(importances.compressed())[::-1][
                               :min(importances.compressed().shape[0], self.max_important_features_toshow)]
                     headers = ["name", "score"]
-                    print(tabulate(
-                        zip(np.array(StaticValues.featureColumns)[indices], importances.compressed()[indices]),
-                        headers, tablefmt="simple")
-                    )
+                    print(tabulate(zip(
+                        np.asarray(StaticValues.featureColumns, object)[~importances.mask][indices],
+                        importances.compressed()[indices]
+                    ), headers, tablefmt="simple"))
 
                 # if hasattr(clf, "feature_importances_"):
                 #         # if results:
