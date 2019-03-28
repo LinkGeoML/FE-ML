@@ -353,7 +353,7 @@ class baseMetrics:
 
     def _perform_feature_selection(self, X_train, y_train, X_test, method, model):
         fsupported = None
-        no_features_keep = 21
+        no_features_keep = 11
 
         if method == 'rfe':
             rfe = RFE(model, n_features_to_select=no_features_keep, step=2)
@@ -376,7 +376,8 @@ class baseMetrics:
             # clf = LassoCV(cv=5, max_iter=2000, n_jobs=2)
 
             sfm = SelectFromModel(model, threshold=-np.inf, max_features=no_features_keep)
-            X = sfm.fit_transform(X_train, y_train)
+            sfm.fit(X_train, y_train)
+            X = sfm.fit_transform(X_train)
             X_t = sfm.transform(X_test)
             fsupported = sfm.get_support()
 
