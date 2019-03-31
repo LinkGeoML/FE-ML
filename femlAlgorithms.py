@@ -354,7 +354,7 @@ class baseMetrics:
 
     def _perform_feature_selection(self, X_train, y_train, X_test, method, model):
         fsupported = None
-        no_features_keep = 12
+        no_features_keep = 11
 
         if method == 'rfe':
             rfe = RFE(model, n_features_to_select=no_features_keep, step=2)
