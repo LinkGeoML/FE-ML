@@ -74,12 +74,13 @@ class Evaluator:
             for row in reader:
                 self.evalClass.preprocessing(row)
 
-    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', feature_selection=None):
+    def evaluate_metrics(self, dataset='dataset-string-similarity.txt', feature_selection=None, features=None):
         if self.evalClass is not None:
             print( "Reading dataset...")
             relpath = getRelativePathtoWorking(dataset)
             self.evalClass.freq_terms_list()
 
+            lFeatures = [(True if x == 'True' else False) for x in features.split(',')] if feature_selection is None and features is not None else features
             with open(relpath) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
@@ -93,10 +94,10 @@ class Evaluator:
 
                 for row in reader:
                     self.evalClass.evaluate(
-                        row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, thres_type
+                        row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, thres_type, lFeatures
                     )
             if hasattr(self.evalClass, "train_classifiers"):
-                self.evalClass.train_classifiers(self.ml_algs, polynomial=False, standardize=True, fs_method=feature_selection)
+                self.evalClass.train_classifiers(self.ml_algs, polynomial=False, standardize=True, fs_method=feature_selection, features=lFeatures)
             self.evalClass.print_stats()
 
     def evaluate_metrics_with_various_thres(self, dataset='dataset-string-similarity.txt'):

@@ -12,6 +12,7 @@ import itertools
 import glob
 import csv
 from text_unidecode import unidecode
+from itertools import compress, chain, izip_longest
 
 import numpy as np
 import pandas as pd
@@ -31,8 +32,8 @@ from xgboost import XGBClassifier
 # We'll use this library to make the display pretty
 from tabulate import tabulate
 
-from external.datasetcreator import strip_accents, LSimilarityVars, lsimilarity_terms, score_per_term, calibrate_weights, weighted_terms
-from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
+from external.datasetcreator import strip_accents, LSimilarityVars, lsimilarity_terms, score_per_term, weighted_terms
+from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues, getRelativePathtoWorking
 
 
 punctuation_regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.-]')
@@ -277,7 +278,7 @@ class baseMetrics:
         else: self.num_false += 1.0
 
     @abstractmethod
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig'):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig', selectable_features=None):
         pass
 
     def _compute_stats(self, idx, results=False):
@@ -353,10 +354,10 @@ class baseMetrics:
 
     def _perform_feature_selection(self, X_train, y_train, X_test, method, model):
         fsupported = None
-        no_features_keep = 11
+        no_features_keep = 12
 
         if method == 'rfe':
-            rfe = RFE(model, n_features_to_select=no_features_keep, step=1)
+            rfe = RFE(model, n_features_to_select=no_features_keep, step=2)
             rfe.fit(X_train, y_train)
             X = rfe.transform(X_train)
             X_t = rfe.transform(X_test)
@@ -398,7 +399,7 @@ class calcSotAMetrics(baseMetrics):
         self.predictedState[varnm][idx - 1] += 1.0
         return res
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig'):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig', selected_features=None):
         tot_res = ""
         flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
 
@@ -502,7 +503,8 @@ class calcCustomFEML(baseMetrics):
 
         super(calcCustomFEML, self).__init__(len(self.classifiers), njobs, accures)
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False, custom_thres='orig'):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False,
+                 custom_thres='orig', selectable_features=None):
         if row['res'] == "TRUE":
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(1.0)
             else: self.Y2.append(1.0)
@@ -544,9 +546,15 @@ class calcCustomFEML(baseMetrics):
                     tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
 
         if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
-            self.X1.append(list(itertools.chain.from_iterable(tmp_X1)))
+            if selectable_features is not None:
+                self.X1.append(list(compress(chain.from_iterable(tmp_X1), selectable_features)))
+            else:
+                self.X1.append(list(chain.from_iterable(tmp_X1)))
         else:
-            self.X2.append(list(itertools.chain.from_iterable(tmp_X2)))
+            if selectable_features is not None:
+                self.X2.append(list(compress(chain.from_iterable(tmp_X2), selectable_features)))
+            else:
+                self.X2.append(list(chain.from_iterable(tmp_X2)))
 
         if self.file is None and self.accuracyresults:
             file_name = 'dataset-accuracyresults-sim-metrics'
@@ -556,7 +564,7 @@ class calcCustomFEML(baseMetrics):
                 file_name += '_sorted'
             self.file = open(file_name + '.csv', 'w+')
 
-    def train_classifiers(self, ml_algs, polynomial=False, standardize=False, fs_method=None):
+    def train_classifiers(self, ml_algs, polynomial=False, standardize=False, fs_method=None, features=None):
         if polynomial:
             self.X1 = PolynomialFeatures().fit_transform(self.X1)
             self.X2 = PolynomialFeatures().fit_transform(self.X2)
@@ -575,6 +583,7 @@ class calcCustomFEML(baseMetrics):
 
             train_time = 0
             predictedL = list()
+            tot_features = list()
             print("Training {}...".format(StaticValues.classifiers[clf_abbr]))
             for X_train, y_train, X_pred, y_pred in zip(
                     (np.asarray(row, float) for row in [self.X1, self.X2]),
@@ -585,10 +594,13 @@ class calcCustomFEML(baseMetrics):
                 start_time = time.time()
 
                 features_supported = [True] * len(StaticValues.featureColumns)
+                if features is not None:
+                    features_supported = [x and y for x, y in zip(features_supported, features)]
                 if fs_method is not None and {'rf', 'et', 'xgboost'}.intersection({name}):
                     X_train, X_pred, features_supported = self._perform_feature_selection(
                         X_train, y_train, X_pred, fs_method, model
                     )
+                    tot_features = [x or y for x, y in izip_longest(features_supported, tot_features, fillvalue=False)]
 
                 model.fit(X_train, y_train)
 
@@ -610,6 +622,8 @@ class calcCustomFEML(baseMetrics):
                         self.importances[clf_abbr] = model.coef_.ravel()
                 # print(model.score(X_pred, y_pred))
 
+            print("Best Features discovered: ", end="")
+            print(*tot_features, sep=",")
             print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
             self.timers[clf_abbr] += self.timer
 
@@ -705,7 +719,8 @@ class calcCustomFEMLExtended(baseMetrics):
 
         super(calcCustomFEMLExtended, self).__init__(len(self.classifiers), njobs, accures)
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False, custom_thres='orig'):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False,
+                 custom_thres='orig', features=None, selectable_features=None):
         if row['res'] == "TRUE":
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(1.0)
             else: self.Y2.append(1.0)
@@ -874,7 +889,10 @@ class calcCustomFEMLExtended(baseMetrics):
             #     feature7_2[:self.fterm_feature_size/2] + feature7_2[len(feature7_2)/2:self.fterm_feature_size/2]
             # )
 
-            self.X1.append(list(itertools.chain.from_iterable(tmp_X1)))
+            if selectable_features is not None:
+                self.X1.append(list(compress(chain.from_iterable(tmp_X1), selectable_features)))
+            else:
+                self.X1.append(list(chain.from_iterable(tmp_X1)))
         else:
             tmp_X2.append([
                 feature1_1, feature1_2, feature1_3,
@@ -896,7 +914,10 @@ class calcCustomFEMLExtended(baseMetrics):
             # tmp_X2.append(map(lambda x: int(x == max(feature6_1)), feature6_1))
             # tmp_X2.append(map(lambda x: int(x == max(feature6_2)), feature6_2))
 
-            self.X2.append(list(itertools.chain.from_iterable(tmp_X2)))
+            if selectable_features is not None:
+                self.X2.append(list(compress(chain.from_iterable(tmp_X2), selectable_features)))
+            else:
+                self.X2.append(list(chain.from_iterable(tmp_X2)))
 
         if self.file is None and self.accuracyresults:
             file_name = 'dataset-accuracyresults-sim-metrics'
@@ -906,7 +927,7 @@ class calcCustomFEMLExtended(baseMetrics):
                 file_name += '_sorted'
             self.file = open(file_name + '.csv', 'w+')
 
-    def train_classifiers(self, ml_algs, polynomial=False, standardize=False, fs_method=None):
+    def train_classifiers(self, ml_algs, polynomial=False, standardize=False, fs_method=None, features=None):
         if polynomial:
             self.X1 = PolynomialFeatures().fit_transform(self.X1)
             self.X2 = PolynomialFeatures().fit_transform(self.X2)
@@ -931,6 +952,7 @@ class calcCustomFEMLExtended(baseMetrics):
 
             train_time = 0
             predictedL = list()
+            tot_features = list()
             print("Training {}...".format(StaticValues.classifiers[clf_abbr]))
             for X_train, y_train, X_pred, y_pred in zip(
                     (np.asarray(row, float) for row in [self.X1, self.X2]),
@@ -941,10 +963,13 @@ class calcCustomFEMLExtended(baseMetrics):
                 start_time = time.time()
 
                 features_supported = [True] * len(StaticValues.featureColumns)
+                if features is not None:
+                    features_supported = [x and y for x, y in zip(features_supported, features)]
                 if fs_method is not None and set([name]) & {'rf', 'et', 'xgboost'}:
                     X_train, X_pred, features_supported = self._perform_feature_selection(
                         X_train, y_train, X_pred, fs_method, model
                     )
+                    tot_features = [x or y for x, y in izip_longest(features_supported, tot_features, fillvalue=False)]
 
                 model.fit(X_train, y_train)
 
@@ -973,6 +998,8 @@ class calcCustomFEMLExtended(baseMetrics):
                         model.score(X_pred, y_pred))
                     )
 
+            print("Best Features discovered: ", end="")
+            print(*tot_features, sep=",")
             print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
             self.timers[clf_abbr] += self.timer
 

@@ -27,6 +27,7 @@ Options:
   --optimalSortingThres         Find best threshold for metric used to decide whether to apply sorting or not.
   --buildDataset                Build the dataset for evaluation.
   --fs <FeatureSelection>       Method to use for feature selection.
+  -f <Features>                 Comma separated features that will be used for training/predict from the available ones.
 
 Arguments:
   evaluator_type            'SotAMetrics' (default)
@@ -80,7 +81,7 @@ def main(args):
         elif args['--cmp']: evaluator.print_false_posneg(dataset_path)
         elif args['--optimalThres']: evaluator.evaluate_metrics_with_various_thres(fpath_ds)
         elif args['--optimalSortingThres']: evaluator.evaluate_sorting_with_various_thres(fpath_ds)
-        else: evaluator.evaluate_metrics(fpath_ds, args['--fs'])
+        else: evaluator.evaluate_metrics(fpath_ds, args['--fs'], args['-f'])
     else: print("No file {0} exists!!!\n".format(fpath_ds))
 
 
