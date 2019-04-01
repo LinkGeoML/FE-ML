@@ -622,7 +622,7 @@ class calcCustomFEML(baseMetrics):
                         self.importances[clf_abbr] = model.coef_.ravel()
                 # print(model.score(X_pred, y_pred))
 
-            print("Best Features discovered: ", end="")
+            print("Best features discovered: ", end="")
             print(*tot_features, sep=",")
             print("Training took {0:.3f} sec ({1:.3f} min)".format(train_time, train_time / 60.0))
             self.timers[clf_abbr] += self.timer
@@ -768,7 +768,8 @@ class calcCustomFEMLExtended(baseMetrics):
 
         row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
-        for flag in list({False, True}):
+        # for flag in list({False, True}):
+        for flag in list({True}):
             lsim_baseThres = 'avg' if flag else 'simple'
 
             start_time = time.time()
@@ -827,12 +828,10 @@ class calcCustomFEMLExtended(baseMetrics):
         start_time = time.time()
 
         method_nm = 'damerau_levenshtein'
-        baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(row['s1'], row['s2'], LSimilarityVars.per_metric_optimal_values[method_nm]['simple'][0])
-        feature1_1, feature1_2, feature1_3 = score_per_term(baseTerms, mismatchTerms, specialTerms, method_nm)
         baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(
-            row['s1'], row['s2'], LSimilarityVars.per_metric_optimal_values[method_nm]['simple'][0]
-        )
-        feature1_11, feature1_12, feature1_13 = score_per_term(baseTerms, mismatchTerms, specialTerms, method_nm)
+            row['s1'], row['s2'], LSimilarityVars.per_metric_optimal_values[method_nm]['avg'][0])
+        feature1_1, feature1_2, feature1_3 = score_per_term(baseTerms, mismatchTerms, specialTerms, method_nm)
+
         # feature2_1 = FEMLFeatures.contains(row['s1'], row['s2'])
         # feature2_2 = FEMLFeatures.contains(row['s2'], row['s1'])
         # feature3_1, feature3_2 = FEMLFeatures.no_of_words(row['s1'], row['s2'])
@@ -867,7 +866,7 @@ class calcCustomFEMLExtended(baseMetrics):
         if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
             tmp_X1.append([
                 feature1_1, feature1_2, feature1_3,
-                feature1_11, feature1_12, feature1_13,
+
                 # feature8_1, feature8_2, feature8_3,
                 # feature9_1, feature9_2, feature9_3,
                 # feature10_1, feature10_2, feature10_3,
@@ -896,7 +895,7 @@ class calcCustomFEMLExtended(baseMetrics):
         else:
             tmp_X2.append([
                 feature1_1, feature1_2, feature1_3,
-                feature1_11, feature1_12, feature1_13,
+
                 # feature8_1, feature8_2, feature8_3,
                 # feature9_1, feature9_2, feature9_3,
                 # feature10_1, feature10_2, feature10_3,
