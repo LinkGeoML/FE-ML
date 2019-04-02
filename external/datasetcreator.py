@@ -702,9 +702,7 @@ def calibrate_weights(baseTerms, mismatchTerms, specialTerms, method, averaged=F
         weights[1] = weights[1] * mismatchTerms['char_len'] / 2
         weights[2] = weights[2] * specialTerms['char_len'] / 2
     denominator = weights[0] + weights[1] + weights[2]
-    # if averaged: print("after: ", weights, denominator, ' '.join(baseTerms['a']) + ' ' + ' '.join(mismatchTerms['a']) + ' ' + ' '.join(specialTerms['a']),
-    # ' '.join(baseTerms['b']) + ' ' + ' '.join(mismatchTerms['b']) + ' ' + ' '.join(specialTerms['b']))
-    # sys.stdout.flush()
+
     return [w / denominator for w in weights]
 
 
