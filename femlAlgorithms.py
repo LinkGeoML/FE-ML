@@ -399,7 +399,8 @@ class calcSotAMetrics(baseMetrics):
         self.predictedState[varnm][idx - 1] += 1.0
         return res
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig', selected_features=None):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None,
+                 custom_thres='orig', selectable_features=None):
         tot_res = ""
         flag_true_match = 1.0 if row['res'].upper() == "TRUE" else 0.0
 

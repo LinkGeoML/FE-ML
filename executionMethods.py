@@ -138,14 +138,14 @@ class Evaluator:
 
                     self.evalClass.reset_vars()
 
-            print('\nThe process took {0:.2f} sec'.format(time.time() - start_time))
-            for k, val in all_res.items():
-                if len(val) == 0:
-                    print('{0} is empty'.format(k))
-                    continue
+                print('\nThe process took {0:.2f} sec'.format(time.time() - start_time))
+                for k, val in all_res.items():
+                    if len(val) == 0:
+                        print('{0} is empty'.format(k))
+                        continue
 
-                print(k, max(val, key=lambda x: x[1][0]))
-            sys.stdout.flush()
+                    print(k, max(val, key=lambda x: x[1][0]))
+                sys.stdout.flush()
 
     def evaluate_sorting_with_various_thres(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
