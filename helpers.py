@@ -187,8 +187,10 @@ class StaticValues:
                                       'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.55, 'orig_all': 0.55, 'sorted_all': 0.55
                                       }],
 
-        ["Jaro LinkGeoML Similarity", {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-                                       'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75}],
+        ["Jaro LinkGeoML Similarity",
+         {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
+           'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75, 'orig_all': 0.55, 'sorted_all': 0.55
+          }],
         ["Jaro Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
           'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75, 'orig_all': 0.55, 'sorted_all': 0.55
