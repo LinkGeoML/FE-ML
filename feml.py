@@ -23,6 +23,7 @@ Options:
   --ml <ML_algs>                Comma separated machine learning algorithms to run. [default: all]
   --cmp                         Print output results that a comparison produces. Default is False.
   --onlyLATIN                   Check for similarities only both strings use LATIN chars. Default is False.
+  -e <encoding_type>            Check for similarities only for the specified encoding type. Default is False.
   --optimalThres                Find best threshold for metrics.
   --optimalSortingThres         Find best threshold for metric used to decide whether to apply sorting or not.
   --buildDataset                Build the dataset for evaluation.
@@ -48,6 +49,8 @@ Arguments:
                             'lsvm' (Linear SVM)
   FeatureSelection          'sfm'
                             'rfe'
+  encoding_type             'all'
+                            'latin'
 """
 
 import os, sys
@@ -66,7 +69,7 @@ def main(args):
     dataset_path = [x for x in args['-d'].split(',')]
 
     evaluator = rc.Evaluator(
-        args['--ml'], args['--sort'], args['--stemming'], args['--canonical'], args['--permuted'], args['--onlyLATIN']
+        args['--ml'], args['--sort'], args['--stemming'], args['--canonical'], args['--permuted'], args['--onlyLATIN'], args['-e']
     )
 
     if args['--buildDataset']:

@@ -274,7 +274,7 @@ class baseMetrics:
         self.timers[:] = [0.0] * len(self.timers)
 
     def preprocessing(self, row):
-        if row['res'] == "TRUE": self.num_true += 1.0
+        if row['res'].upper() == "TRUE": self.num_true += 1.0
         else: self.num_false += 1.0
 
     @abstractmethod
@@ -295,7 +295,7 @@ class baseMetrics:
             f1 = 2.0 * ((pre * rec) / (pre + rec))
         except ZeroDivisionError:
             exit_status = 1
-            # print "{0} is divided by zero\n".format(StaticValues.methods[idx][0])
+            # print("{0} is divided by zero\n".format(StaticValues.methods[idx][0]))
 
         if results:
             return exit_status, acc, pre, rec, f1, timer
@@ -401,7 +401,7 @@ class calcSotAMetrics(baseMetrics):
 
     def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig', selected_features=None):
         tot_res = ""
-        flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
+        flag_true_match = 1.0 if row['res'].upper() == "TRUE" else 0.0
 
         a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
@@ -439,7 +439,7 @@ class calcSotAMetrics(baseMetrics):
 
     def evaluate_sorting(self, row, custom_thres, data_format, stemming=False, permuted=False):
         tot_res = ""
-        flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
+        flag_true_match = 1.0 if row['res'].upper() == "TRUE" else 0.0
 
         row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=True, stemming=stemming, canonical=True, thres=custom_thres)
 
@@ -505,7 +505,7 @@ class calcCustomFEML(baseMetrics):
 
     def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False,
                  custom_thres='orig', selectable_features=None):
-        if row['res'] == "TRUE":
+        if row['res'].upper() == "TRUE":
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(1.0)
             else: self.Y2.append(1.0)
         else:
@@ -721,7 +721,7 @@ class calcCustomFEMLExtended(baseMetrics):
 
     def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False,
                  custom_thres='orig', features=None, selectable_features=None):
-        if row['res'] == "TRUE":
+        if row['res'].upper() == "TRUE":
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(1.0)
             else: self.Y2.append(1.0)
         else:
@@ -1114,9 +1114,10 @@ class calcLSimilarities(baseMetrics):
 
         return tot_res
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig'):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None,
+                 custom_thres='orig', features=None, selectable_features=None):
         tot_res = ""
-        flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
+        flag_true_match = 1.0 if row['res'].upper() == "TRUE" else 0.0
 
         a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
@@ -1172,9 +1173,10 @@ class testMetrics(baseMetrics):
     #     self.predictedState[varnm][idx - 1] += 1.0
     #     return res
 
-    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None, custom_thres='orig', term_split_thres=0.75):
+    def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None,
+                 custom_thres='orig', term_split_thres=0.75):
         tot_res = ""
-        flag_true_match = 1.0 if row['res'] == "TRUE" else 0.0
+        flag_true_match = 1.0 if row['res'].upper() == "TRUE" else 0.0
 
         a, b = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 

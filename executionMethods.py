@@ -26,13 +26,14 @@ class Evaluator:
         'lSimilarityMetrics': calcLSimilarities,
     }
 
-    def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, only_latin=False):
+    def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, only_latin=False, encoding=None):
         self.ml_algs = [x for x in ml_algs.split(',')]
         self.permuted = permuted
         self.stemming = stemming
         self.canonical = canonical
         self.sorting = sorting
         self.latin = only_latin
+        self.encoding = encoding
 
         self.termfrequencies = {
             'gram': Counter(),
@@ -91,6 +92,8 @@ class Evaluator:
                 if self.latin:
                     # thres_type += '_onlylatin'
                     thres_type += '_latin_EU/NA'
+                if self.encoding:
+                    thres_type += '_all'
 
                 for row in reader:
                     self.evalClass.evaluate(
@@ -110,11 +113,11 @@ class Evaluator:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
-                separator = ''
                 print('Computing stats for threshold', end='')
 
                 all_res = {}
                 for m in StaticValues.methods: all_res[m[0]] = []
+                separator = ''
                 for i in range(30, 91, 5):
                     print('{0} {1}'.format(separator, float(i / 100.0)), end='')
                     sys.stdout.flush()
@@ -162,6 +165,8 @@ class Evaluator:
                 if self.latin:
                     # thres_type += '_onlylatin'
                     thres_type += '_latin_EU/NA'
+                if self.encoding:
+                    thres_type += '_all'
 
                 all_res = {}
                 for m in StaticValues.methods: all_res[m[0]] = []
@@ -366,7 +371,7 @@ class Evaluator:
                     a, b = transform(row['s1'], row['s2'], sorting=True, canonical=True)
                     baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(a, b, 0.7)
                     output_f.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
-                        row['res'],
+                        row['res'].upper(),
                         row['s1'], ','.join(baseTerms['a']).encode('utf8'),
                         ','.join(mismatchTerms['a']).encode('utf8'),
                         ','.join(specialTerms['a']).encode('utf8'),
