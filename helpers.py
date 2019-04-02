@@ -189,67 +189,67 @@ class StaticValues:
 
         ["Jaro LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-           'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75, 'orig_all': 0.55, 'sorted_all': 0.55
+           'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75, 'orig_all': 0.55, 'sorted_all': 0.75
           }],
         ["Jaro Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75, 'orig_all': 0.55, 'sorted_all': 0.75
           }],
         ["Jaro-Winkler LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.7
           }],
         ["Jaro-Winkler Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.7
           }],
         ["Jaro-Winkler reversed LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.7
           }],
         ["Jaro-Winkler reversed Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75, 'orig_all': 0.55, 'sorted_all': 0.75
           }],
         ["Cosine NGrams LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.45, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.45, 'orig_all': 0.55, 'sorted_all': 0.45
           }],
         ["Cosine NGrams Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.45, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.45, 'orig_all': 0.55, 'sorted_all': 0.45
           }],
         ["Jaccard NGrams LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.35, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.35, 'orig_all': 0.55, 'sorted_all': 0.35
           }],
         ["Jaccard NGrams Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.35, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.35, 'orig_all': 0.55, 'sorted_all': 0.35
           }],
         ["Dice BiGrams LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.5, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.5, 'orig_all': 0.55, 'sorted_all': 0.5
           }],
         ["Dice BiGrams Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.5, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.5, 'orig_all': 0.55, 'sorted_all': 0.5
           }],
         ["Jaccard Skipgrams LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.45, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.45, 'orig_all': 0.55, 'sorted_all': 0.45
           }],
         ["Jaccard Skipgrams Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.45, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.45, 'orig_all': 0.55, 'sorted_all': 0.45
           }],
         ["Monge–Elkan LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.7
           }],
         ["Monge–Elkan Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.7
           }],
         ["Soft–Jaccard LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
@@ -257,31 +257,31 @@ class StaticValues:
           }],
         ["Soft–Jaccard Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.6, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.6, 'orig_all': 0.55, 'sorted_all': 0.6
           }],
         ["Davis and De Salles LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.65, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.65, 'orig_all': 0.55, 'sorted_all': 0.65
           }],
         ["Davis and De Salles Avg LinkGeoML Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.65, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.65, 'orig_all': 0.55, 'sorted_all': 0.65
           }],
         ["LinkGeoML Jaro - Winkler Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.7
           }],
         ["LinkGeoML Jaro - Winkler Avg Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.7
           }],
         ["LinkGeoML Jaro - Winkler reversed Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.7, 'orig_all': 0.55, 'sorted_all': 0.7
           }],
         ["LinkGeoML Jaro - Winkler reversed Avg Similarity",
          {'orig': 0.4, 'sorted': 0.35, 'orig_onlylatin': 0.35, 'sorted_onlylatin': 0.35,
-          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75, 'orig_all': 0.55, 'sorted_all': 0.55
+          'orig_latin_EU/NA': 0.4, 'sorted_latin_EU/NA': 0.75, 'orig_all': 0.55, 'sorted_all': 0.75
           }],
     ]
 

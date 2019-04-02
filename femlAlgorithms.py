@@ -354,7 +354,7 @@ class baseMetrics:
 
     def _perform_feature_selection(self, X_train, y_train, X_test, method, model):
         fsupported = None
-        no_features_keep = 13
+        no_features_keep = 11
 
         if method == 'rfe':
             rfe = RFE(model, n_features_to_select=no_features_keep, step=2)
@@ -488,13 +488,13 @@ class calcCustomFEML(baseMetrics):
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
             DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
             RandomForestClassifier(
-                n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=50, oob_score=True, bootstrap=True
+                n_estimators=250, random_state=0, n_jobs=int(njobs), max_depth=50, oob_score=True, bootstrap=True
             ),
             MLPClassifier(alpha=1, random_state=0),
             # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
             # QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
-            ExtraTreesClassifier(n_estimators=150, random_state=0, n_jobs=int(njobs), max_depth=50),
+            ExtraTreesClassifier(n_estimators=100, random_state=0, n_jobs=int(njobs), max_depth=50),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         # self.scores = [[] for _ in range(len(self.classifiers))]
@@ -705,13 +705,13 @@ class calcCustomFEMLExtended(baseMetrics):
             # GaussianProcessClassifier(1.0 * RBF(1.0), n_jobs=3, warm_start=True),
             DecisionTreeClassifier(random_state=0, max_depth=100, max_features='auto'),
             RandomForestClassifier(
-                n_estimators=300, random_state=0, n_jobs=int(njobs), max_depth=50, oob_score=True, bootstrap=True
+                n_estimators=250, random_state=0, n_jobs=int(njobs), max_depth=50, oob_score=True, bootstrap=True
             ),
             MLPClassifier(alpha=1, random_state=0),
             # AdaBoostClassifier(DecisionTreeClassifier(max_depth=50), n_estimators=300, random_state=0),
             GaussianNB(),
             # QuadraticDiscriminantAnalysis(), LinearDiscriminantAnalysis(),
-            ExtraTreesClassifier(n_estimators=150, random_state=0, n_jobs=int(njobs), max_depth=50),
+            ExtraTreesClassifier(n_estimators=100, random_state=0, n_jobs=int(njobs), max_depth=50),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
         self.scores = [[] for _ in range(len(self.classifiers))]
