@@ -284,6 +284,10 @@ class Evaluator:
                     all_res = {}
                     for m in StaticValues.methods: all_res[m[0]] = []
                     feml = FEMLFeatures()
+                    print('====================================================================================')
+                    print("The averaged lSimilarity is being tested by default. To test the normal one, update ")
+                    print("parameter 'averaged'=False under 'class testMetrics' in file 'femlAlgorithms.py'")
+                    print('====================================================================================')
                     for n in [3.34] + list(range(4, 8)):
                         weight_combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.product([1, 2, 3, 4, 5, 2.5, 3.33], repeat=2) if sum(seq) == (10 - n)]
 
@@ -293,11 +297,11 @@ class Evaluator:
                             print('Computing stats for weights ({})'.format(','.join(map(str, w))))
                             print('Computing stats for threshold', end='')
 
-                            separator = ''
                             start_time = time.time()
 
                             tmp_res = {}
                             for m in StaticValues.methods: tmp_res[m[0]] = []
+                            separator = ''
                             for i in range(35, 81, 5):
                                 print('{0} {1}'.format(separator, float(i / 100.0)), end='')
                                 separator = ','
@@ -370,7 +374,7 @@ class Evaluator:
 
                 for row in reader:
                     a, b = transform(row['s1'], row['s2'], sorting=True, canonical=True)
-                    baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(a, b, 0.7)
+                    baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(a, b, 0.55)
                     output_f.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
                         row['res'].upper(),
                         row['s1'], ','.join(baseTerms['a']).encode('utf8'),

@@ -1159,21 +1159,11 @@ class testMetrics(baseMetrics):
     def _generic_evaluator(self, idx, sim_metric, baseTerms, mismatchTerms, specialTerms, is_a_match, custom_thres):
         start_time = time.time()
 
-        sim_val = weighted_terms(baseTerms, mismatchTerms, specialTerms, sim_metric, averaged=False, test_mode=True)
+        sim_val = weighted_terms(baseTerms, mismatchTerms, specialTerms, sim_metric, averaged=True, test_mode=True)
         res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
         self.timers[idx - 1] += (time.time() - start_time)
         self.predictedState[varnm][idx - 1] += 1.0
         return res
-
-    # def _generic_evaluator(self, idx, sim_metric, a, b, is_a_match, custom_thres):
-    #     start_time = time.time()
-    #
-    #     # LSimilarityVars.split_thres = StaticValues.methods[idx - 1][1]['sorted'] - 0.05
-    #     sim_val = lsimilarity(a, b, sim_metric)
-    #     res, varnm = self.prediction(idx, sim_val, is_a_match, custom_thres)
-    #     self.timers[idx - 1] += (time.time() - start_time)
-    #     self.predictedState[varnm][idx - 1] += 1.0
-    #     return res
 
     def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None,
                  custom_thres='orig', term_split_thres=0.75):
