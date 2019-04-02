@@ -37,6 +37,7 @@ Arguments:
                             'DLearninng'
                             'TestMetrics'
                             'customFEMLExtended'
+                            'lSimilarityMetrics'
   ML_algs                   'rf' (Random Forest)
                             'et' (ExtraTreeClassifier)
                             'xgboost' (XGBoost)

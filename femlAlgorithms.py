@@ -1166,7 +1166,7 @@ class testMetrics(baseMetrics):
         return res
 
     def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=None,
-                 custom_thres='orig', term_split_thres=0.75):
+                 custom_thres='orig', term_split_thres=0.55):
         tot_res = ""
         flag_true_match = 1.0 if row['res'].upper() == "TRUE" else 0.0
 
