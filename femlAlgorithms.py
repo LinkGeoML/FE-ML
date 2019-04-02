@@ -12,7 +12,7 @@ import itertools
 import glob
 import csv
 from text_unidecode import unidecode
-from itertools import compress, chain, izip_longest
+from itertools import compress, chain, izip_longest, izip
 
 import numpy as np
 import pandas as pd
@@ -354,7 +354,7 @@ class baseMetrics:
 
     def _perform_feature_selection(self, X_train, y_train, X_test, method, model):
         fsupported = None
-        no_features_keep = 10
+        no_features_keep = 13
 
         if method == 'rfe':
             rfe = RFE(model, n_features_to_select=no_features_keep, step=2)
@@ -585,11 +585,11 @@ class calcCustomFEML(baseMetrics):
             predictedL = list()
             tot_features = list()
             print("Training {}...".format(StaticValues.classifiers[clf_abbr]))
-            for X_train, y_train, X_pred, y_pred in zip(
-                    (np.asarray(row, float) for row in [self.X1, self.X2]),
-                    (np.asarray(row, float) for row in [self.Y1, self.Y2]),
-                    (np.asarray(row, float) for row in [self.X2, self.X1]),
-                    ((row for row in [self.Y2, self.Y1]))
+            for X_train, y_train, X_pred, y_pred in izip(
+                    (np.asarray(row, float) for row in (self.X1, self.X2)),
+                    (np.asarray(row, float) for row in (self.Y1, self.Y2)),
+                    (np.asarray(row, float) for row in (self.X2, self.X1)),
+                    ((row for row in (self.Y2, self.Y1)))
             ):
                 start_time = time.time()
 
@@ -670,6 +670,7 @@ class calcCustomFEML(baseMetrics):
                 else:
                     importances = self.importances[idx] / 2.0
                     importances = np.ma.masked_equal(importances, 0.0)
+                    if importances.mask is np.ma.nomask: importances.mask = np.zeros(importances.shape, dtype=bool)
 
                     # indices = np.argsort(importances)[::-1]
                     # for f in range(min(importances.shape[0], self.max_important_features_toshow)):
@@ -953,11 +954,11 @@ class calcCustomFEMLExtended(baseMetrics):
             predictedL = list()
             tot_features = list()
             print("Training {}...".format(StaticValues.classifiers[clf_abbr]))
-            for X_train, y_train, X_pred, y_pred in zip(
-                    (np.asarray(row, float) for row in [self.X1, self.X2]),
-                    (np.asarray(row, float) for row in [self.Y1, self.Y2]),
-                    (np.asarray(row, float) for row in [self.X2, self.X1]),
-                    (row for row in [self.Y2, self.Y1])
+            for X_train, y_train, X_pred, y_pred in izip(
+                    (np.asarray(row, float) for row in (self.X1, self.X2)),
+                    (np.asarray(row, float) for row in (self.Y1, self.Y2)),
+                    (np.asarray(row, float) for row in (self.X2, self.X1)),
+                    (row for row in (self.Y2, self.Y1))
             ):
                 start_time = time.time()
 
@@ -1045,6 +1046,7 @@ class calcCustomFEMLExtended(baseMetrics):
                 else:
                     importances = self.importances[idx] / 2.0
                     importances = np.ma.masked_equal(importances, 0.0)
+                    if importances.mask is np.ma.nomask: importances.mask = np.zeros(importances.shape, dtype=bool)
 
                     indices = np.argsort(importances.compressed())[::-1][
                               :min(importances.compressed().shape[0], self.max_important_features_toshow)]
