@@ -141,6 +141,7 @@ class Evaluator:
                     continue
 
                 print(k, max(val, key=lambda x: x[1][0]))
+            sys.stdout.flush()
 
     def evaluate_sorting_with_various_thres(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
