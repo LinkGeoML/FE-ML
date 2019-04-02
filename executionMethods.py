@@ -107,6 +107,7 @@ class Evaluator:
         if self.evalClass is not None:
             print("Reading dataset...")
             relpath = getRelativePathtoWorking(dataset)
+            self.evalClass.freq_terms_list()
 
             start_time = time.time()
             with open(relpath) as csvfile:
