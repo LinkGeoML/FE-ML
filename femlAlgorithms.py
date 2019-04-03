@@ -527,7 +527,7 @@ class calcCustomFEML(baseMetrics):
             sim7 = StaticValues.algorithms['cosine'](a, b)
             sim9 = StaticValues.algorithms['strike_a_match'](a, b)
             sim12 = StaticValues.algorithms['soft_jaccard'](a, b)
-            sim5 = StaticValues.algorithms['sorted_winkler'](a, b)
+            if not flag: sim5 = StaticValues.algorithms['sorted_winkler'](a, b)
             if permuted: sim6 = StaticValues.algorithms['permuted_winkler'](a, b)
             sim10 = StaticValues.algorithms['skipgram'](a, b)
             sim13 = StaticValues.algorithms['davies'](a, b)
@@ -536,14 +536,18 @@ class calcCustomFEML(baseMetrics):
 
             if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
                 if permuted:
-                    tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    if flag: tmp_X1.append([sim1, sim2, sim3, sim4, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    else: tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 else:
-                    tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    if flag: tmp_X1.append([sim1, sim2, sim3, sim4, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    else: tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
             else:
                 if permuted:
-                    tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    if flag: tmp_X2.append([sim1, sim2, sim3, sim4, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    else: tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 else:
-                    tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    if flag: tmp_X2.append([sim1, sim2, sim3, sim4, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    else: tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
 
         if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
             if selectable_features is not None:
@@ -746,7 +750,7 @@ class calcCustomFEMLExtended(baseMetrics):
             sim7 = StaticValues.algorithms['cosine'](a, b)
             sim9 = StaticValues.algorithms['strike_a_match'](a, b)
             sim12 = StaticValues.algorithms['soft_jaccard'](a, b)
-            sim5 = StaticValues.algorithms['sorted_winkler'](a, b)
+            if not flag: sim5 = StaticValues.algorithms['sorted_winkler'](a, b)
             if permuted: sim6 = StaticValues.algorithms['permuted_winkler'](a, b)
             sim10 = StaticValues.algorithms['skipgram'](a, b)
             sim13 = StaticValues.algorithms['davies'](a, b)
@@ -761,15 +765,19 @@ class calcCustomFEMLExtended(baseMetrics):
 
             if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
                 if permuted:
-                    tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    if flag: tmp_X1.append([sim1, sim2, sim3, sim4, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    else: tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 else:
-                    tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    if flag: tmp_X1.append([sim1, sim2, sim3, sim4, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    else: tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 if flag: tmp_X1.append([sim16, sim17, sim15])
             else:
                 if permuted:
-                    tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    if flag: tmp_X2.append([sim1, sim2, sim3, sim4, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    else: tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 else:
-                    tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    if flag: tmp_X2.append([sim1, sim2, sim3, sim4, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
+                    else: tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 if flag: tmp_X2.append([sim16, sim17, sim15])
 
         row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)

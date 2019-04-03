@@ -360,7 +360,7 @@ class StaticValues:
         "Jaro Sorted",
         "Jaro-Winkler Sorted",
         "Jaro-Winkler reversed Sorted",
-        "Sorted Jaro-Winkler Sorted",
+        # "Sorted Jaro-Winkler Sorted",
         # "Permuted Jaro-Winkler Sorted",
         "Cosine N-grams Sorted",
         "Jaccard N-grams Sorted",
