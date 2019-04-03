@@ -352,12 +352,11 @@ class baseMetrics:
     def freq_terms_list(self):
         self.feml_features.get_freqterms()
 
-    def _perform_feature_selection(self, X_train, y_train, X_test, method, model):
+    def _perform_feature_selection(self, X_train, y_train, X_test, method, model, no_features_to_keep=11):
         fsupported = None
-        no_features_keep = 11
 
         if method == 'rfe':
-            rfe = RFE(model, n_features_to_select=no_features_keep, step=2)
+            rfe = RFE(model, n_features_to_select=no_features_to_keep, step=2)
             rfe.fit(X_train, y_train)
             X = rfe.transform(X_train)
             X_t = rfe.transform(X_test)
@@ -365,7 +364,7 @@ class baseMetrics:
 
             print("{} features selected using Recursive Feature Elimination (RFE).".format(X.shape[1]))
         elif method == 'rfecv':
-            rfe = RFECV(model, min_features_to_select=no_features_keep, step=2, cv=5)
+            rfe = RFECV(model, min_features_to_select=no_features_to_keep, step=2, cv=5)
             rfe.fit(X_train, y_train)
             X = rfe.transform(X_train)
             X_t = rfe.transform(X_test)
@@ -376,7 +375,7 @@ class baseMetrics:
             # We use the base estimator LassoCV since the L1 norm promotes sparsity of features.
             # clf = LassoCV(cv=5, max_iter=2000, n_jobs=2)
 
-            sfm = SelectFromModel(model, threshold=-np.inf, max_features=no_features_keep, prefit=False)
+            sfm = SelectFromModel(model, threshold=-np.inf, max_features=no_features_to_keep, prefit=False)
             sfm.fit(X_train, y_train)
             X = sfm.transform(X_train)
             X_t = sfm.transform(X_test)
@@ -968,7 +967,7 @@ class calcCustomFEMLExtended(baseMetrics):
                     features_supported = [x and y for x, y in zip(features_supported, features)]
                 if fs_method is not None and set([name]) & {'rf', 'et', 'xgboost'}:
                     X_train, X_pred, features_supported = self._perform_feature_selection(
-                        X_train, y_train, X_pred, fs_method, model
+                        X_train, y_train, X_pred, fs_method, model, 10
                     )
                     tot_features = [x or y for x, y in izip_longest(features_supported, tot_features, fillvalue=False)]
 
