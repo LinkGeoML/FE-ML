@@ -178,7 +178,7 @@ class Evaluator:
 
                     csvfile.seek(0)
                     for row in reader:
-                        if self.latin and (row['a1'] != 'LATIN' or row['a2'] != 'LATIN'): continue
+                        # if self.latin and (row['a1'] != 'LATIN' or row['a2'] != 'LATIN'): continue
 
                         self.evalClass.evaluate_sorting(row, float(i / 100.0), thres_type, self.stemming, self.permuted)
                     if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
