@@ -616,10 +616,12 @@ class calcCustomFEML(baseMetrics):
                     for idx, val in zip([i for i, x in enumerate(features_supported) if x], model.feature_importances_):
                         self.importances[clf_abbr][idx] += val
                 elif hasattr(model, "coef_"):
-                    if clf_abbr in self.importances:
-                        self.importances[clf_abbr] += model.coef_.ravel()
-                    else:
-                        self.importances[clf_abbr] = model.coef_.ravel()
+                    if clf_abbr not in self.importances:
+                        self.importances[clf_abbr] = np.zeros(len(StaticValues.featureColumns), dtype=float)
+
+                    for idx, val in zip([i for i, x in enumerate(features_supported) if x],
+                                        model.coef_.ravel()):
+                        self.importances[clf_abbr][idx] += val
                 # print(model.score(X_pred, y_pred))
 
             print("Best features discovered: ", end="")

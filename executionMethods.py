@@ -289,7 +289,11 @@ class Evaluator:
                     print("parameter 'averaged'=False under 'class testMetrics' in file 'femlAlgorithms.py'")
                     print('====================================================================================')
                     for n in [3.34] + list(range(4, 8)):
-                        weight_combs = [tuple(float(x/10.0) for x in seq) for seq in itertools.product([1, 2, 3, 4, 5, 2.5, 3.33], repeat=2) if sum(seq) == (10 - n)]
+                        weight_combs = [
+                            tuple(float(x/10.0) for x in seq)
+                            for seq in itertools.product([1, 2, 3, 4, 5, 2.5, 3.33], repeat=2)
+                            if sum(seq) == (10 - n)
+                        ]
 
                         for w in weight_combs:
                             w = (float(n/10.0), ) + w
