@@ -751,7 +751,10 @@ class calcCustomFEMLExtended(baseMetrics):
             sim10 = StaticValues.algorithms['skipgram'](a, b)
             sim13 = StaticValues.algorithms['davies'](a, b)
             if flag:
+                sim16 = StaticValues.algorithms['l_jaro_winkler'](a, b)
+                sim17 = StaticValues.algorithms['l_jaro_winkler'](a[::-1], b[::-1])
                 # sim14 = StaticValues.algorithms['lsimilarity'](a, b)
+
                 sim15 = StaticValues.algorithms['avg_lsimilarity'](a, b)
 
             self.timer += (time.time() - start_time)
@@ -761,13 +764,13 @@ class calcCustomFEMLExtended(baseMetrics):
                     tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 else:
                     tmp_X1.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-                if flag: tmp_X1.append([sim15])
+                if flag: tmp_X1.append([sim16, sim17, sim15])
             else:
                 if permuted:
                     tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim6, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
                 else:
                     tmp_X2.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-                if flag: tmp_X2.append([sim15])
+                if flag: tmp_X2.append([sim16, sim17, sim15])
 
         row['s1'], row['s2'] = transform(row['s1'], row['s2'], sorting=sorting, stemming=stemming, canonical=canonical)
 
@@ -820,13 +823,31 @@ class calcCustomFEMLExtended(baseMetrics):
                  'len': specialTerms['len'], 'char_len': specialTerms['char_len']},
                 'jaro_winkler', flag
             )
+            baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(
+                row['s1'], row['s2'], LSimilarityVars.per_metric_optimal_values['l_jaro_winkler'][lsim_baseThres][0]
+            )
+            feature26 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'l_jaro_winkler', flag)
+            baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(
+                row['s1'], row['s2'], LSimilarityVars.per_metric_optimal_values['l_jaro_winkler_r'][lsim_baseThres][0]
+            )
+            feature27 = weighted_terms(
+                {'a': [x[::-1] for x in baseTerms['a']], 'b': [x[::-1] for x in baseTerms['b']],
+                 'len': baseTerms['len'], 'char_len': baseTerms['char_len']},
+                {'a': [x[::-1] for x in mismatchTerms['a']], 'b': [x[::-1] for x in mismatchTerms['b']],
+                 'len': mismatchTerms['len'], 'char_len': mismatchTerms['char_len']},
+                {'a': [x[::-1] for x in specialTerms['a']], 'b': [x[::-1] for x in specialTerms['b']],
+                 'len': specialTerms['len'], 'char_len': specialTerms['char_len']},
+                'l_jaro_winkler', flag
+            )
 
             self.timer += (time.time() - start_time)
 
             if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
-                tmp_X1.append([feature17, feature18, feature19, feature20, feature21, feature22, feature23, feature24, feature25])
+                tmp_X1.append([feature17, feature18, feature19, feature20, feature21, feature22, feature23, feature24,
+                               feature25, feature26, feature27])
             else:
-                tmp_X2.append([feature17, feature18, feature19, feature20, feature21, feature22, feature23, feature24, feature25])
+                tmp_X2.append([feature17, feature18, feature19, feature20, feature21, feature22, feature23, feature24,
+                               feature25, feature26, feature27])
 
         start_time = time.time()
 
@@ -969,7 +990,7 @@ class calcCustomFEMLExtended(baseMetrics):
                     features_supported = [x and y for x, y in zip(features_supported, features)]
                 if fs_method is not None and set([name]) & {'rf', 'et', 'xgboost'}:
                     X_train, X_pred, features_supported = self._perform_feature_selection(
-                        X_train, y_train, X_pred, fs_method, model, 9
+                        X_train, y_train, X_pred, fs_method, model, 8
                     )
                     tot_features = [x or y for x, y in izip_longest(features_supported, tot_features, fillvalue=False)]
 
