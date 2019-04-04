@@ -352,7 +352,7 @@ class baseMetrics:
     def freq_terms_list(self):
         self.feml_features.get_freqterms()
 
-    def _perform_feature_selection(self, X_train, y_train, X_test, method, model, no_features_to_keep=11):
+    def _perform_feature_selection(self, X_train, y_train, X_test, method, model, no_features_to_keep=12):
         fsupported = None
 
         if method == 'rfe':
@@ -727,7 +727,7 @@ class calcCustomFEMLExtended(baseMetrics):
         super(calcCustomFEMLExtended, self).__init__(len(self.classifiers), njobs, accures)
 
     def evaluate(self, row, sorting=False, stemming=False, canonical=False, permuted=False, freqTerms=False,
-                 custom_thres='orig', features=None, selectable_features=None):
+                 custom_thres='orig', selectable_features=None):
         if row['res'].upper() == "TRUE":
             if len(self.Y1) < ((self.num_true + self.num_false) / 2.0): self.Y1.append(1.0)
             else: self.Y2.append(1.0)
@@ -758,7 +758,6 @@ class calcCustomFEMLExtended(baseMetrics):
                 sim16 = StaticValues.algorithms['l_jaro_winkler'](a, b)
                 sim17 = StaticValues.algorithms['l_jaro_winkler'](a[::-1], b[::-1])
                 # sim14 = StaticValues.algorithms['lsimilarity'](a, b)
-
                 sim15 = StaticValues.algorithms['avg_lsimilarity'](a, b)
 
             self.timer += (time.time() - start_time)
@@ -998,7 +997,7 @@ class calcCustomFEMLExtended(baseMetrics):
                     features_supported = [x and y for x, y in zip(features_supported, features)]
                 if fs_method is not None and set([name]) & {'rf', 'et', 'xgboost'}:
                     X_train, X_pred, features_supported = self._perform_feature_selection(
-                        X_train, y_train, X_pred, fs_method, model, 8
+                        X_train, y_train, X_pred, fs_method, model, 10
                     )
                     tot_features = [x or y for x, y in izip_longest(features_supported, tot_features, fillvalue=False)]
 
