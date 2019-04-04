@@ -997,7 +997,7 @@ class calcCustomFEMLExtended(baseMetrics):
                     features_supported = [x and y for x, y in zip(features_supported, features)]
                 if fs_method is not None and set([name]) & {'rf', 'et', 'xgboost'}:
                     X_train, X_pred, features_supported = self._perform_feature_selection(
-                        X_train, y_train, X_pred, fs_method, model, 10
+                        X_train, y_train, X_pred, fs_method, model, 11
                     )
                     tot_features = [x or y for x, y in izip_longest(features_supported, tot_features, fillvalue=False)]
 
