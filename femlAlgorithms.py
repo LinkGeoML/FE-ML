@@ -596,7 +596,6 @@ class calcCustomFEML(baseMetrics):
                     ((row for row in (self.Y2, self.Y1)))
             ):
                 start_time = time.time()
-
                 features_supported = [True] * len(StaticValues.featureColumns)
                 if features is not None:
                     features_supported = [x and y for x, y in zip(features_supported, features)]
@@ -607,9 +606,9 @@ class calcCustomFEML(baseMetrics):
                     tot_features = [x or y for x, y in izip_longest(features_supported, tot_features, fillvalue=False)]
 
                 model.fit(X_train, y_train)
-
                 train_time += (time.time() - start_time)
 
+                start_time = time.time()
                 predictedL += list(model.predict(X_pred))
                 self.timers[clf_abbr] += (time.time() - start_time)
 
@@ -991,7 +990,6 @@ class calcCustomFEMLExtended(baseMetrics):
                     (row for row in (self.Y2, self.Y1))
             ):
                 start_time = time.time()
-
                 features_supported = [True] * len(StaticValues.featureColumns)
                 if features is not None:
                     features_supported = [x and y for x, y in zip(features_supported, features)]
@@ -1002,9 +1000,9 @@ class calcCustomFEMLExtended(baseMetrics):
                     tot_features = [x or y for x, y in izip_longest(features_supported, tot_features, fillvalue=False)]
 
                 model.fit(X_train, y_train)
-
                 train_time += (time.time() - start_time)
 
+                start_time = time.time()
                 predictedL += list(model.predict(X_pred))
                 self.timers[clf_abbr] += (time.time() - start_time)
 
