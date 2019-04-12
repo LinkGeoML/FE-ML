@@ -10,9 +10,8 @@ import json
 from nltk.corpus import stopwords
 
 from femlAlgorithms import *
-from helpers import normalize_str, getRelativePathtoWorking
+from helpers import normalize_str, getRelativePathtoWorking, StaticValues
 from external.datasetcreator import filter_dataset, build_dataset_from_geonames
-from helpers import StaticValues
 
 
 class Evaluator:
