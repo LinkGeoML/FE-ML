@@ -34,11 +34,6 @@ class Evaluator:
         self.latin = only_latin
         self.encoding = encoding
 
-        self.termfrequencies = {
-            'gram': Counter(),
-            '2gram_1': Counter(), '3gram_1': Counter(),
-            '2gram_2': Counter(), '3gram_2': Counter(), '3gram_3': Counter(),
-        }
         self.termsperalphabet = {}
         self.stop_words = []
         self.abbr = {'A': [], 'B': []}
@@ -95,7 +90,7 @@ class Evaluator:
 
                 for row in reader:
                     self.evalClass.evaluate(
-                        row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, thres_type, lFeatures
+                        row, self.sorting, self.stemming, self.canonical, self.permuted, thres_type, lFeatures
                     )
             if hasattr(self.evalClass, "train_classifiers"):
                 self.evalClass.train_classifiers(self.ml_algs, polynomial=False, standardize=True, fs_method=feature_selection, features=lFeatures)
@@ -124,8 +119,7 @@ class Evaluator:
                     csvfile.seek(0)
                     for row in reader:
                         self.evalClass.evaluate(
-                            row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies,
-                            float(i / 100.0)
+                            row, self.sorting, self.stemming, self.canonical, self.permuted, float(i / 100.0)
                         )
                     if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                     tmp_res = self.evalClass.get_stats()
@@ -316,7 +310,7 @@ class Evaluator:
                                     csvfile.seek(0)
                                     for row in reader:
                                         self.evalClass.evaluate(
-                                            row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies,
+                                            row, self.sorting, self.stemming, self.canonical, self.permuted,
                                             float(i / 100.0), float(k / 100.0)
                                         )
                                     if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
@@ -354,7 +348,7 @@ class Evaluator:
                                             delimiter='\t')
                     for row in reader:
                         self.evalClass.evaluate(
-                            row, self.sorting, self.stemming, self.canonical, self.permuted, self.termfrequencies, 'sorted'
+                            row, self.sorting, self.stemming, self.canonical, self.permuted, 'sorted'
                         )
                     self.evalClass.debug_stats()
         elif test_case - 1 == 4:
