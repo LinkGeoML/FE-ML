@@ -103,11 +103,6 @@ class FEMLFeatures:
         return all(x in str2 for x in str1.split())
 
     @staticmethod
-    def contains_freq_term(str, freqTerms=None):
-        str, _ = normalize_str(str)
-        return True if freqTerms is not None and str in freqTerms else False
-
-    @staticmethod
     def is_matched(str):
         """
         Finds out how balanced an expression is.
