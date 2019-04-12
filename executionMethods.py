@@ -10,7 +10,7 @@ import json
 from nltk.corpus import stopwords
 
 from femlAlgorithms import *
-from helpers import normalize_str, getRelativePathtoWorking, getTMabsPath
+from helpers import normalize_str, getRelativePathtoWorking
 from external.datasetcreator import filter_dataset, build_dataset_from_geonames
 from helpers import StaticValues
 
@@ -77,12 +77,11 @@ class Evaluator:
 
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt', feature_selection=None, features=None):
         if self.evalClass is not None:
-            print( "Reading dataset...")
-            relpath = getRelativePathtoWorking(dataset)
             self.evalClass.freq_terms_list()
 
             lFeatures = [(True if x == 'True' else False) for x in features.split(',')] if feature_selection is None and features is not None else features
-            with open(relpath) as csvfile:
+            print("Reading dataset...")
+            with open(dataset) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
@@ -105,12 +104,11 @@ class Evaluator:
 
     def evaluate_metrics_with_various_thres(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
-            print("Reading dataset...")
-            relpath = getRelativePathtoWorking(dataset)
             self.evalClass.freq_terms_list()
 
             start_time = time.time()
-            with open(relpath) as csvfile:
+            print("Reading dataset...")
+            with open(dataset) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
@@ -149,11 +147,9 @@ class Evaluator:
 
     def evaluate_sorting_with_various_thres(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
-            print("Reading dataset...")
-            relpath = getRelativePathtoWorking(dataset)
-
             start_time = time.time()
-            with open(relpath) as csvfile:
+            print("Reading dataset...")
+            with open(dataset) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
 
@@ -272,11 +268,10 @@ class Evaluator:
                         f.write("{}\t{}\n".format(value.encode('utf8'), count))
         elif test_case - 1 == 2:
             if self.evalClass is not None:
-                print("Reading dataset...")
-                relpath = getRelativePathtoWorking(dataset)
                 self.evalClass.freq_terms_list()
 
-                with open(relpath) as csvfile:
+                print("Reading dataset...")
+                with open(dataset) as csvfile:
                     reader = csv.DictReader(csvfile,
                                             fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                             delimiter='\t')
@@ -351,11 +346,10 @@ class Evaluator:
                         print(k, max(val, key=lambda x: x[1][0]))
         elif test_case - 1 == 3:
             if self.evalClass is not None:
-                print("Reading dataset...")
-                relpath = getRelativePathtoWorking(dataset)
                 self.evalClass.freq_terms_list()
 
-                with open(relpath) as csvfile:
+                print("Reading dataset...")
+                with open(dataset) as csvfile:
                     reader = csv.DictReader(csvfile,
                                             fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                             delimiter='\t')
@@ -365,13 +359,12 @@ class Evaluator:
                         )
                     self.evalClass.debug_stats()
         elif test_case - 1 == 4:
-            print("Reading dataset...")
-            relpath = getRelativePathtoWorking(dataset)
             self.evalClass.freq_terms_list()
 
             output_f = open("./output/lsimilarity_terms.csv", "w+")
             output_f.write("res\tstr1\tbase_s1\tmismatch_s1\tspecial_s1\tstr2\tbase_s2\tmismatch_s2\tspecial_s2\n")
-            with open(relpath) as csvfile:
+            print("Reading dataset...")
+            with open(dataset) as csvfile:
                 reader = csv.DictReader(csvfile,
                                         fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
@@ -398,7 +391,7 @@ class Evaluator:
             os.makedirs("output")
 
         if len(datasets) == 2:
-            reader = pd.read_csv(getTMabsPath(datasets[0]), sep='\t', names=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"])
+            reader = pd.read_csv((datasets[0]), sep='\t', names=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"])
             results = pd.read_csv(datasets[1], sep='\t', names=["res1", "res2"])
 
             print("No of rows for dataset: {0}".format(results.shape[0]/2))
@@ -416,7 +409,7 @@ class Evaluator:
             ]
             posDf.to_csv('./output/false_positives.csv', sep='\t', encoding='utf-8', columns=['s1', 's2'])
         elif len(datasets) == 3:
-            reader = pd.read_csv(getTMabsPath(datasets[0]), sep='\t',
+            reader = pd.read_csv(getRelativePathtoWorking(datasets[0]), sep='\t',
                                  names=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"])
 
             res1 = pd.read_csv(

@@ -33,7 +33,7 @@ from xgboost import XGBClassifier
 from tabulate import tabulate
 
 from external.datasetcreator import strip_accents, LSimilarityVars, lsimilarity_terms, score_per_term, weighted_terms
-from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues, getRelativePathtoWorking
+from helpers import perform_stemming, normalize_str, sorted_nicely, StaticValues
 
 
 punctuation_regex = re.compile(u'[‘’“”\'"!?;/⧸⁄‹›«»`ʿ,.-]')

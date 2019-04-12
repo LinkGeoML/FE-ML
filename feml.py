@@ -60,7 +60,7 @@ from docopt import docopt
 from kitchen.text.converters import getwriter
 
 import executionMethods as rc
-from helpers import getTMabsPath
+from helpers import getRelativePathtoWorking
 
 
 def main(args):
@@ -77,7 +77,7 @@ def main(args):
         evaluator.build_dataset()
         sys.exit(0)
 
-    fpath_ds = getTMabsPath(dataset_path[0])
+    fpath_ds = getRelativePathtoWorking(dataset_path[0])
     if os.path.isfile(fpath_ds):
         evaluator.initialize(fpath_ds, args['--ev'], args['--jobs'], args['--accuracyresults'])
 
