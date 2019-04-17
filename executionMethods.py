@@ -97,7 +97,7 @@ class Evaluator:
 
     def evaluate_metrics_with_various_thres(self, dataset='dataset-string-similarity.txt'):
         if self.evalClass is not None:
-            self.evalClass.freq_terms_list()
+            self.evalClass.freq_terms_list(self.encoding)
 
             start_time = time.time()
             print("Reading dataset...")
@@ -258,7 +258,7 @@ class Evaluator:
                         f.write("{}\t{}\n".format(value.encode('utf8'), count))
         elif test_case - 1 == 2:
             if self.evalClass is not None:
-                self.evalClass.freq_terms_list()
+                self.evalClass.freq_terms_list(self.encoding)
 
                 print("Reading dataset...")
                 with open(dataset) as csvfile:
@@ -336,7 +336,7 @@ class Evaluator:
                         print(k, max(val, key=lambda x: x[1][0]))
         elif test_case - 1 == 3:
             if self.evalClass is not None:
-                self.evalClass.freq_terms_list()
+                self.evalClass.freq_terms_list(self.encoding)
 
                 print("Reading dataset...")
                 with open(dataset) as csvfile:
@@ -349,7 +349,7 @@ class Evaluator:
                         )
                     self.evalClass.debug_stats()
         elif test_case - 1 == 4:
-            self.evalClass.freq_terms_list()
+            self.evalClass.freq_terms_list(self.encoding)
 
             output_f = open("./output/lsimilarity_terms.csv", "w+")
             output_f.write("res\tstr1\tbase_s1\tmismatch_s1\tspecial_s1\tstr2\tbase_s2\tmismatch_s2\tspecial_s2\n")
@@ -430,5 +430,5 @@ class Evaluator:
         else: print("Wrong number {0} of input datasets to cmp".format(len(datasets)))
 
     def build_dataset(self):
-        build_dataset_from_geonames(only_latin=self.latin)
+        build_dataset_from_geonames(only_latin=True if self.encoding.lower() == 'latin' else False)
         filter_dataset()
