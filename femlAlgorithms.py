@@ -209,7 +209,7 @@ class FEMLFeatures:
             for f in glob.iglob(os.path.join(input_path[1], '*gram*{}{}.csv'.format('_', encoding))):
                 gram_type = 'tokens' if 'token' in os.path.basename(os.path.normpath(f)) else 'chars'
                 with open(f) as csvfile:
-                    print("Loading frequent terms from file {}...".format(f))
+                    print("Loading frequent terms from file {} ...".format(f))
                     reader = csv.DictReader(csvfile, fieldnames=["term", "no"], delimiter='\t')
                     _ = reader.fieldnames
                     # go to next line after header
