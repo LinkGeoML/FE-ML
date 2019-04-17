@@ -22,8 +22,7 @@ Options:
   --test <no>                   perform various test operations. [default: 0].
   --ml <ML_algs>                Comma separated machine learning algorithms to run. [default: all]
   --cmp                         Print output results that a comparison produces. Default is False.
-  --onlyLATIN                   Check for similarities only both strings use LATIN chars. Default is False.
-  -e <encoding_type>            Check for similarities only for the specified encoding type. Default is False.
+  -e <encoding_type>            Check for similarities only for the specified encoding type. [default: latin]
   --optimalThres                Find best threshold for metrics.
   --optimalSortingThres         Find best threshold for metric used to decide whether to apply sorting or not.
   --buildDataset                Build the dataset for evaluation.
@@ -50,7 +49,7 @@ Arguments:
                             'lsvm' (Linear SVM)
   FeatureSelection          'sfm'
                             'rfe'
-  encoding_type             'all'
+  encoding_type             'global'
                             'latin'
 """
 
@@ -68,15 +67,11 @@ def main(args):
     UTF8Writer = getwriter('utf8')
     sys.stdout = UTF8Writer(sys.stdout)
 
-    if args["--onlyLATIN"]:
-        LSimilarityVars.per_metric_optimal_values = StaticValues.MetricOptimalValues['latin']
-    elif args['-e'] == 'all':
-        LSimilarityVars.per_metric_optimal_values = StaticValues.MetricOptimalValues['global']
-
+    LSimilarityVars.per_metric_optimal_values = StaticValues.MetricOptimalValues[args["-e"].lower()]
     dataset_path = [x for x in args['-d'].split(',')]
 
     evaluator = rc.Evaluator(
-        args['--ml'], args['--sort'], args['--stemming'], args['--canonical'], args['--permuted'], args['--onlyLATIN'], args['-e']
+        args['--ml'], args['--sort'], args['--stemming'], args['--canonical'], args['--permuted'], args['-e']
     )
 
     if args['--buildDataset']:

@@ -25,13 +25,12 @@ class Evaluator:
         'lSimilarityMetrics': calcLSimilarities,
     }
 
-    def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, only_latin=False, encoding=None):
+    def __init__(self, ml_algs, sorting=False, stemming=False, canonical=False, permuted=False, encoding=None):
         self.ml_algs = [x for x in ml_algs.split(',')]
         self.permuted = permuted
         self.stemming = stemming
         self.canonical = canonical
         self.sorting = sorting
-        self.latin = only_latin
         self.encoding = encoding
 
         self.termsperalphabet = {}
@@ -71,22 +70,22 @@ class Evaluator:
 
     def evaluate_metrics(self, dataset='dataset-string-similarity.txt', feature_selection=None, features=None):
         if self.evalClass is not None:
-            self.evalClass.freq_terms_list()
+            self.evalClass.freq_terms_list(self.encoding)
+
+            thres_type = 'orig'
+            if self.sorting:
+                thres_type = 'sorted'
+            if self.encoding.lower() == 'latin':
+                # thres_type += '_onlylatin'
+                thres_type += '_latin_EU/NA'
+            elif self.encoding.lower() == 'global':
+                thres_type += '_global'
 
             lFeatures = [(True if x == 'True' else False) for x in features.split(',')] if feature_selection is None and features is not None else features
             print("Reading dataset...")
             with open(dataset) as csvfile:
                 reader = csv.DictReader(csvfile, fieldnames=["s1", "s2", "res", "c1", "c2", "a1", "a2", "cc1", "cc2"],
                                         delimiter='\t')
-
-                thres_type = 'orig'
-                if self.sorting:
-                    thres_type = 'sorted'
-                if self.latin:
-                    # thres_type += '_onlylatin'
-                    thres_type += '_latin_EU/NA'
-                if self.encoding:
-                    thres_type += '_all'
 
                 for row in reader:
                     self.evalClass.evaluate(
@@ -152,11 +151,11 @@ class Evaluator:
                 thres_type = 'orig'
                 if self.sorting:
                     thres_type = 'sorted'
-                if self.latin:
+                if self.encoding.lower() == 'latin':
                     # thres_type += '_onlylatin'
                     thres_type += '_latin_EU/NA'
-                if self.encoding:
-                    thres_type += '_all'
+                elif self.encoding.lower() == 'global':
+                    thres_type += '_global'
 
                 all_res = {}
                 for m in StaticValues.methods: all_res[m[0]] = []
@@ -167,8 +166,6 @@ class Evaluator:
 
                     csvfile.seek(0)
                     for row in reader:
-                        # if self.latin and (row['a1'] != 'LATIN' or row['a2'] != 'LATIN'): continue
-
                         self.evalClass.evaluate_sorting(row, float(i / 100.0), thres_type, self.stemming, self.permuted)
                     if hasattr(self.evalClass, "train_classifiers"): self.evalClass.train_classifiers(self.ml_algs)
                     tmp_res = self.evalClass.get_stats()

@@ -201,12 +201,12 @@ class FEMLFeatures:
 
         return fvec_str1, fvec_str2
 
-    def get_freqterms(self):
+    def get_freqterms(self, encoding):
         input_path = (True, os.path.join(os.getcwd(), 'input/')) \
             if os.path.isdir(os.path.join(os.getcwd(), 'input/')) \
             else (os.path.isdir(os.path.join(os.getcwd(), '../input/')), os.path.join(os.getcwd(), '../input/'))
         if input_path[0]:
-            for f in glob.iglob(os.path.join(input_path[1], '*gram*.csv')):
+            for f in glob.iglob(os.path.join(input_path[1], '*gram*{}{}.csv'.format('_', encoding))):
                 gram_type = 'tokens' if 'token' in os.path.basename(os.path.normpath(f)) else 'chars'
                 with open(f) as csvfile:
                     print("Loading frequent terms from file {}...".format(f))
@@ -347,8 +347,8 @@ class baseMetrics:
 
         return result, var_name
 
-    def freq_terms_list(self):
-        self.feml_features.get_freqterms()
+    def freq_terms_list(self, encoding):
+        self.feml_features.get_freqterms(encoding)
 
     def _perform_feature_selection(self, X_train, y_train, X_test, method, model, no_features_to_keep=12):
         fsupported = None
@@ -418,8 +418,9 @@ class calcSotAMetrics(baseMetrics):
         tot_res += self._generic_evaluator(13, 'davies', a, b, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(14, 'l_jaro_winkler', a, b, flag_true_match, custom_thres)
         tot_res += self._generic_evaluator(15, 'l_jaro_winkler', a[::-1], b[::-1], flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(16, 'lsimilarity', a, b, flag_true_match, custom_thres)
-        tot_res += self._generic_evaluator(17, 'avg_lsimilarity', a, b, flag_true_match, custom_thres)
+        if sorting:
+            tot_res += self._generic_evaluator(16, 'lsimilarity', a, b, flag_true_match, custom_thres)
+            tot_res += self._generic_evaluator(17, 'avg_lsimilarity', a, b, flag_true_match, custom_thres)
 
         if self.accuracyresults:
             if self.file is None:
