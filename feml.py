@@ -28,6 +28,7 @@ Options:
   --buildDataset                Build the dataset for evaluation.
   --fs <FeatureSelection>       Method to use for feature selection.
   -f <Features>                 Comma separated features that will be used for training/predict from the available ones.
+  --tuning                      Hyperparamet tuning for a series of classifiers. [default: false]
 
 Arguments:
   evaluator_type            'SotAMetrics' (default)
@@ -83,6 +84,7 @@ def main(args):
         evaluator.initialize(fpath_ds, args['--ev'], args['--jobs'], args['--accuracyresults'])
 
         if int(args['--test']): evaluator.test_cases(fpath_ds, int(args['--test']))
+        elif args['--tuning']: evaluator.hyperparamTuning(fpath_ds)
         elif args['--cmp']: evaluator.print_false_posneg(dataset_path)
         elif args['--optimalThres']: evaluator.evaluate_metrics_with_various_thres(fpath_ds)
         elif args['--optimalSortingThres']: evaluator.evaluate_sorting_with_various_thres(fpath_ds)

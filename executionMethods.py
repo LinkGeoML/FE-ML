@@ -12,6 +12,9 @@ from nltk.corpus import stopwords
 from femlAlgorithms import *
 from helpers import normalize_str, getRelativePathtoWorking, StaticValues
 from external.datasetcreator import filter_dataset, build_dataset_from_geonames
+import parameterTuning
+import config
+from featureConstruction import Features
 
 
 class Evaluator:
@@ -432,3 +435,39 @@ class Evaluator:
     def build_dataset(self):
         build_dataset_from_geonames(only_latin=True if self.encoding.lower() == 'latin' else False)
         filter_dataset()
+
+    def hyperparamTuning(self, dataset='dataset-string-similarity.txt'):
+        pt = parameterTuning.ParamTuning()
+        f = Features()
+
+        tot_time = time.time(); start_time = time.time()
+        f.load_data(getRelativePathtoWorking(config.initialConfig.test_dataset))
+        fX, y = f.build_features()
+        print("Loaded train dataset and build features for {} setup; {} sec.".format(
+            config.initialConfig.classification_method, time.time() - start_time))
+
+        start_time = time.time()
+        # 1st phase: find out best classifier from a list of candidate ones
+        best_clf = pt.getBestClassifier(fX, y)
+        print("Best classifier is {}; {} sec.".format(best_clf['classifier'], time.time() - start_time))
+
+        start_time = time.time()
+        #  2nd phase: fine tune the best classifier in previous step
+        estimator, params, score = pt.fineTuningBestClassifier(fX, y, best_clf)
+        print("Best hyperparams, {}, with score {}; {} sec.".format(params, score, time.time() - start_time))
+
+        start_time = time.time()
+        # 3nd phase: train the fine tuned best classifier on the whole train dataset (no folds)
+        estimator = pt.trainBestClassifier(fX, y, estimator)
+        print("Finished training model on the dataset; {} sec.".format(time.time() - start_time))
+
+        start_time = time.time()
+        f.load_data(dataset)
+        fX, y = f.build_features()
+
+        # 4th phase: test the fine tuned best classifier on the test dataset
+        acc = pt.testBestClassifier(fX, y, estimator)
+        print("Loaded test dataset, build features and validated with acc {}; {} sec".format(
+            acc, time.time() - start_time))
+
+        print("The whole process took {} sec.".format(time.time() - tot_time))

@@ -136,7 +136,7 @@ class FEMLFeatures:
 
     @staticmethod
     def containsTermsInParenthesis(str):
-        tokens = re.split('[{\[(]', str)
+        tokens = re.split(r'[{\[(]', str)
         bflag = True if len(tokens) > 1 else False
         return bflag
 
@@ -170,9 +170,6 @@ class FEMLFeatures:
     def ngram_tokens(tokens, ngram=1):
         if tokens < 1: tokens = 1
         return list(itertools.chain.from_iterable([[tokens[i:i + ngram] for i in range(len(tokens) - (ngram - 1))]]))
-
-    def ngrams(str, ngram=1):
-       pass
 
     def _check_size(self, s):
         if not len(s) == 3:
@@ -496,7 +493,7 @@ class calcCustomFEML(baseMetrics):
             ExtraTreesClassifier(n_estimators=100, random_state=0, n_jobs=int(njobs), max_depth=50),
             XGBClassifier(n_estimators=3000, seed=0, nthread=int(njobs)),
         ]
-        # self.scores = [[] for _ in range(len(self.classifiers))]
+
         self.importances = dict()
         self.mlalgs_to_run = StaticValues.classifiers_abbr.keys()
 
@@ -805,6 +802,10 @@ class calcCustomFEMLExtended(baseMetrics):
             )
             feature21 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'cosine', flag)
             baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(
+                row['s1'], row['s2'], LSimilarityVars.per_metric_optimal_values['jaccard'][lsim_baseThres][0]
+            )
+            feature211 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'jaccard', flag)
+            baseTerms, mismatchTerms, specialTerms = lsimilarity_terms(
                 row['s1'], row['s2'], LSimilarityVars.per_metric_optimal_values['monge_elkan'][lsim_baseThres][0]
             )
             feature22 = weighted_terms(baseTerms, mismatchTerms, specialTerms, 'monge_elkan', flag)
@@ -848,11 +849,11 @@ class calcCustomFEMLExtended(baseMetrics):
             self.timer += (time.time() - start_time)
 
             if len(self.X1) < ((self.num_true + self.num_false) / 2.0):
-                tmp_X1.append([feature17, feature18, feature19, feature20, feature21, feature22, feature23, feature24,
-                               feature25, feature26, feature27])
+                tmp_X1.append([feature17, feature18, feature19, feature20, feature21, feature211, feature22, feature23,
+                               feature24, feature25, feature26, feature27])
             else:
-                tmp_X2.append([feature17, feature18, feature19, feature20, feature21, feature22, feature23, feature24,
-                               feature25, feature26, feature27])
+                tmp_X2.append([feature17, feature18, feature19, feature20, feature21, feature211, feature22, feature23,
+                               feature24, feature25, feature26, feature27])
 
         start_time = time.time()
 
