@@ -449,7 +449,8 @@ class Evaluator:
         start_time = time.time()
         # 1st phase: find out best classifier from a list of candidate ones
         best_clf = pt.getBestClassifier(fX, y)
-        print("Best classifier is {}; {} sec.".format(best_clf['classifier'], time.time() - start_time))
+        print("Best classifier is {} with score {}; {} sec.".format(
+            best_clf['classifier'], best_clf['accuracy'], time.time() - start_time))
 
         start_time = time.time()
         #  2nd phase: fine tune the best classifier in previous step
