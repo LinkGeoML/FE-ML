@@ -2,16 +2,17 @@ import config
 import numpy as np
 
 from sklearn.svm import SVC
-from sklearn.gaussian_process.kernels import RBF
+# from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from xgboost import XGBClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import classification_report
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+# from sklearn.metrics import classification_report
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
+# from external.hyperband.search import HyperbandSearchCV
 
 
 seed_no = 13
@@ -20,12 +21,12 @@ np.random.seed(seed_no)
 
 class ParamTuning:
     clf_names = {
-        'SVM': [SVC, config.initialConfig.SVM_hyperparameters],
-        'Decision Tree': [DecisionTreeClassifier, config.initialConfig.DecisionTree_hyperparameters],
-        'MLP': [MLPClassifier, config.initialConfig.MLP_hyperparameters],
-        'Random Forest': [RandomForestClassifier, config.initialConfig.RandomForest_hyperparameters],
-        'Extra-Trees': [ExtraTreesClassifier, config.initialConfig.RandomForest_hyperparameters],
-        'XGBoost': [XGBClassifier, config.initialConfig.XGBoost_hyperparameters]
+        'SVM': [SVC, config.initialConfig.SVM_hyperparameters, config.initialConfig.SVM_hyperparameters_dist],
+        # 'Decision Tree': [DecisionTreeClassifier, config.initialConfig.DecisionTree_hyperparameters, config.initialConfig.DecisionTree_hyperparameters_dist],
+        # 'MLP': [MLPClassifier, config.initialConfig.MLP_hyperparameters, config.initialConfig.MLP_hyperparameters_dist],
+        # 'Random Forest': [RandomForestClassifier, config.initialConfig.RandomForest_hyperparameters, config.initialConfig.RandomForest_hyperparameters_dist],
+        # 'Extra-Trees': [ExtraTreesClassifier, config.initialConfig.RandomForest_hyperparameters, config.initialConfig.RandomForest_hyperparameters_dist],
+        'XGBoost': [XGBClassifier, config.initialConfig.XGBoost_hyperparameters, config.initialConfig.XGBoost_hyperparameters_dist]
     }
 
     scores = ['accuracy']  # , 'f1_macro', 'f1_micro']
@@ -40,6 +41,9 @@ class ParamTuning:
         self.kfold = config.initialConfig.kfold_parameter
         self.n_jobs = config.initialConfig.n_jobs
 
+        self.search_method = config.initialConfig.hyperparams_search_method
+        self.n_iter = config.initialConfig.max_iter
+
     def getBestClassifier(self, X, y):
         hyperparams_data = {
             'KFold': {},
@@ -52,15 +56,24 @@ class ParamTuning:
             X_train, y_train, X_test, y_test = X[train_idx], y[train_idx], X[test_idx], y[test_idx]
 
             for clf_key, clf_val in self.clf_names.iteritems():
-                tuned_parameters = clf_val[1]
-
                 clf = None
                 for score in self.scores:
-                    clf = GridSearchCV(
-                        clf_val[0](probability=True) if clf_key == 'SVM' else clf_val[0](), tuned_parameters,
-                        cv=self.inner_cv, scoring=score, verbose=0, n_jobs=self.n_jobs)
-                    #             clf = RandomizedSearchCV(clf_val[0](), tuned_parameters, cv=inner_cv,
-                    #                                scoring=score, verbose=5, n_jobs=5, n_iter=250)
+                    if self.search_method.lower() == 'grid':
+                        clf = GridSearchCV(
+                            clf_val[0](probability=True) if clf_key == 'SVM' else clf_val[0](), clf_val[1],
+                            cv=self.inner_cv, scoring=score, verbose=1, n_jobs=self.n_jobs)
+                    # elif self.search_method.lower() == 'hyperband' and clf_key in ['XGBoost', 'Extra-Trees', 'Random Forest']:
+                    #     HyperbandSearchCV(
+                    #         clf_val[0](probability=True) if clf_key == 'SVM' else clf_val[0](), clf_val[2].copy().pop('n_estimators'),
+                    #         resource_param='n_estimators',
+                    #         min_iter=500 if clf_key == 'XGBoost' else 200,
+                    #         max_iter=3000 if clf_key == 'XGBoost' else 1000,
+                    #         cv=self.inner_cv, random_state=seed_no, scoring=score
+                    #     )
+                    else:  # randomized is used as default
+                        clf = RandomizedSearchCV(
+                            clf_val[0](probability=True) if clf_key == 'SVM' else clf_val[0](), clf_val[2],
+                            cv=self.inner_cv, scoring=score, verbose=1, n_jobs=self.n_jobs, n_iter=self.n_iter)
                     clf.fit(X_train, y_train)
 
                 y_pred = clf.predict(X_test)
@@ -94,12 +107,30 @@ class ParamTuning:
         return best_clf
 
     def fineTuningBestClassifier(self, X, y, best_clf):
-        tuned_parameters = self.clf_names[best_clf['classifier']][1]
-
         clf = None
         for score in self.scores:
-            clf = GridSearchCV(self.clf_names[best_clf['classifier']][0](), tuned_parameters, cv=self.outer_cv,
-                               scoring=score, verbose=1, n_jobs=self.n_jobs)
+            if self.search_method.lower() == 'grid':
+                clf = GridSearchCV(
+                    self.clf_names[best_clf['classifier']][0](probability=True) if best_clf['classifier'] == 'SVM'
+                    else self.clf_names[best_clf['classifier']][0](),
+                    self.clf_names[best_clf['classifier']][1],
+                    cv=self.outer_cv, scoring=score, verbose=0, n_jobs=self.n_jobs)
+            # elif self.search_method.lower() == 'hyperband' and  best_clf['classifier'] in ['XGBoost', 'Extra-Trees', 'Random Forest']:
+            #     HyperbandSearchCV(
+            #         self.clf_names[best_clf['classifier']][0](probability=True) if best_clf['classifier'] == 'SVM'
+            #         else self.clf_names[best_clf['classifier']][0](),
+            #         self.clf_names[best_clf['classifier']][2].copy().pop('n_estimators'),
+            #         resource_param='n_estimators',
+            #         min_iter=500 if best_clf['classifier'] == 'XGBoost' else 200,
+            #         max_iter=3000 if best_clf['classifier'] == 'XGBoost' else 1000,
+            #         cv=self.inner_cv, random_state=seed_no, scoring=score
+            #     )
+            else:  # randomized is used as default
+                clf = RandomizedSearchCV(
+                    self.clf_names[best_clf['classifier']][0](probability=True) if best_clf['classifier'] == 'SVM'
+                    else self.clf_names[best_clf['classifier']][0](),
+                    self.clf_names[best_clf['classifier']][2],
+                    cv=self.outer_cv, scoring=score, verbose=0, n_jobs=self.n_jobs, n_iter=self.n_iter)
             clf.fit(X, y)
 
         return clf.best_estimator_, clf.best_params_, clf.best_score_

@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import randint, expon, truncnorm
 
 
 class initialConfig:
@@ -11,7 +12,7 @@ class initialConfig:
     kfold_parameter = 5
     kfold_inner_parameter = 4
 
-    n_jobs = 2
+    n_jobs = -1
     test_dataset = './datasets/dataset-string-similarity-100.csv'
 
     # the classification method used: basic, basic_sorted, lgm
@@ -22,7 +23,10 @@ class initialConfig:
     classifiers = ['SVM', 'Decision Tree', 'Random Forest', 'AdaBoost',
                    'Naive Bayes', 'MLP', 'Gaussian Process', 'Extra Trees']
 
-    # These are the parameters that constitute the search space
+    # Search Method to use for best hyperparameters: randomized, grid, hyperband
+    hyperparams_search_method = 'randomized'
+
+    # These are the parameters that constitute the search space for GridSearchCV
     # in our experiments.
     SVM_hyperparameters = [
         {'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
@@ -41,7 +45,7 @@ class initialConfig:
         'bootstrap': [True, False],
         'max_depth': [10, 20, 30, 40, 50, 60, 100, None],
         'criterion': ['gini', 'entropy'],
-        'max_features': ['auto', 'sqrt'],
+        'max_features': ['log2', 'sqrt'],  # auto is equal to sqrt
         'min_samples_leaf': [1, 2, 4],
         'min_samples_split': [2, 5, 10],
         "n_estimators": [250, 500, 1000]
@@ -61,6 +65,44 @@ class initialConfig:
         'max_iter': [300, 500, 1000],
         'solver': ['sgd', 'adam']
     }
+
+    # These are the parameters that constitute the search space for RandomizedSearchCV
+    # in our experiments.
+    SVM_hyperparameters_dist = {
+        'C': expon(scale=100), 'gamma': expon(scale=.1), 'kernel': ['rbf'], 'class_weight': ['balanced', None]
+    }
+    DecisionTree_hyperparameters_dist = {
+        'max_depth': randint(10, 100),
+        'min_samples_split': list(np.linspace(0.1, 1, 50)),
+        'min_samples_leaf': list(np.linspace(0.1, 0.5, 25)),
+        'max_features': randint(1, 11),
+    }
+    RandomForest_hyperparameters_dist = {
+        'bootstrap': [True, False],
+        'max_depth': [10, 20, 30, 40, 50, 60, 100, None],
+        'criterion': ['gini', 'entropy'],
+        'max_features': ['sqrt', 'log2'],  # sp_randint(1, 11)
+        'min_samples_leaf': randint(1, 5),
+        'min_samples_split': randint(2, 11),
+        "n_estimators": randint(250, 1000),
+    }
+    XGBoost_hyperparameters_dist = {
+        "n_estimators": randint(500, 4000),
+        # 'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, None],
+        # hyperparameters to avoid overfitting
+        'eta': expon(loc=0.01, scale=0.1),  # 'learning_rate'
+        'gamma': [0, 1, 5],
+        'subsample': truncnorm(0.7, 1),
+        'colsample_bytree': truncnorm(0, 1),
+        'min_child_weight': [1, 5, 10],
+    }
+    MLP_hyperparameters_dist = {
+        'learning_rate_init': expon(loc=0.0001, scale=0.1),
+        'max_iter': [300, 500, 1000],
+        'solver': ['sgd', 'adam']
+    }
+
+    max_iter = 200
 
     ## The following parameters correspond to the various options
     ## regarding the textual feature extraction phase.
