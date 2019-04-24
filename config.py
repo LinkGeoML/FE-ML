@@ -13,7 +13,8 @@ class initialConfig:
     kfold_inner_parameter = 4
 
     n_jobs = -1
-    test_dataset = './datasets/dataset-string-similarity-100.csv'
+    test_dataset = './datasets/dataset-string-similarity_original_1k.csv'
+    # test_dataset = './datasets/dataset-string-similarity_latin_EU_NA_1k.txt'
 
     # the classification method used: basic, basic_sorted, lgm
     classification_method = 'lgm'
