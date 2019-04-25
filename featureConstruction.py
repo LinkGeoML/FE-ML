@@ -77,7 +77,9 @@ class Features:
                 StaticValues.algorithms['monge_elkan'](*row),
                 StaticValues.algorithms['soft_jaccard'](*row),
                 StaticValues.algorithms['davies'](*row),
-            ], index=StaticValues.featureColumns[12:23]))
+                StaticValues.algorithms['l_jaro_winkler'](*row),
+                StaticValues.algorithms['l_jaro_winkler'](row[0][::-1], row[1][::-1]),
+            ], index=StaticValues.featureColumns[12:25]))
 
             fX = pd.concat([fX1, fX2], axis=1).values
         else:  # lgm

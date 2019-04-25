@@ -12,17 +12,22 @@ class initialConfig:
     kfold_parameter = 5
     kfold_inner_parameter = 4
 
+    # Number of parallel jobs to be initiated:
+    # -1: use all processors
+    # int: no of processors to use
     n_jobs = -1
+
     test_dataset = './datasets/dataset-string-similarity_original_1k.csv'
     # test_dataset = './datasets/dataset-string-similarity_latin_EU_NA_1k.txt'
+    # test_dataset = './datasets/dataset-string-similarity-100.csv'
 
     # the classification method used: basic, basic_sorted, lgm
     classification_method = 'lgm'
 
     # This parameter contains a list of the various classifiers
     # the results of which will be compared in the experiments.
-    classifiers = ['SVM', 'Decision Tree', 'Random Forest', 'AdaBoost',
-                   'Naive Bayes', 'MLP', 'Gaussian Process', 'Extra Trees']
+    # classifiers = ['SVM', 'Decision Tree', 'Random Forest', 'AdaBoost',
+    #                'Naive Bayes', 'MLP', 'Gaussian Process', 'Extra Trees']
 
     # Search Method to use for best hyperparameters: randomized, grid, hyperband
     hyperparams_search_method = 'randomized'
@@ -103,33 +108,4 @@ class initialConfig:
         'solver': ['sgd', 'adam']
     }
 
-    max_iter = 200
-
-    ## The following parameters correspond to the various options
-    ## regarding the textual feature extraction phase.
-
-    # This parameter refers to the percentage of term n-grams to be
-    # utilized in the feature extraction phase. E.g. when it is
-    # set to 0.1, only the top 10% term n-grams will be used.
-    top_k_terms_percentage = 0.1
-
-    # This parameter refers to the percentage of character n-grams to be
-    # utilized in the feature extraction phase. E.g. when it is
-    # set to 0.1, only the top 10% character n-grams will be used.
-    top_k_character_ngrams_percentage = 0.1
-
-    # These parameters refer to the size of the character n-grams
-    # and term n-grams respectively.
-    character_n_gram_size = 3
-    term_n_gram_size = 2
-
-    # This parameter refers to the category levels to be predicted.
-    # If level is equal to None, the experiments will be run for
-    # all category levels, one at a time.
-    # level = [1, 2]
-    level = [2]
-    # level = [1]
-
-    # This parameter refers to the desired numbers of the top k most probable
-    # predictions to be taken into account for computing the top-k accuracies.
-    k_error = [5, 10]
+    max_iter = 250
