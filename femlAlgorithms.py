@@ -50,10 +50,6 @@ def ascii_transliteration_and_punctuation_strip(s):
 
 
 def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' ', thres=0.55, only_sorting=False):
-    if not isinstance(strA, string_types) and not isinstance(strB, string_types):
-        print("The following variables should be strings: {}, {}".format(strA, strB))
-        return strA, strB
-
     a = strA.decode('utf8') #.lower()
     b = strB.decode('utf8') #.lower()
 

@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import config
 
 from helpers import StaticValues
@@ -19,12 +20,20 @@ class Features:
         "alpha2_cc2",
     ]
 
+    dtypes = {
+        's1': str, 's2': str,
+        'status': str,
+        'gid1': np.int32, 'gid2': np.int32,
+        'alphabet1': str, 'alphabet1': str,
+        'alpha2_cc1': str, 'alpha2_cc2': str
+    }
+
     def __init__(self):
         self.clf_method = config.initialConfig.classification_method
         self.data_df = None
 
     def load_data(self, fname):
-        self.data_df = pd.read_csv(fname, sep='\t', names=self.fields)
+        self.data_df = pd.read_csv(fname, sep='\t', names=self.fields, dtype=self.dtypes, na_filter=False)
 
     def build_features(self):
         y = self.data_df['status'].values

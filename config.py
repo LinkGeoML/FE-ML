@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import randint, expon, truncnorm
+from scipy.stats import randint as sp_randint, expon, truncnorm
 
 
 class initialConfig:
@@ -78,22 +78,22 @@ class initialConfig:
         'C': expon(scale=100), 'gamma': expon(scale=.1), 'kernel': ['rbf'], 'class_weight': ['balanced', None]
     }
     DecisionTree_hyperparameters_dist = {
-        'max_depth': randint(10, 100),
+        'max_depth': sp_randint(10, 100),
         'min_samples_split': list(np.linspace(0.1, 1, 50)),
         'min_samples_leaf': list(np.linspace(0.1, 0.5, 25)),
-        'max_features': randint(1, 11),
+        'max_features': sp_randint(1, 11),
     }
     RandomForest_hyperparameters_dist = {
         'bootstrap': [True, False],
         'max_depth': [10, 20, 30, 40, 50, 60, 100, None],
         'criterion': ['gini', 'entropy'],
         'max_features': ['sqrt', 'log2'],  # sp_randint(1, 11)
-        'min_samples_leaf': randint(1, 5),
-        'min_samples_split': randint(2, 11),
-        "n_estimators": randint(250, 1000),
+        'min_samples_leaf': sp_randint(1, 5),
+        'min_samples_split': sp_randint(2, 11),
+        "n_estimators": sp_randint(250, 1000),
     }
     XGBoost_hyperparameters_dist = {
-        "n_estimators": randint(500, 4000),
+        "n_estimators": sp_randint(500, 4000),
         # 'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, None],
         # hyperparameters to avoid overfitting
         'eta': expon(loc=0.01, scale=0.1),  # 'learning_rate'
