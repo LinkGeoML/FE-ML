@@ -41,61 +41,8 @@ class Features:
 
         fX = None
         if self.clf_method.lower() == 'basic':
-            self.data_df = self.data_df[['s1', 's2']].apply(self.oneshot_transformations, axis=1)
-            fX = self.data_df[['s1_basic', 's2_basic']].apply(lambda row: pd.Series([
-                StaticValues.algorithms['damerau_levenshtein'](*row),
-                StaticValues.algorithms['jaro'](*row),
-                StaticValues.algorithms['jaro_winkler'](*row),
-                StaticValues.algorithms['jaro_winkler'](row[0][::-1], row[1][::-1]),
-                StaticValues.algorithms['sorted_winkler'](*row),
-                StaticValues.algorithms['cosine'](*row),
-                StaticValues.algorithms['jaccard'](*row),
-                StaticValues.algorithms['strike_a_match'](*row),
-                StaticValues.algorithms['skipgram'](*row),
-                StaticValues.algorithms['monge_elkan'](*row),
-                StaticValues.algorithms['soft_jaccard'](*row),
-                StaticValues.algorithms['davies'](*row),
-            ], index=StaticValues.featureColumns[0:12]), axis=1).values
-        elif self.clf_method.lower() == 'basic_sorted':
-            self.data_df = self.data_df[['s1', 's2']].apply(lambda row: self.oneshot_transformations(row, True), axis=1)
-
-            fX1 = self.data_df[['s1_basic', 's2_basic']].apply(lambda row: pd.Series([
-                StaticValues.algorithms['damerau_levenshtein'](*row),
-                StaticValues.algorithms['jaro'](*row),
-                StaticValues.algorithms['jaro_winkler'](*row),
-                StaticValues.algorithms['jaro_winkler'](row[0][::-1], row[1][::-1]),
-                StaticValues.algorithms['sorted_winkler'](*row),
-                StaticValues.algorithms['cosine'](*row),
-                StaticValues.algorithms['jaccard'](*row),
-                StaticValues.algorithms['strike_a_match'](*row),
-                StaticValues.algorithms['skipgram'](*row),
-                StaticValues.algorithms['monge_elkan'](*row),
-                StaticValues.algorithms['soft_jaccard'](*row),
-                StaticValues.algorithms['davies'](*row),
-            ], index=StaticValues.featureColumns[0:12]), axis=1)
-
-            fX2 = self.data_df[['s1_sorted', 's2_sorted']].apply(lambda row: pd.Series([
-                StaticValues.algorithms['damerau_levenshtein'](*row),
-                StaticValues.algorithms['jaro'](*row),
-                StaticValues.algorithms['jaro_winkler'](*row),
-                StaticValues.algorithms['jaro_winkler'](row[0][::-1], row[1][::-1]),
-                StaticValues.algorithms['cosine'](*row),
-                StaticValues.algorithms['jaccard'](*row),
-                StaticValues.algorithms['strike_a_match'](*row),
-                StaticValues.algorithms['skipgram'](*row),
-                StaticValues.algorithms['monge_elkan'](*row),
-                StaticValues.algorithms['soft_jaccard'](*row),
-                StaticValues.algorithms['davies'](*row),
-                StaticValues.algorithms['l_jaro_winkler'](*row),
-                StaticValues.algorithms['l_jaro_winkler'](row[0][::-1], row[1][::-1]),
-            ], index=StaticValues.featureColumns[12:25]), axis=1)
-
-            fX = pd.concat([fX1, fX2], axis=1).values
-        else:  # lgm
-            # X = self.data_df.apply(lambda row: transform(row['s1'], row['s2']), axis=1)
-            # self.data_df = self.data_df[['s1', 's2']].apply(lambda row: self.oneshot_transformations(row, True), axis=1).drop(['s1', 's2'], axis=1)
-            #
-            # fX1 = self.data_df[['s1_basic', 's2_basic']].apply(lambda row: pd.Series([
+            # self.data_df = self.data_df[['s1', 's2']].apply(self.oneshot_transformations, axis=1)
+            # fX = self.data_df[['s1_basic', 's2_basic']].apply(lambda row: pd.Series([
             #     StaticValues.algorithms['damerau_levenshtein'](*row),
             #     StaticValues.algorithms['jaro'](*row),
             #     StaticValues.algorithms['jaro_winkler'](*row),
@@ -108,47 +55,21 @@ class Features:
             #     StaticValues.algorithms['monge_elkan'](*row),
             #     StaticValues.algorithms['soft_jaccard'](*row),
             #     StaticValues.algorithms['davies'](*row),
-            # ], index=StaticValues.featureColumns[0:12], dtype=np.float32), axis=1)
-            #
-            # fX2 = self.data_df[['s1_sorted', 's2_sorted']].apply(lambda row: pd.Series([
-            #     StaticValues.algorithms['damerau_levenshtein'](*row),
-            #     StaticValues.algorithms['jaro'](*row),
-            #     StaticValues.algorithms['jaro_winkler'](*row),
-            #     StaticValues.algorithms['jaro_winkler'](row[0][::-1], row[1][::-1]),
-            #     StaticValues.algorithms['cosine'](*row),
-            #     StaticValues.algorithms['jaccard'](*row),
-            #     StaticValues.algorithms['strike_a_match'](*row),
-            #     StaticValues.algorithms['skipgram'](*row),
-            #     StaticValues.algorithms['monge_elkan'](*row),
-            #     StaticValues.algorithms['soft_jaccard'](*row),
-            #     StaticValues.algorithms['davies'](*row),
-            #     StaticValues.algorithms['l_jaro_winkler'](*row),
-            #     StaticValues.algorithms['l_jaro_winkler'](row[0][::-1], row[1][::-1]),
-            #     self._compute_lsimilarity(row[0], row[1], 'damerau_levenshtein'),
-            #     self._compute_lsimilarity(row[0], row[1], 'davies'),
-            #     self._compute_lsimilarity(row[0], row[1], 'skipgram'),
-            #     self._compute_lsimilarity(row[0], row[1], 'soft_jaccard'),
-            #     self._compute_lsimilarity(row[0], row[1], 'strike_a_match'),
-            #     self._compute_lsimilarity(row[0], row[1], 'cosine'),
-            #     self._compute_lsimilarity(row[0], row[1], 'jaccard'),
-            #     self._compute_lsimilarity(row[0], row[1], 'monge_elkan'),
-            #     self._compute_lsimilarity(row[0], row[1], 'jaro_winkler'),
-            #     self._compute_lsimilarity(row[0], row[1], 'jaro'),
-            #     self._compute_lsimilarity(row[0], row[1], 'jaro_winkler_r'),
-            #     self._compute_lsimilarity(row[0], row[1], 'l_jaro_winkler'),
-            #     self._compute_lsimilarity(row[0], row[1], 'l_jaro_winkler_r'),
-            # ] + list(self._compute_lsimilarity_base_scores(row[0], row[1], 'damerau_levenshtein')),
-            #     index=StaticValues.featureColumns[12:41], dtype=np.float32), axis=1)
-            #
-            # fX = pd.concat([fX1, fX2], axis=1).values
-            fX = np.asarray(list(map(self._compute_features, self.data_df['s1'], self.data_df['s2'])), dtype=float)
+            # ], index=StaticValues.featureColumns[0:12]), axis=1).values
+            fX = np.asarray(list(map(self._compute_basic_features, self.data_df['s1'], self.data_df['s2'])),
+                            dtype=float)
+        elif self.clf_method.lower() == 'basic_sorted':
+            fX = np.asarray(list(map(self._compute_sorted_features, self.data_df['s1'], self.data_df['s2'])),
+                            dtype=float)
+        else:  # lgm
+            fX = np.asarray(list(map(self._compute_all_features, self.data_df['s1'], self.data_df['s2'])), dtype=float)
 
         return fX, y
 
-    def _compute_features(self, s1, s2, sorting=True):
+    def _compute_all_features(self, s1, s2, sorting=True, all_features=True):
         f = []
-        for t in list({False, sorting}):
-            a, b = transform(s1, s2, sorting=t, canonical=t)
+        for status in list({False, sorting}):
+            a, b = transform(s1, s2, sorting=status, canonical=status)
 
             sim1 = StaticValues.algorithms['damerau_levenshtein'](a, b)
             sim8 = StaticValues.algorithms['jaccard'](a, b)
@@ -159,21 +80,21 @@ class Features:
             sim7 = StaticValues.algorithms['cosine'](a, b)
             sim9 = StaticValues.algorithms['strike_a_match'](a, b)
             sim12 = StaticValues.algorithms['soft_jaccard'](a, b)
-            if not t: sim5 = StaticValues.algorithms['sorted_winkler'](a, b)
+            if not status: sim5 = StaticValues.algorithms['sorted_winkler'](a, b)
             sim10 = StaticValues.algorithms['skipgram'](a, b)
             sim13 = StaticValues.algorithms['davies'](a, b)
-            if t:
+            if status:
                 sim16 = StaticValues.algorithms['l_jaro_winkler'](a, b)
                 sim17 = StaticValues.algorithms['l_jaro_winkler'](a[::-1], b[::-1])
 
-            if t:
+            if status:
                 f.append([sim1, sim2, sim3, sim4, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
             else:
                 f.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-            if t: f.append([sim16, sim17])
+            if status: f.append([sim16, sim17])
 
-        if sorting:
-            a, b = transform(s1, s2, sorting=sorting, canonical=sorting)
+        if all_features:
+            a, b = transform(s1, s2, sorting=True, canonical=True)
 
             sim1 = self._compute_lsimilarity(a, b, 'damerau_levenshtein')
             sim2 = self._compute_lsimilarity(a, b, 'davies')
@@ -196,13 +117,11 @@ class Features:
 
         return f
 
-    @staticmethod
-    def oneshot_transformations(row, sorting=False):
-        for t in list(zip({False, sorting}, ['basic', 'sorted'])):
-            row['s1_{}'.format(t[1])], row['s2_{}'.format(t[1])] = transform(
-                row['s1'], row['s2'], sorting=t[0], canonical=t[0])
+    def _compute_sorted_features(self, s1, s2):
+        self._compute_all_features(s1, s2, True, False)
 
-        return row
+    def _compute_basic_features(self, s1, s2):
+        self._compute_all_features(s1, s2, False, False)
 
     @staticmethod
     def _compute_lsimilarity(s1, s2, metric, w_type='avg'):

@@ -33,10 +33,12 @@ class ParamTuning:
 
     def __init__(self):
         # To be used within GridSearch
-        self.inner_cv = StratifiedKFold(n_splits=config.initialConfig.kfold_inner_parameter, shuffle=False, random_state=seed_no)
+        self.inner_cv = StratifiedKFold(n_splits=config.initialConfig.kfold_inner_parameter, shuffle=False,
+                                        random_state=seed_no)
 
         # To be used in outer CV
-        self.outer_cv = StratifiedKFold(n_splits=config.initialConfig.kfold_parameter, shuffle=False, random_state=seed_no)
+        self.outer_cv = StratifiedKFold(n_splits=config.initialConfig.kfold_parameter, shuffle=False,
+                                        random_state=seed_no)
 
         self.kfold = config.initialConfig.kfold_parameter
         self.n_jobs = config.initialConfig.n_jobs
@@ -135,11 +137,11 @@ class ParamTuning:
 
         return clf.best_estimator_, clf.best_params_, clf.best_score_
 
-    def trainBestClassifier(self, X, y, model):
-        model.fit(X, y)
+    def trainBestClassifier(self, X_train, y_train, model):
+        model.fit(X_train, y_train)
         return model
 
-    def testBestClassifier(self, X, y, model):
-        y_pred = model.predict(X)
-        acc = accuracy_score(y_pred, y)
+    def testBestClassifier(self, X_test, y_test, model):
+        y_pred = model.predict(X_test)
+        acc = accuracy_score(y_pred, y_test)
         return acc
