@@ -41,11 +41,11 @@ class Features:
         fX = None
         if self.clf_method.lower() == 'basic':
             X = self.data_df.apply(lambda row: transform(row['s1'], row['s2']), axis=1)
-            fX = X[0].apply(lambda row: pd.Series([
+            fX = X.apply(lambda row: pd.Series([
                 StaticValues.algorithms['damerau_levenshtein'](*row),
                 StaticValues.algorithms['jaro'](*row),
                 StaticValues.algorithms['jaro_winkler'](*row),
-                StaticValues.algorithms['jaro_winkler'](row['s1'][::-1], row['s2'][::-1]),
+                StaticValues.algorithms['jaro_winkler'](row[0][::-1], row[1][::-1]),
                 StaticValues.algorithms['sorted_winkler'](*row),
                 StaticValues.algorithms['cosine'](*row),
                 StaticValues.algorithms['jaccard'](*row),
@@ -124,9 +124,6 @@ class Features:
                 StaticValues.algorithms['davies'](*row),
                 StaticValues.algorithms['l_jaro_winkler'](*row),
                 StaticValues.algorithms['l_jaro_winkler'](row[0][::-1], row[1][::-1]),
-            ], index=StaticValues.featureColumns[12:25]))
-
-            fX3 = X_sorted.apply(lambda row: pd.Series([
                 self._compute_lsimilarity(row[0], row[1], 'damerau_levenshtein'),
                 self._compute_lsimilarity(row[0], row[1], 'davies'),
                 self._compute_lsimilarity(row[0], row[1], 'skipgram'),
@@ -141,9 +138,9 @@ class Features:
                 self._compute_lsimilarity(row[0], row[1], 'l_jaro_winkler'),
                 self._compute_lsimilarity(row[0], row[1], 'l_jaro_winkler_r'),
             ] + list(self._compute_lsimilarity_base_scores(row[0], row[1], 'damerau_levenshtein')),
-                index=StaticValues.featureColumns[25:41]))
+                index=StaticValues.featureColumns[12:41]))
 
-            fX = pd.concat([fX1, fX2, fX3], axis=1).values
+            fX = pd.concat([fX1, fX2], axis=1).values
 
         return fX, y
 
