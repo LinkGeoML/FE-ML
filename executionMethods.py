@@ -465,10 +465,11 @@ class Evaluator:
         start_time = time.time()
         f.load_data(dataset)
         fX, y = f.build_features()
+        print("Loaded test dataset and build features; {} sec".format(time.time() - start_time))
 
+        start_time = time.time()
         # 4th phase: test the fine tuned best classifier on the test dataset
         acc = pt.testBestClassifier(fX, y, estimator)
-        print("Loaded test dataset, build features and validated with acc {}; {} sec".format(
-            acc, time.time() - start_time))
+        print("Achieved acc {} on test dataset; {} sec".format(acc, time.time() - start_time))
 
         print("The whole process took {} sec.".format(time.time() - tot_time))
