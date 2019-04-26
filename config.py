@@ -29,7 +29,7 @@ class initialConfig:
     # classifiers = ['SVM', 'Decision Tree', 'Random Forest', 'AdaBoost',
     #                'Naive Bayes', 'MLP', 'Gaussian Process', 'Extra Trees']
 
-    # Search Method to use for best hyperparameters: randomized, grid, hyperband
+    # Search Method to use for best hyperparameters: randomized, grid, hyperband - not yet implemented!!!
     hyperparams_search_method = 'randomized'
 
     # These are the parameters that constitute the search space for GridSearchCV

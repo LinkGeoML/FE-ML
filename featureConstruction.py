@@ -118,10 +118,10 @@ class Features:
         return f
 
     def _compute_sorted_features(self, s1, s2):
-        self._compute_all_features(s1, s2, True, False)
+        return self._compute_all_features(s1, s2, True, False)
 
     def _compute_basic_features(self, s1, s2):
-        self._compute_all_features(s1, s2, False, False)
+        return self._compute_all_features(s1, s2, False, False)
 
     @staticmethod
     def _compute_lsimilarity(s1, s2, metric, w_type='avg'):
