@@ -84,14 +84,11 @@ class Features:
             sim10 = StaticValues.algorithms['skipgram'](a, b)
             sim13 = StaticValues.algorithms['davies'](a, b)
             if status:
-                sim16 = StaticValues.algorithms['l_jaro_winkler'](a, b)
-                sim17 = StaticValues.algorithms['l_jaro_winkler'](a[::-1], b[::-1])
+                sim14 = StaticValues.algorithms['l_jaro_winkler'](a, b)
+                sim15 = StaticValues.algorithms['l_jaro_winkler'](a[::-1], b[::-1])
 
-            if status:
-                f.append([sim1, sim2, sim3, sim4, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-            else:
-                f.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
-            if status: f.append([sim16, sim17])
+            if status: f.append([sim1, sim2, sim3, sim4, sim7, sim8, sim9, sim10, sim11, sim12, sim13, sim14, sim15])
+            else: f.append([sim1, sim2, sim3, sim4, sim5, sim7, sim8, sim9, sim10, sim11, sim12, sim13])
 
         if all_features:
             a, b = transform(s1, s2, sorting=True, canonical=True)
