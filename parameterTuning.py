@@ -9,8 +9,7 @@ from xgboost import XGBClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 # from sklearn.metrics import classification_report
-from sklearn.metrics import f1_score
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, classification_report, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 # from external.hyperband.search import HyperbandSearchCV
 
@@ -147,5 +146,10 @@ class ParamTuning:
 
     def testBestClassifier(self, X_test, y_test, model):
         y_pred = model.predict(X_test)
-        acc = accuracy_score(y_pred, y_test)
-        return acc
+
+        acc = accuracy_score(y_test, y_pred)
+        pre = precision_score(y_test, y_pred)
+        rec = recall_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred)
+
+        return acc, pre, rec, f1

@@ -29,6 +29,11 @@ class Features:
         'alpha2_cc1': str, 'alpha2_cc2': str
     }
 
+    d = {
+        'TRUE': True,
+        'FALSE': False
+    }
+
     def __init__(self):
         self.clf_method = config.initialConfig.classification_method
         self.data_df = None
@@ -37,7 +42,7 @@ class Features:
         self.data_df = pd.read_csv(fname, sep='\t', names=self.fields, dtype=self.dtypes, na_filter=False)
 
     def build_features(self):
-        y = self.data_df['status'].values
+        y = self.data_df['status'].str.upper().map(self.d).values
 
         fX = None
         if self.clf_method.lower() == 'basic':

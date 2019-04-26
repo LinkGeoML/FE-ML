@@ -245,7 +245,7 @@ def filter_dataset(input='dataset-unfiltered.txt', num_instances=2500000):
 def skipgrams(sequence, n, k):
     sequence = " " + sequence + " "
     res = []
-    for ngram in {sequence[i:i + n + k] for i in xrange(len(sequence) - (n + k - 1))}:
+    for ngram in {sequence[i:i + n + k] for i in range(len(sequence) - (n + k - 1))}:
         if k == 0:
             res.append(ngram)
         else:

@@ -469,7 +469,9 @@ class Evaluator:
 
         start_time = time.time()
         # 4th phase: test the fine tuned best classifier on the test dataset
-        acc = pt.testBestClassifier(fX, y, estimator)
-        print("Achieved acc {} on test dataset; {} sec".format(acc, time.time() - start_time))
+        acc, pre, rec, f1 = pt.testBestClassifier(fX, y, estimator)
+        print("| Method\t\t& Accuracy\t& Precision\t& Recall\t& F1-Score\t& Time (sec)")
+        print("||{0}\t& {1}\t& {2}\t& {3}\t& {4}\t& {5}".format(
+            best_clf['classifier'], acc, pre, rec, f1, time.time() - start_time))
 
         print("The whole process took {} sec.".format(time.time() - tot_time))
