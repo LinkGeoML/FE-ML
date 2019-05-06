@@ -28,13 +28,13 @@ Options:
   --buildDataset                Build the dataset for evaluation.
   --fs <FeatureSelection>       Method to use for feature selection.
   -f <Features>                 Comma separated features that will be used for training/predict from the available ones.
-  --tuning                      Hyperparamet tuning for a series of classifiers. [default: false]
+  --tuning                      Hyperparameters tuning for a series of classifiers. [default: False]
 
 Arguments:
   evaluator_type            'SotAMetrics' (default)
                             'SotAML'
                             'customFEML'
-                            'DLearninng'
+                            'DLearning'
                             'TestMetrics'
                             'customFEMLExtended'
                             'lSimilarityMetrics'

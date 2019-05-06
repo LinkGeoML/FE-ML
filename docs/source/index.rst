@@ -10,7 +10,11 @@ Welcome to FE-ML's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+FE-ML API documentation
+=======================
+.. automodule:: app
+   :members:
+   :inherited-members:
 
 Indices and tables
 ==================
