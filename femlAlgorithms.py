@@ -49,7 +49,7 @@ def ascii_transliteration_and_punctuation_strip(s):
     return s
 
 
-def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' ', thres=0.55, only_sorting=False):
+def transform(strA, strB, sorting=False, stemming=False, canonical=False, delimiter=' ', thres=0.5, only_sorting=False):
     a = strA.decode('utf8') #.lower()
     b = strB.decode('utf8') #.lower()
 
